@@ -5,20 +5,25 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import service.AutoEcoleService;
 
 import java.io.IOException;
 
-/**
- * JavaFX App
- */
+
 public class App extends Application {
 
     private static Scene scene;
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 640, 480);
+
+        boolean isInitialized = !AutoEcoleService.getAutoEcoleData().isEmpty();
+
+
+        String fxmlToLoad = isInitialized ? "Login" : "AutoEcole";
+        scene = new Scene(loadFXML(fxmlToLoad), 640, 480);
         stage.setScene(scene);
+        stage.setTitle(isInitialized ? "Connexion" : "Configuration Auto-école");
         stage.show();
     }
 

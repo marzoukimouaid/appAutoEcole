@@ -9,7 +9,7 @@ import java.sql.SQLException;
 public class ConnexionDB  {
     private static Connection connexion;
 
-    private final String DB_URL = "jdbc:mysql://localhost:3306/testDB";
+    private final String DB_URL = "jdbc:mysql://localhost:3306/autoecole";
     private final String USER = "root";
     private final String PASS = "";
     private ConnexionDB() throws SQLException {
