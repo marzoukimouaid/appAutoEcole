@@ -1,17 +1,19 @@
 package controller;
 
 import Utils.AlertUtils;
-import javafx.scene.Parent;
-import service.UserService;
+import Utils.SessionManager;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.fxml.FXMLLoader;
+import entite.User;
+import service.UserService;
+
 import java.io.IOException;
-import java.net.URL;
-import java.sql.ClientInfoStatus;
 
 public class LoginController {
 
@@ -23,6 +25,18 @@ public class LoginController {
     private final UserService userService = new UserService();
 
     @FXML
+    private void initialize() {
+        Platform.runLater(this::checkAutoLogin);
+    }
+
+    private void checkAutoLogin() {
+        User savedUser = SessionManager.getCurrentUser();
+        if (savedUser != null) {
+            switchToDashboard(savedUser.getRole());
+        }
+    }
+
+    @FXML
     private void handleLogin() {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
@@ -32,61 +46,40 @@ public class LoginController {
             return;
         }
 
-        String role = userService.authenticateUser(username, password);
-        if (role != null) {
-            AlertUtils.showAlert("Succès", "Connexion réussie!", javafx.scene.control.Alert.AlertType.INFORMATION);
-            switchToDashboard(role);
+        User authenticatedUser = userService.authenticateUser(username, password);
+        if (authenticatedUser != null) {
+            SessionManager.setCurrentUser(authenticatedUser);
+            switchToDashboard(authenticatedUser.getRole());
         } else {
             AlertUtils.showAlert("Erreur", "Nom d'utilisateur ou mot de passe incorrect.", javafx.scene.control.Alert.AlertType.ERROR);
         }
     }
 
     private void switchToDashboard(String role) {
-        // Build the path
         String fxmlPage;
         if ("secretaire".equals(role)) {
             fxmlPage = "/org/example/SecretaireDashboard.fxml";
         } else if ("candidat".equals(role)) {
             fxmlPage = "/org/example/CandidatDashboard.fxml";
-        } else if ("moniteur".equals(role)) {
-            fxmlPage = "/org/example/MoniteurDashboard.fxml";
+        } else if ("ingenieur".equals(role)) {
+            fxmlPage = "/org/example/IngenieurDashboard.fxml";
         } else {
             AlertUtils.showAlert("Erreur", "Rôle utilisateur inconnu.", javafx.scene.control.Alert.AlertType.ERROR);
             return;
         }
 
         try {
-            System.out.println("Trying to load: " + fxmlPage);
-
             Stage stage = (Stage) usernameField.getScene().getWindow();
-
-            URL resource = getClass().getResource(fxmlPage);
-            System.out.println("Resource for " + fxmlPage + ": " + resource);
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPage));
-
-            if (loader.getLocation() == null) {
-                throw new IOException("FXML file not found: " + fxmlPage);
-            }
-
             Parent root = loader.load();
-            Scene scene = new Scene(root);
+
+            Scene scene = new Scene(root, 1024, 600);
             stage.setScene(scene);
+            stage.setResizable(false);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            AlertUtils.showAlert(
-                    "Erreur",
-                    "Impossible de charger la page: " + fxmlPage,
-                    javafx.scene.control.Alert.AlertType.ERROR
-            );
+            AlertUtils.showAlert("Erreur", "Impossible de charger la page.", javafx.scene.control.Alert.AlertType.ERROR);
         }
     }
-
-
-
-
-
-
-
-
 }

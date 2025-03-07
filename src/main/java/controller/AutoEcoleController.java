@@ -2,9 +2,15 @@ package controller;
 
 import Utils.AlertUtils;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import service.AutoEcoleService;
+
+import java.io.IOException;
 
 public class AutoEcoleController {
 
@@ -30,6 +36,7 @@ public class AutoEcoleController {
 
 
         AlertUtils.showAlert("Succès", "L'auto-école a été initialisée avec succès.", Alert.AlertType.INFORMATION);
+        switchToLoginPage();
     }
 
     private boolean validateInputs(String name, String address, String phone, String email) {
@@ -50,6 +57,21 @@ public class AutoEcoleController {
             return false;
         }
         return true;
+    }
+
+    private void switchToLoginPage() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml")); // Update path if needed
+            Parent root = loader.load();
+
+            Stage stage = (Stage) nameField.getScene().getWindow(); // Get current stage
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertUtils.showAlert("Erreur", "Impossible de charger la page de connexion.", Alert.AlertType.ERROR);
+        }
     }
 
 

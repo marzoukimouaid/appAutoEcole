@@ -228,3 +228,172 @@
     -fx-font-size: 14px;
     -fx-text-fill: #333;
 }
+
+
+/* Sidebar Button */
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-alignment: CENTER_LEFT;
+    -fx-text-fill: #555;
+    -fx-font-size: 14px;
+    -fx-padding: 10 15;
+    -fx-cursor: hand;
+    -fx-border-radius: 8;
+}
+.sidebar-button:hover {
+    -fx-background-color: #F1F1F1;
+    -fx-text-fill: #333;
+}
+
+/* Highlighted (Selected) Sidebar Button */
+.sidebar-button.selected {
+    -fx-background-color: #2575FC; /* Blue background */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-radius: 8;
+}
+
+/* Logout Button */
+.sidebar-button.logout {
+    -fx-text-fill: #D9534F; /* Red logout text */
+}
+
+/* Sidebar Divider */
+.sidebar-divider {
+    -fx-background-color: #E0E0E0;
+    -fx-pref-height: 1px;
+    -fx-padding: 10 0;
+}
+
+/* Normal sidebar button style */
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-alignment: CENTER_LEFT;
+    -fx-text-fill: #555;
+    -fx-font-size: 14px;
+    -fx-padding: 10 15;
+    -fx-cursor: hand;
+    -fx-border-radius: 8;
+}
+.sidebar-button:hover {
+    -fx-background-color: #F1F1F1;
+    -fx-text-fill: #333;
+}
+
+/* Highlighted (Selected) Sidebar Button */
+.sidebar-button.selected {
+    -fx-background-color: #2575FC; /* Blue background */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-radius: 8;
+}
+
+
+/* Sidebar Button */
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-alignment: CENTER_LEFT;
+    -fx-text-fill: #555;
+    -fx-font-size: 14px;
+    -fx-padding: 10 15;
+    -fx-cursor: hand;
+    -fx-border-radius: 8;
+    -fx-graphic-text-gap: 10; /* ✅ Ensures spacing between icon and text */
+    -fx-content-display: LEFT; /* ✅ Aligns icon & text properly */
+}
+.sidebar-button:hover {
+    -fx-background-color: #F1F1F1;
+    -fx-text-fill: #333;
+}
+
+/* Highlighted (Selected) Sidebar Button */
+.sidebar-button.selected {
+    -fx-background-color: #2575FC;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-radius: 8;
+}
+
+/* Sidebar Separator */
+.sidebar-separator {
+    -fx-background-color: #E0E0E0;
+    -fx-pref-height: 1px;
+    -fx-padding: 10 0;
+}
+
+
+/* Sidebar Design */
+#sidebar {
+    -fx-background-color: #2C3E50; /* Dark sleek background */
+    -fx-pref-width: 230px; /* Slightly wider for better spacing */
+    -fx-padding: 20px 15px;
+    -fx-spacing: 15px;
+    -fx-border-radius: 0 20 20 0;
+}
+
+/* Sidebar Header Text */
+.sidebar-brand {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ECF0F1; /* Light gray text */
+    -fx-alignment: CENTER;
+}
+
+/* Sidebar Buttons */
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-alignment: CENTER_LEFT;
+    -fx-text-fill: #BDC3C7; /* Light gray for modern look */
+    -fx-font-size: 14px;
+    -fx-padding: 12px 15px;
+    -fx-border-radius: 10px;
+    -fx-graphic-text-gap: 12px; /* Better spacing between icon and text */
+    -fx-content-display: LEFT;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0.2, 0, 2);
+}
+
+/* Hover Effect */
+.sidebar-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15); /* Subtle hover effect */
+    -fx-text-fill: white;
+}
+
+/* Selected Button */
+.sidebar-button.selected {
+    -fx-background-color: #3498DB; /* Elegant blue selection */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-radius: 10px;
+}
+
+/* Sidebar Separator */
+.sidebar-separator {
+    -fx-background-color: #34495E;
+    -fx-pref-height: 1px;
+    -fx-padding: 10px 0;
+}
+
+/* Logout Button */
+.sidebar-button.logout {
+    -fx-text-fill: #E74C3C; /* Modern red */
+    -fx-font-weight: bold;
+}
+.sidebar-button.logout:hover {
+    -fx-background-color: rgba(231, 76, 60, 0.2);
+    -fx-text-fill: white;
+}
+
+/* Icons Styling */
+.sidebar-button .ikonli-font-icon {
+    -fx-icon-color: #BDC3C7; /* Light grayish icons */
+    -fx-icon-size: 16px;
+}
+
+/* Highlight icon color when selected */
+.sidebar-button.selected .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+
+

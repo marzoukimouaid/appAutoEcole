@@ -79,3 +79,6 @@ bin/
 
 # Ignore environment-specific files
 .env
+
+#session file
+session.enc

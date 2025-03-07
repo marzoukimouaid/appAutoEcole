@@ -1,144 +1,159 @@
 package controller;
 
+import Utils.AlertUtils;
+import Utils.SessionManager;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.shape.Circle;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-
-// Ikonli imports
-import org.kordamp.ikonli.javafx.FontIcon;
+import javafx.stage.Stage;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
-import javafx.scene.paint.Color;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.io.IOException;
 
 public class SecretaireController {
 
-    @FXML private BorderPane root; // main container to manipulate sidebars
-
-    // Sidebar
+    @FXML private BorderPane root;
     @FXML private VBox sidebar;
-    @FXML private Circle profileCircle;
-    @FXML private Button btnDashboard, btnContent, btnAnalytics, btnLikes, btnComments, btnShare;
+    @FXML private StackPane contentArea;
+    @FXML private Label pageTitle;
+
+    // Sidebar buttons
+    @FXML private Button btnCandidats, btnMoniteurs, btnAnalytics, btnVehicules, btnPaiements, btnSeances,btnInscription;
     @FXML private Button btnLogout;
-
-    // Top Bar
-    @FXML private Button btnMenu;
-    @FXML private Circle avatarImageView;
-
-    // Center Content
-    @FXML private Label lblLikes, lblComments, lblShares;
-    @FXML private TableView<ActivityRecord> tableActivity;
-    @FXML private TableColumn<ActivityRecord, String> colName, colEmail, colType, colStatus, colJoined;
-
-    // Track the sidebar's visibility
-    private boolean isSidebarVisible = true;
 
     @FXML
     public void initialize() {
-        // Set light gray icons
-        setIkonliIcons();
-
-        // Table setup
-        setupTable();
-        loadTableData();
-
-        // Toggle the sidebar with the hamburger button
-        btnMenu.setOnAction(e -> toggleSidebar());
+        setSidebarIcons();
+        handleCandidats();
     }
 
-    /**
-     * Show/hide the sidebar by setting left to null or the sidebar node.
-     */
-    private void toggleSidebar() {
-        if (isSidebarVisible) {
-            root.setLeft(null);
-            isSidebarVisible = false;
-        } else {
-            root.setLeft(sidebar);
-            isSidebarVisible = true;
+    // ===================================
+    // SIDEBAR BUTTON HANDLERS
+    // ===================================
+    @FXML
+    private void handleCandidats() {
+        loadPage("/org/example/Candidats.fxml", "Candidats");
+        highlightSidebarButton(btnCandidats);
+    }
+
+    @FXML
+    private void handleMoniteurs() {
+        loadPage("/org/example/Moniteurs.fxml", "Moniteurs");
+        highlightSidebarButton(btnMoniteurs);
+    }
+
+    @FXML
+    private void handleAnalytics() {
+        loadPage("/org/example/Analytics.fxml", "Analytics");
+        highlightSidebarButton(btnAnalytics);
+    }
+
+    @FXML
+    private void handleVehicules() {
+        loadPage("/org/example/Vehicules.fxml", "Vehicules");
+        highlightSidebarButton(btnVehicules);
+    }
+
+    @FXML
+    private void handlePaiements() {
+        loadPage("/org/example/Paiements.fxml", "Paiements");
+        highlightSidebarButton(btnPaiements);
+    }
+
+    @FXML
+    private void handleSeances() {
+        loadPage("/org/example/Seances.fxml", "Seances");
+        highlightSidebarButton(btnSeances);
+    }
+
+    @FXML
+    private void handleInscription() {
+        loadPage("/org/example/Inscription.fxml", "Inscription");
+        highlightSidebarButton(btnInscription);
+    }
+
+    // ===================================
+    // LOGOUT
+    // ===================================
+    @FXML
+    private void handleLogout() {
+        SessionManager.logout();
+        switchToLoginPage();
+    }
+
+    private void switchToLoginPage() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) btnLogout.getScene().getWindow();
+            stage.setScene(new Scene(root, 1024, 600));
+            stage.setResizable(false);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertUtils.showAlert("Erreur", "Impossible de charger la page de connexion.", javafx.scene.control.Alert.AlertType.ERROR);
         }
     }
 
-    /**
-     * Assign icons in light gray for a consistent look.
-     */
-    private void setIkonliIcons() {
-        // Light gray color for icons
-        Color iconColor = Color.web("#CCCCCC");
+    // ===================================
+    // DYNAMIC PAGE LOADING
+    // ===================================
+    private void loadPage(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent newPage = loader.load();
 
-        FontIcon dashIcon = FontIcon.of(FontAwesomeSolid.HOME, 18);
-        dashIcon.setIconColor(iconColor);
-        btnDashboard.setGraphic(dashIcon);
+            // Replace contentArea's children with the new page
+            contentArea.getChildren().setAll(newPage);
 
-        FontIcon contentIcon = FontIcon.of(FontAwesomeSolid.FOLDER, 18);
-        contentIcon.setIconColor(iconColor);
-        btnContent.setGraphic(contentIcon);
-
-        FontIcon analyticsIcon = FontIcon.of(FontAwesomeSolid.CHART_BAR, 18);
-        analyticsIcon.setIconColor(iconColor);
-        btnAnalytics.setGraphic(analyticsIcon);
-
-        FontIcon likesIcon = FontIcon.of(FontAwesomeSolid.THUMBS_UP, 18);
-        likesIcon.setIconColor(iconColor);
-        btnLikes.setGraphic(likesIcon);
-
-        FontIcon commentsIcon = FontIcon.of(FontAwesomeSolid.COMMENT_ALT, 18);
-        commentsIcon.setIconColor(iconColor);
-        btnComments.setGraphic(commentsIcon);
-
-        FontIcon shareIcon = FontIcon.of(FontAwesomeSolid.SHARE_ALT, 18);
-        shareIcon.setIconColor(iconColor);
-        btnShare.setGraphic(shareIcon);
-
-        // Logout icon
-        FontIcon logoutIcon = FontIcon.of(FontAwesomeSolid.SIGN_OUT_ALT, 18);
-        logoutIcon.setIconColor(iconColor);
-        btnLogout.setGraphic(logoutIcon);
-
-        // Hamburger icon
-        FontIcon menuIcon = FontIcon.of(FontAwesomeSolid.BARS, 18);
-        menuIcon.setIconColor(iconColor);
-        btnMenu.setGraphic(menuIcon);
-    }
-
-    private void setupTable() {
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
-        colJoined.setCellValueFactory(new PropertyValueFactory<>("joined"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-    }
-
-    private void loadTableData() {
-        tableActivity.getItems().addAll(
-                new ActivityRecord("Prem Shahi",    "premshahi@gmail.com",   "2022-02-12", "New",    "Liked"),
-                new ActivityRecord("Deepa Chand",   "deepachand@gmail.com",  "2022-02-12", "Member", "Shared"),
-                new ActivityRecord("Prakash Shahi", "prakashshahi@gmail.com","2022-02-13", "New",    "Liked"),
-                new ActivityRecord("Manisha Chand", "manishachan@gmail.com", "2022-02-13", "Member", "Shared")
-        );
-    }
-
-    // Data model
-    public static class ActivityRecord {
-        private String name;
-        private String email;
-        private String joined;
-        private String type;
-        private String status;
-
-        public ActivityRecord(String name, String email, String joined, String type, String status) {
-            this.name = name;
-            this.email = email;
-            this.joined = joined;
-            this.type = type;
-            this.status = status;
+            // Set page title
+            pageTitle.setText(title);
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertUtils.showAlert("Erreur", "Impossible de charger la page: " + fxmlPath, javafx.scene.control.Alert.AlertType.ERROR);
         }
-
-        public String getName()   { return name; }
-        public String getEmail()  { return email; }
-        public String getJoined() { return joined; }
-        public String getType()   { return type; }
-        public String getStatus() { return status; }
     }
+
+    private void setSidebarIcons() {
+        btnCandidats.setGraphic(createIcon(FontAwesomeSolid.USER_GRADUATE));
+        btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
+        btnAnalytics.setGraphic(createIcon(FontAwesomeSolid.CHART_LINE));
+        btnVehicules.setGraphic(createIcon(FontAwesomeSolid.CAR));
+        btnPaiements.setGraphic(createIcon(FontAwesomeSolid.MONEY_BILL_WAVE));
+        btnSeances.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
+        btnInscription.setGraphic(createIcon(FontAwesomeSolid.EDIT));
+        btnLogout.setGraphic(createIcon(FontAwesomeSolid.SIGN_OUT_ALT));
+    }
+
+    private FontIcon createIcon(FontAwesomeSolid iconType) {
+        FontIcon icon = new FontIcon(iconType);
+        icon.setIconSize(16);
+        icon.getStyleClass().add("ikonli-font-icon"); // Uses CSS for color
+        return icon;
+    }
+
+    // ===================================
+    // SIDEBAR STYLING
+    // ===================================
+    private void highlightSidebarButton(Button selectedButton) {
+        // Remove "selected" style from all buttons
+        btnCandidats.getStyleClass().remove("selected");
+        btnMoniteurs.getStyleClass().remove("selected");
+        btnAnalytics.getStyleClass().remove("selected");
+        btnVehicules.getStyleClass().remove("selected");
+        btnPaiements.getStyleClass().remove("selected");
+        btnSeances.getStyleClass().remove("selected");
+        btnInscription.getStyleClass().remove("selected");
+
+        // Add "selected" style to the clicked button
+        selectedButton.getStyleClass().add("selected");
+    }
+
 }
