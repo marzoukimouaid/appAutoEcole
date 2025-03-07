@@ -397,3 +397,145 @@
 
 
 
+/* =============================
+   Top Navigation Bar (Navbar)
+   ============================= */
+
+.top-bar {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-padding: 10 20;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);
+    -fx-spacing: 15;
+    -fx-alignment: center-left;
+}
+
+/* Hamburger Menu Button */
+.hamburger-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C3E50;
+    -fx-font-size: 20px;
+    -fx-padding: 5 12;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+}
+.hamburger-button:hover {
+    -fx-background-color: rgba(0,0,0,0.1);
+}
+
+/* Profile Container */
+.profile-container {
+    -fx-spacing: 10;
+    -fx-alignment: center-right;
+    -fx-padding: 5px;
+}
+
+/* Profile Picture */
+.profile-image {
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
+    -fx-cursor: hand;
+}
+
+/* Profile Menu Button */
+.profile-menu {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C3E50;
+    -fx-font-size: 14px;
+    -fx-border-color: transparent;
+}
+.profile-menu:hover {
+    -fx-background-color: rgba(0,0,0,0.05);
+}
+
+
+/*********************************************************/
+
+/* =============================
+   Top Navigation Bar (Navbar)
+   ============================= */
+
+.top-bar {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-padding: 10 20;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);
+    -fx-spacing: 15;
+    -fx-alignment: center-left;
+}
+
+/* Hamburger Menu Button */
+.hamburger-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C3E50;
+    -fx-font-size: 20px;
+    -fx-padding: 5 12;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+}
+.hamburger-button:hover {
+    -fx-background-color: rgba(0,0,0,0.1);
+}
+
+/* Profile Container */
+.profile-container {
+    -fx-spacing: 10;
+    -fx-alignment: center-right;
+    -fx-padding: 5px;
+}
+
+/* Profile Picture (Circular) */
+.profile-image {
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
+    -fx-cursor: hand;
+}
+
+/* Profile Menu Button */
+.profile-menu {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C3E50;
+    -fx-font-size: 14px;
+    -fx-border-color: transparent;
+}
+.profile-menu:hover {
+    -fx-background-color: rgba(0,0,0,0.05);
+}
+
+/* Profile Picture Styling */
+.profile-image {
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
+    -fx-cursor: hand;
+}
+
+/* Example snippet for relevant styles: */
+
+/* Hamburger button */
+.hamburger-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C3E50;
+    -fx-font-size: 20px;
+    -fx-padding: 5 12;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+}
+.hamburger-button:hover {
+    -fx-background-color: rgba(0,0,0,0.1);
+}
+
+/* Profile image in the menu */
+.profile-image {
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
+    -fx-cursor: hand;
+}
+
+
+
+
+

@@ -32,10 +32,10 @@ public class AutoEcoleDao {
 
     public void createDefaultSecretaire() {
         String defaultUsername = "secretaire";
-        String defaultPassword = "secretaire"; // Plain-text password
+        String defaultPassword = "secretaire";
         String role = "secretaire";
 
-        // 🔹 Hash the password using BCrypt
+
         String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt(12));
 
         String insertSql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
@@ -44,7 +44,7 @@ public class AutoEcoleDao {
              PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
 
             insertStmt.setString(1, defaultUsername);
-            insertStmt.setString(2, hashedPassword);  // Store the BCrypt-hashed password
+            insertStmt.setString(2, hashedPassword);
             insertStmt.setString(3, role);
 
             insertStmt.executeUpdate();
