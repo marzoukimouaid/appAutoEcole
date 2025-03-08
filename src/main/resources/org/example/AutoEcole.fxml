@@ -5,7 +5,7 @@
 <?import javafx.scene.text.*?>
 
 <?import java.net.URL?>
-<StackPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AutoEcoleController">
+<StackPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="AutoEcole.controller.AutoEcoleController">
    <stylesheets>
       <URL value="@style.css" />
    </stylesheets>

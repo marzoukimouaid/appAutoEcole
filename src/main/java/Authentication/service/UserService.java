@@ -1,7 +1,7 @@
-package service;
+package Authentication.service;
 
-import dao.UserDao;
-import entite.User;
+import Authentication.dao.UserDao;
+import Authentication.entite.User;
 
 public class UserService {
     private final UserDao userDAO = new UserDao();

@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.*?>
 <?import java.net.URL?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LoginController"
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="Authentication.controller.LoginController"
       alignment="CENTER" spacing="20" maxWidth="350" maxHeight="450" styleClass="card">
     <stylesheets>
         <URL value="@style.css"/>

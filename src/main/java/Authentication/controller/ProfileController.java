@@ -1,4 +1,4 @@
-package controller;
+package Authentication.controller;
 
 public class ProfileController {
 }

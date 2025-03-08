@@ -1,4 +1,4 @@
-package dao;
+package AutoEcole.dao;
 
 import Utils.ConnexionDB;
 import java.sql.Connection;

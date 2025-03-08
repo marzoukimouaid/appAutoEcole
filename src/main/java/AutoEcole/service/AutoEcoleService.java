@@ -1,6 +1,6 @@
-package service;
+package AutoEcole.service;
 
-import dao.AutoEcoleDao;
+import AutoEcole.dao.AutoEcoleDao;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package controller;
+package Authentication.controller;
 
 import Utils.AlertUtils;
 import Utils.SessionManager;
@@ -10,8 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import entite.User;
-import service.UserService;
+import Authentication.entite.User;
+import Authentication.service.UserService;
 
 import java.io.IOException;
 

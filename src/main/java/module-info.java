@@ -7,7 +7,15 @@ module org.example {
     requires org.kordamp.ikonli.fontawesome5;
     opens org.example to javafx.fxml;
     exports org.example;
-    exports controller;
-    opens controller to javafx.fxml;
+
+
+    exports Secretaire.controller;
+    opens Secretaire.controller to javafx.fxml;
+    exports AutoEcole.controller;
+    opens AutoEcole.controller to javafx.fxml;
+    exports Authentication.controller;
+    opens Authentication.controller to javafx.fxml;
+    exports Moniteur.controller;
+    opens Moniteur.controller to javafx.fxml;
 
 }

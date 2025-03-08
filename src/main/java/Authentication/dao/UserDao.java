@@ -1,7 +1,7 @@
-package dao;
+package Authentication.dao;
 
 import Utils.ConnexionDB;
-import entite.User;
+import Authentication.entite.User;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;

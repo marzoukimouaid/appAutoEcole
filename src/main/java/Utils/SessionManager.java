@@ -1,6 +1,6 @@
 package Utils;
 
-import entite.User;
+import Authentication.entite.User;
 
 import java.io.*;
 import java.time.Instant;

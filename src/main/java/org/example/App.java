@@ -5,7 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import service.AutoEcoleService;
+import AutoEcole.service.AutoEcoleService;
 
 import java.io.IOException;
 

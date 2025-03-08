@@ -1,4 +1,4 @@
-package controller;
+package AutoEcole.controller;
 
 import Utils.AlertUtils;
 import javafx.fxml.FXML;
@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import service.AutoEcoleService;
+import AutoEcole.service.AutoEcoleService;
 
 import java.io.IOException;
 

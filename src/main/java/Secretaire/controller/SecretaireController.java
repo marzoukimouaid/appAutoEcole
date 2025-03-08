@@ -1,4 +1,4 @@
-package controller;
+package Secretaire.controller;
 
 import Utils.AlertUtils;
 import Utils.SessionManager;

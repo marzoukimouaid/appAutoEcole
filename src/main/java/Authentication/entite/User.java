@@ -1,4 +1,4 @@
-package entite;
+package Authentication.entite;
 
 public class User {
     private int id;
