@@ -24,36 +24,13 @@ public class AutoEcoleDao {
 
             stmt.executeUpdate();
             System.out.println("Auto-école enregistrée avec succès !");
-            createDefaultSecretaire();
+
         } catch (SQLException e) {
             System.out.println("Erreur lors de l'insertion : " + e.getMessage());
         }
     }
 
-    public void createDefaultSecretaire() {
-        String defaultUsername = "secretaire";
-        String defaultPassword = "secretaire";
-        String role = "secretaire";
 
-
-        String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt(12));
-
-        String insertSql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-
-        try (Connection conn = ConnexionDB.getInstance();
-             PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-
-            insertStmt.setString(1, defaultUsername);
-            insertStmt.setString(2, hashedPassword);
-            insertStmt.setString(3, role);
-
-            insertStmt.executeUpdate();
-            System.out.println("Default secretary account created successfully!");
-
-        } catch (SQLException e) {
-            System.out.println("Error creating the secretary account: " + e.getMessage());
-        }
-    }
 
 
 

@@ -5,6 +5,8 @@ module org.example {
     requires jbcrypt;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.fontawesome5;
+    requires org.json;
+    requires java.desktop;
     opens org.example to javafx.fxml;
     exports org.example;
 

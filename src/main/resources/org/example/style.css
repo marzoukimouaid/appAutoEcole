@@ -505,12 +505,7 @@
 }
 
 /* Profile Picture Styling */
-.profile-image {
-    -fx-border-radius: 50%;
-    -fx-background-radius: 50%;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
-    -fx-cursor: hand;
-}
+
 
 /* Example snippet for relevant styles: */
 
@@ -534,6 +529,17 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 2);
     -fx-cursor: hand;
 }
+
+.auto-ecole-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.profile-image {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0.3, 0, 2);
+}
+
 
 
 
