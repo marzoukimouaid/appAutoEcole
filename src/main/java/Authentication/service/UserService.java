@@ -13,4 +13,8 @@ public class UserService {
     public boolean createUser(String username, String password, String role) {
         return userDAO.createUser(username, password, role);
     }
+
+    public int getUserIdByUsername(String username) {
+        return userDAO.getUserIdByUsername(username);
+    }
 }

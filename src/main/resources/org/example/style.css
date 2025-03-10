@@ -540,6 +540,272 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0.3, 0, 2);
 }
 
+.content-area {
+    -fx-padding: 20 40;
+    -fx-spacing: 20;
+    /* background can be #F8FBFF or transparent if your overall root is already set */
+}
+
+.section-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #666;
+}
+
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-border-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 5, 0.2, 0, 2);
+}
+
+.input-field {
+    -fx-font-size: 14px;
+    -fx-padding: 12px;
+    -fx-background-color: #ecf0f3;
+    -fx-background-radius: 15;
+    -fx-border-color: transparent;
+    -fx-border-radius: 15;
+    -fx-effect: innershadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);
+    -fx-prompt-text-fill: rgba(0,0,0,0.5);
+}
+
+/* etc. */
+
+/* New style for file chooser buttons */
+.file-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #333;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+}
+
+.file-button:hover {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #bbb;
+}
+
+/* Optionally, adjust the header container if needed */
+.header-container {
+    -fx-background-color: transparent; /* Now the header is transparent to show the root background */
+    -fx-padding: 20px;
+    -fx-spacing: 15;
+}
+
+.header-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C3E50;  /* Dark text for a clean look */
+}
+
+.header-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7F8C8D;
+}
+
+/* Remove the purple gradient from the root background for this page */
+.content-area {
+    -fx-padding: 20 40;
+    -fx-spacing: 20;
+    /* Using a clean off-white background for content */
+    -fx-background-color: #F8FBFF;
+}
+
+/* Modern header styles */
+.header-container {
+    -fx-background-color: transparent; /* No background, letting the content-area show */
+    -fx-padding: 20px;
+    -fx-spacing: 15;
+}
+
+.header-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C3E50; /* Dark text for contrast */
+}
+
+.header-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7F8C8D;
+}
+
+/* File Button: subtle, modern, and simplistic */
+.file-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #333;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+}
+
+.file-button:hover {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #bbb;
+}
+
+/* Retain your existing styles for card, input-field, and primary-button */
+.card {
+    -fx-background-color: white;
+    -fx-padding: 30px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.3, 0, 4);
+}
+
+.input-field {
+    -fx-font-size: 14px;
+    -fx-padding: 12px;
+    -fx-border-width: 2px;
+    -fx-border-radius: 15px;
+    -fx-background-radius: 15px;
+    -fx-border-color: transparent;
+    -fx-background-color: #ecf0f3;
+    -fx-effect: innershadow(three-pass-box, rgba(0, 0, 0, 0.05), 5, 0, 0, 2);
+    -fx-prompt-text-fill: rgba(0, 0, 0, 0.5);
+}
+
+.input-field:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: linear-gradient(to right, #6A11CB, #2575FC);
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(106, 17, 203, 0.3), 10, 0.3, 0, 4);
+    -fx-prompt-text-fill: rgba(0, 0, 0, 0.4);
+}
+
+.primary-button {
+    -fx-background-color: linear-gradient(to right, #6A11CB, #2575FC);
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: linear-gradient(to right, #2575FC, #6A11CB);
+}
+
+.primary-button:pressed {
+    -fx-background-color: #2C3E50;
+}
+
+/* ================================
+   Sleek ScrollPane Scrollbar
+   ================================ */
+
+/* Targets our custom scroll pane */
+.custom-scrollpane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Ensures the viewport (the visible content area) is also transparent */
+.custom-scrollpane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Vertical scrollbar styling */
+.custom-scrollpane .scroll-bar:vertical {
+    -fx-background-color: transparent; /* No background for track */
+}
+
+/* The draggable "thumb" of the scrollbar */
+.custom-scrollpane .scroll-bar:vertical .thumb {
+    -fx-background-color: #ccc;  /* Light gray thumb */
+    -fx-background-radius: 6;    /* Rounded corners */
+}
+
+/* Hover effect on the thumb */
+.custom-scrollpane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #b8b8b8;
+}
+
+/* Remove the increment/decrement arrow buttons */
+.custom-scrollpane .scroll-bar:vertical .increment-button,
+.custom-scrollpane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Hide the arrow shapes themselves */
+.custom-scrollpane .scroll-bar:vertical .increment-arrow,
+.custom-scrollpane .scroll-bar:vertical .decrement-arrow {
+    -fx-shape: " "; /* Blank shape, effectively hides the arrows */
+}
+
+/* Horizontal scrollbar styling (if needed) */
+.custom-scrollpane .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.custom-scrollpane .scroll-bar:horizontal .thumb {
+    -fx-background-color: #ccc;
+    -fx-background-radius: 6;
+}
+
+.custom-scrollpane .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #b8b8b8;
+}
+
+.custom-scrollpane .scroll-bar:horizontal .increment-button,
+.custom-scrollpane .scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.custom-scrollpane .scroll-bar:horizontal .increment-arrow,
+.custom-scrollpane .scroll-bar:horizontal .decrement-arrow {
+    -fx-shape: " ";
+}
+
+.error {
+    -fx-border-color: red !important;
+    -fx-border-width: 2px;
+}
+.inspect-button {
+    /* Outline style by default */
+    -fx-background-color: transparent;
+    -fx-border-color: #2575FC;    /* Same color as your left tab highlight */
+    -fx-border-width: 2;
+    -fx-border-radius: 15;
+    -fx-background-radius: 15;
+    -fx-text-fill: #2575FC;       /* Text matches the border color */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 15;
+    -fx-cursor: hand;
+}
+
+/* On hover, fill with #2575FC, text becomes white */
+.inspect-button:hover {
+    -fx-background-color: #2575FC;
+    -fx-text-fill: white;
+    -fx-border-color: #2575FC;
+}
+
+/* On press/click, optionally a darker shade */
+.inspect-button:pressed {
+    -fx-background-color: #1f6dd3; /* Slightly darker shade */
+    -fx-border-color: #1f6dd3;
+    -fx-text-fill: white;
+}
+
 
 
 

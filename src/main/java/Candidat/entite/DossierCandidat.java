@@ -45,63 +45,48 @@ public class DossierCandidat {
     public int getId() {
         return id;
     }
-
     public void setId(int id) {
         this.id = id;
     }
-
     public String getCinUrl() {
         return cinUrl;
     }
-
     public void setCinUrl(String cinUrl) {
         this.cinUrl = cinUrl;
     }
-
     public String getCertificatMedicalUrl() {
         return certificatMedicalUrl;
     }
-
     public void setCertificatMedicalUrl(String certificatMedicalUrl) {
         this.certificatMedicalUrl = certificatMedicalUrl;
     }
-
     public String getPhotoIdentiteUrl() {
         return photoIdentiteUrl;
     }
-
     public void setPhotoIdentiteUrl(String photoIdentiteUrl) {
         this.photoIdentiteUrl = photoIdentiteUrl;
     }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
     public int getCandidateId() {
         return candidateId;
     }
-
     public void setCandidateId(int candidateId) {
         this.candidateId = candidateId;
     }
-
     public String getPermisType() {
         return permisType;
     }
-
     public void setPermisType(String permisType) {
         this.permisType = permisType;
     }

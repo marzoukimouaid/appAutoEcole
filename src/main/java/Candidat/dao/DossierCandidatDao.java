@@ -2,13 +2,10 @@ package Candidat.dao;
 
 import Candidat.entite.DossierCandidat;
 import Utils.ConnexionDB;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class DossierCandidatDao {
@@ -69,5 +66,37 @@ public class DossierCandidatDao {
         return Optional.empty();
     }
 
-    // Additional methods for update, delete, etc., can be added following similar patterns.
+    /**
+     * Retrieves all dossier candidats from the database, ordered by creation date (newest first).
+     *
+     * @return A list of DossierCandidat.
+     */
+    public List<DossierCandidat> getAllDossierCandidats() {
+        List<DossierCandidat> dossiers = new ArrayList<>();
+        String sql = "SELECT * FROM dossier_candidats ORDER BY created_at DESC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                DossierCandidat dossier = new DossierCandidat();
+                dossier.setId(rs.getInt("id"));
+                dossier.setCinUrl(rs.getString("cin_url"));
+                dossier.setCertificatMedicalUrl(rs.getString("certificat_medical_url"));
+                dossier.setPhotoIdentiteUrl(rs.getString("photo_identite_url"));
+                Timestamp createdTimestamp = rs.getTimestamp("created_at");
+                if (createdTimestamp != null) {
+                    dossier.setCreatedAt(createdTimestamp.toLocalDateTime());
+                }
+                Timestamp updatedTimestamp = rs.getTimestamp("updated_at");
+                if (updatedTimestamp != null) {
+                    dossier.setUpdatedAt(updatedTimestamp.toLocalDateTime());
+                }
+                dossier.setCandidateId(rs.getInt("candidate_id"));
+                dossier.setPermisType(rs.getString("permis_type"));
+                dossiers.add(dossier);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dossiers;
+    }
 }
