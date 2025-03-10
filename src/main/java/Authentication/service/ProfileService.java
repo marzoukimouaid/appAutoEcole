@@ -13,29 +13,33 @@ import java.util.Optional;
 
 public class ProfileService {
     private final ProfileDao profileDao = new ProfileDao();
-
-
     private static final String IMGBB_API_KEY = ConfigReader.getKey("imgbb_api_key");
 
     /**
      * Retrieves the full profile of a user.
+     *
      * @param userId The user's ID.
-     * @return The Profile object if found, otherwise an empty optional.
+     * @return An Optional containing the Profile if found.
      */
     public Optional<Profile> getProfileByUserId(int userId) {
         return Optional.ofNullable(profileDao.getProfileByUserId(userId));
     }
 
+    /**
+     * Creates a new profile or updates an existing one.
+     * If an image file is provided, it will be uploaded and its URL saved.
+     *
+     * @param profile   The Profile object containing the new/updated data.
+     * @param imageFile The image file to be uploaded (can be null).
+     * @return True if the operation was successful, false otherwise.
+     */
     public boolean createOrUpdateProfile(Profile profile, File imageFile) {
-        // If an image file is provided, upload it before saving the profile
         if (imageFile != null) {
             String uploadedImageUrl = uploadImageToImgBB(imageFile);
             if (uploadedImageUrl != null) {
                 profile.setPictureUrl(uploadedImageUrl);
             }
         }
-
-        // Save the profile to the database
         Profile existing = profileDao.getProfileByUserId(profile.getUserId());
         if (existing == null) {
             return profileDao.createProfile(profile);
@@ -61,7 +65,7 @@ public class ProfileService {
             OutputStream outputStream = connection.getOutputStream();
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true);
 
-            // Prepare file data
+            // Write the file part
             writer.append("------WebKitFormBoundary\r\n");
             writer.append("Content-Disposition: form-data; name=\"image\"; filename=\"" + file.getName() + "\"\r\n");
             writer.append("Content-Type: " + Files.probeContentType(file.toPath()) + "\r\n\r\n");
@@ -71,7 +75,7 @@ public class ProfileService {
             writer.append("\r\n------WebKitFormBoundary--\r\n");
             writer.close();
 
-            // Read response
+            // Read the response
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             StringBuilder response = new StringBuilder();
             String line;
@@ -80,7 +84,7 @@ public class ProfileService {
             }
             reader.close();
 
-            // Parse JSON response
+            // Parse the JSON response
             JSONObject jsonResponse = new JSONObject(response.toString());
             return jsonResponse.getJSONObject("data").getString("display_url");
 

@@ -36,9 +36,15 @@ public class AutoEcoleService {
                 // Create a default profile for the secretaire
                 Profile defaultProfile = new Profile();
                 defaultProfile.setUserId(secretaireId);
-                defaultProfile.setDisplayName("Admin Secretaire");
+                defaultProfile.setNom("secretaire");
+                defaultProfile.setPrenom("Ben foulen");
                 defaultProfile.setEmail("secretaire@autoecole.com");
                 defaultProfile.setBirthday(LocalDate.of(1990, 1, 1));
+                // Do not set pictureUrl so that SQL default is used
+                // Set a dummy address since the database doesn't have a default for it
+                defaultProfile.setAddresse("Default Address");
+                // Optionally, you can also set a default telephone number if needed
+                // defaultProfile.setTel(0);  // or any dummy value
 
                 // Save the profile to the database
                 profileDao.createProfile(defaultProfile);

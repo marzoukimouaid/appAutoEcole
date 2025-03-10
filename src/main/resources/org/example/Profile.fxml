@@ -35,15 +35,31 @@
         </VBox>
 
         <!-- Display Name -->
+
         <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Display Name:"/>
-            <TextField fx:id="displayNameField" promptText="Enter your display name" styleClass="input-field"/>
+            <Label text="Nom:"/>
+            <TextField fx:id="nomField" promptText="Enter your Nom" styleClass="input-field"/>
+        </VBox>
+
+        <VBox spacing="5" alignment="CENTER_LEFT">
+            <Label text="Prenom:"/>
+            <TextField fx:id="prenomField" promptText="Enter your Prenom" styleClass="input-field"/>
         </VBox>
 
         <!-- Email -->
         <VBox spacing="5" alignment="CENTER_LEFT">
             <Label text="Email:"/>
             <TextField fx:id="emailField" promptText="Enter your email" styleClass="input-field"/>
+        </VBox>
+
+        <VBox spacing="5" alignment="CENTER_LEFT">
+            <Label text="Telephone:"/>
+            <TextField fx:id="telField" promptText="Enter your telephone" styleClass="input-field"/>
+        </VBox>
+
+        <VBox spacing="5" alignment="CENTER_LEFT">
+            <Label text="Adresse:"/>
+            <TextField fx:id="addresseField" promptText="Enter your Addresse" styleClass="input-field"/>
         </VBox>
 
         <!-- Birthday -->

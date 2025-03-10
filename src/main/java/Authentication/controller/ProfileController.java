@@ -12,24 +12,26 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 
 import java.io.File;
-import java.time.LocalDate;
 
 public class ProfileController {
 
     @FXML private ImageView profileImage;
-    @FXML private TextField displayNameField;
+    @FXML private TextField nomField;
+    @FXML private TextField prenomField;
     @FXML private TextField emailField;
     @FXML private DatePicker birthdayPicker;
+    @FXML private TextField telField;
+    @FXML private TextField addresseField;
     @FXML private Button uploadImageButton;
     @FXML private StackPane rootPane;
+
     private final ProfileService profileService = new ProfileService();
     private Profile userProfile;
     private User currentUser;
-    private File selectedImageFile = null; // Store selected image for later upload
+    private File selectedImageFile = null;
 
     @FXML
     public void initialize() {
@@ -45,30 +47,21 @@ public class ProfileController {
             return newProfile;
         });
 
-
-        // Fill fields if data found
-        displayNameField.setText(userProfile.getDisplayName() != null ? userProfile.getDisplayName() : "");
-        emailField.setText(userProfile.getEmail() != null ? userProfile.getEmail() : "");
+        // Populate the fields
+        nomField.setText(userProfile.getNom());
+        prenomField.setText(userProfile.getPrenom());
+        emailField.setText(userProfile.getEmail());
         if (userProfile.getBirthday() != null) {
             birthdayPicker.setValue(userProfile.getBirthday());
         }
+        telField.setText(String.valueOf(userProfile.getTel()));
+        addresseField.setText(userProfile.getAddresse());
 
-        // Display existing profile image
         if (userProfile.getPictureUrl() != null && !userProfile.getPictureUrl().isEmpty()) {
             profileImage.setImage(new Image(userProfile.getPictureUrl(), true));
         }
     }
 
-    private void makeProfileImageCircular() {
-        double radius = profileImage.getFitWidth() / 2;
-        Circle clip = new Circle(radius, radius, radius);
-        profileImage.setClip(clip);
-    }
-
-
-    /**
-     * Opens a file chooser to select an image (but does not upload yet).
-     */
     @FXML
     private void handleUploadImage() {
         FileChooser fileChooser = new FileChooser();
@@ -80,25 +73,31 @@ public class ProfileController {
         selectedImageFile = fileChooser.showOpenDialog(uploadImageButton.getScene().getWindow());
 
         if (selectedImageFile != null) {
-            System.out.println("Selected file: " + selectedImageFile.getAbsolutePath());
-            profileImage.setImage(new Image(selectedImageFile.toURI().toString())); // Show preview
+            profileImage.setImage(new Image(selectedImageFile.toURI().toString()));
         }
     }
 
-    /**
-     * Saves the profile (and uploads the image if a new one was selected).
-     */
     @FXML
     private void handleSaveProfile() {
-        userProfile.setDisplayName(displayNameField.getText().trim());
+        userProfile.setNom(nomField.getText().trim());
+        userProfile.setPrenom(prenomField.getText().trim());
         userProfile.setEmail(emailField.getText().trim());
+
         if (birthdayPicker.getValue() != null) {
             userProfile.setBirthday(birthdayPicker.getValue());
         } else {
             userProfile.setBirthday(null);
         }
 
-        // Save profile and upload image if needed
+        // Parse and set the telephone number
+        try {
+            int tel = Integer.parseInt(telField.getText().trim());
+            userProfile.setTel(tel);
+        } catch (NumberFormatException e) {
+            userProfile.setTel(0);
+        }
+        userProfile.setAddresse(addresseField.getText().trim());
+
         boolean success = profileService.createOrUpdateProfile(userProfile, selectedImageFile);
         if (success) {
             NotificationUtil.showNotification(
@@ -114,5 +113,4 @@ public class ProfileController {
             );
         }
     }
-
 }
