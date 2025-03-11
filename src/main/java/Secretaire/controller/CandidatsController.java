@@ -12,7 +12,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
@@ -32,7 +31,7 @@ public class CandidatsController {
     @FXML private TableColumn<DossierCandidat, String> colPrenom;
     @FXML private TableColumn<DossierCandidat, String> colEmail;
     @FXML private TableColumn<DossierCandidat, LocalDate> colJoinDate;
-    @FXML private TableColumn<DossierCandidat, Void> colInspect;
+    // Removed the colInspect column
 
     private ObservableList<DossierCandidat> dossierList;
     private final DossierCandidatService dossierService = new DossierCandidatService();
@@ -44,24 +43,6 @@ public class CandidatsController {
     @FXML
     public void initialize() {
         refreshCandidates();
-
-        // Use a custom style class for the Inspect button
-        colInspect.setCellFactory(param -> new TableCell<>() {
-            private final Button btn = new Button("Inspect");
-            {
-                // Add our custom style class
-                btn.getStyleClass().add("inspect-button");
-                btn.setOnAction(event -> {
-                    DossierCandidat dossier = getTableView().getItems().get(getIndex());
-                    inspectCandidate(dossier);
-                });
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : btn);
-            }
-        });
 
         btnAddCandidate.setOnAction(event -> openAddCandidatePage());
     }
@@ -82,21 +63,21 @@ public class CandidatsController {
 
         colNom.setCellValueFactory(cellData -> {
             int candidateId = cellData.getValue().getCandidateId();
-            var profile = profileMap.get(candidateId);
+            Profile profile = profileMap.get(candidateId);
             String nom = (profile != null) ? profile.getNom() : "N/A";
             return new SimpleObjectProperty<>(nom);
         });
 
         colPrenom.setCellValueFactory(cellData -> {
             int candidateId = cellData.getValue().getCandidateId();
-            var profile = profileMap.get(candidateId);
+            Profile profile = profileMap.get(candidateId);
             String prenom = (profile != null) ? profile.getPrenom() : "N/A";
             return new SimpleObjectProperty<>(prenom);
         });
 
         colEmail.setCellValueFactory(cellData -> {
             int candidateId = cellData.getValue().getCandidateId();
-            var profile = profileMap.get(candidateId);
+            Profile profile = profileMap.get(candidateId);
             String email = (profile != null) ? profile.getEmail() : "N/A";
             return new SimpleObjectProperty<>(email);
         });
@@ -108,17 +89,12 @@ public class CandidatsController {
         });
     }
 
-    private void inspectCandidate(DossierCandidat dossier) {
-        // Show candidate details or open a new page
-        System.out.println("Inspecting candidate with ID: " + dossier.getCandidateId());
-    }
-
     private void openAddCandidatePage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddCandidate.fxml"));
             Parent addCandidatePage = loader.load();
             Parent root = btnAddCandidate.getScene().getRoot();
-            var contentArea = (StackPane) root.lookup("#contentArea");
+            StackPane contentArea = (StackPane) root.lookup("#contentArea");
             if (contentArea != null) {
                 contentArea.getChildren().setAll(addCandidatePage);
             } else {

@@ -66,16 +66,24 @@ public class AddCandidateController {
         // Initialize permis type drop-down with example values
         permisTypeComboBox.getItems().addAll("A", "B", "C");
 
-        // Add listeners to remove error styling when the user starts typing/changes value
+        // Add listeners to remove error styling when the user starts typing/changes value for text fields
         addClearErrorListener(usernameField, usernameError);
         addClearErrorListener(passwordField, passwordError);
         addClearErrorListener(firstNameField, firstNameError);
         addClearErrorListener(lastNameField, lastNameError);
         addClearErrorListener(emailField, emailError);
-        birthdayPicker.valueProperty().addListener((obs, oldVal, newVal) -> birthdayError.setText(""));
+
+        // For DatePicker and ComboBox, clear error style as well as error label
+        birthdayPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+            birthdayPicker.getStyleClass().remove("error");
+            birthdayError.setText("");
+        });
         addClearErrorListener(phoneField, phoneError);
         addClearErrorListener(addressField, addressError);
-        permisTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> permisTypeError.setText(""));
+        permisTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            permisTypeComboBox.getStyleClass().remove("error");
+            permisTypeError.setText("");
+        });
 
         // File chooser handlers also clear errors on valid selection
         btnChooseCIN.setOnAction(event -> {
