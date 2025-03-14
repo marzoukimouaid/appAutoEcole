@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.ScrollPane?>
+<StackPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.AddVehiculeController"
+           styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
+    <children>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent;">
+            <content>
+                <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+                    <!-- Header -->
+                    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-container">
+                        <VBox alignment="CENTER_LEFT">
+                            <Label text="Ajouter un Véhicule" styleClass="header-title"/>
+                            <Label text="Complétez le formulaire pour ajouter un nouveau véhicule" styleClass="header-subtitle"/>
+                        </VBox>
+                    </HBox>
+                    <!-- Main Card Container -->
+                    <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="600">
+                        <padding>
+                            <Insets top="30" right="30" bottom="30" left="30"/>
+                        </padding>
+                        <!-- Form Grid with three columns: label, input, error -->
+                        <GridPane hgap="15" vgap="10" alignment="CENTER">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="150" />
+                                <ColumnConstraints minWidth="200" />
+                                <ColumnConstraints minWidth="200" />
+                            </columnConstraints>
+                            <!-- Immatriculation -->
+                            <Label text="Immatriculation:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="immatriculationField" promptText="xxxTunisxxxx" styleClass="input-field"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label fx:id="immatriculationError" textFill="red" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                            <!-- Marque -->
+                            <Label text="Marque:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="marqueField" promptText="Marque du véhicule" styleClass="input-field"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label fx:id="marqueError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                            <!-- Date de mise en service -->
+                            <Label text="Date de mise en service:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <DatePicker fx:id="dateMiseEnServicePicker" styleClass="input-field"
+                                        GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label fx:id="dateMiseEnServiceError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                            <!-- Kilométrage Total -->
+                            <Label text="Kilométrage Total:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="kilometrageTotalField" promptText="Kilométrage total" styleClass="input-field"
+                                       GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label fx:id="kilometrageTotalError" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                            <!-- Km Restant pour entretien -->
+                            <Label text="Km restant pour entretien:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                            <TextField fx:id="kmRestantField" promptText="Km restant pour le prochain entretien" styleClass="input-field"
+                                       GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                            <Label fx:id="kmRestantError" textFill="red" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+                            <!-- Type de véhicule -->
+                            <Label text="Type de véhicule:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="vehiculeTypeComboBox" promptText="Sélectionnez le type" styleClass="input-field"
+                                      GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                            <Label fx:id="vehiculeTypeError" textFill="red" GridPane.rowIndex="5" GridPane.columnIndex="2"/>
+                        </GridPane>
+                        <!-- Action Button -->
+                        <HBox alignment="CENTER" spacing="20">
+                            <Button fx:id="btnSubmit" text="Ajouter Véhicule" styleClass="primary-button"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </children>
+</StackPane>

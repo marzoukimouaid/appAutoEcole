@@ -806,6 +806,93 @@
     -fx-text-fill: white;
 }
 
+.search-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #2575FC;
+    -fx-border-width: 2;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-text-fill: #2575FC;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 15;
+    -fx-cursor: hand;
+}
+
+.search-button:hover {
+    -fx-background-color: #2575FC;
+    -fx-background-radius: 20;    /* ensures rounded background */
+    -fx-border-radius: 20;         /* ensures rounded border */
+    -fx-text-fill: white;
+    -fx-border-color: #2575FC;
+}
+
+.search-button:pressed {
+    -fx-background-color: #1f6dd3;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-text-fill: white;
+    -fx-border-color: #1f6dd3;
+}
+.search-field {
+    -fx-background-color: #fff;
+    -fx-background-radius: 20;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-prompt-text-fill: #999;
+    -fx-padding: 8 16;
+    -fx-font-size: 14px;
+}
+
+.search-field:focused {
+    -fx-border-color: linear-gradient(to right, #6A11CB, #2575FC);
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(106,17,203,0.3), 8, 0.3, 0, 2);
+}
+
+
+/* Existing styles … */
+
+/* Custom style for the Inspect button */
+.inspect-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #2575FC;    /* Blue border matching the left panel tab color */
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #2575FC;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-cursor: hand;
+}
+.inspect-button:hover {
+    -fx-background-color: #2575FC;
+    -fx-text-fill: white;
+}
+
+/* Custom style for the Delete button */
+.delete-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #D9534F;    /* Red border */
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #D9534F;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-cursor: hand;
+}
+.delete-button:hover {
+    -fx-background-color: #D9534F;
+    -fx-text-fill: white;
+}
+
+/* Existing styles for search-field and primary-button remain unchanged */
+/* … */
+
 
 
 

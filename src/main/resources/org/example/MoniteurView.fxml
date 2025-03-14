@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/8"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.MoniteurViewController"
+            stylesheets="@style.css"
+            prefWidth="800" prefHeight="600">
+
+    <VBox layoutX="20" layoutY="20" spacing="20">
+        <!-- Header: Title -->
+        <HBox spacing="10">
+            <Label fx:id="lblTitle" text="Moniteur Details" styleClass="title"/>
+        </HBox>
+
+        <GridPane hgap="20" vgap="15">
+            <!-- Left side: an optional profile photo -->
+            <VBox spacing="10" GridPane.columnIndex="0">
+                <Label text="Profile Photo:" styleClass="subtitle"/>
+                <ImageView fx:id="imgProfile" fitWidth="150" fitHeight="150" preserveRatio="true"/>
+            </VBox>
+
+            <!-- Right side: textual details -->
+            <VBox spacing="10" GridPane.columnIndex="1">
+                <Label text="Name:" styleClass="subtitle"/>
+                <Label fx:id="lblName" text="N/A"/>
+
+                <Label text="Email:" styleClass="subtitle"/>
+                <Label fx:id="lblEmail" text="N/A"/>
+
+                <Label text="Birthday:" styleClass="subtitle"/>
+                <Label fx:id="lblBirthday" text="N/A"/>
+
+                <Label text="Phone:" styleClass="subtitle"/>
+                <Label fx:id="lblPhone" text="N/A"/>
+
+                <Label text="Address:" styleClass="subtitle"/>
+                <Label fx:id="lblAddress" text="N/A"/>
+
+                <Label text="Permis Type:" styleClass="subtitle"/>
+                <Label fx:id="lblPermisType" text="N/A"/>
+            </VBox>
+        </GridPane>
+    </VBox>
+</AnchorPane>

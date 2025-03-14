@@ -5,61 +5,77 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="Secretaire.controller.CandidatsController"
-            styleClass="root">
-    <!-- Top Header -->
-    <top>
-        <HBox spacing="20" style="-fx-background-color: #ffffff; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-            <Label text="Candidates Dashboard" styleClass="title"/>
-        </HBox>
-    </top>
-
-    <!-- Center Content -->
-    <center>
-        <VBox spacing="20">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-
-            <!-- Top Controls: Add Candidate button and Total Candidates card -->
-            <VBox spacing="20">
-                <Button fx:id="btnAddCandidate" text="Add New Candidate" styleClass="primary-button">
-                    <VBox.margin>
-                        <Insets top="10" bottom="10"/>
-                    </VBox.margin>
-                </Button>
-                <VBox styleClass="card" spacing="10" maxWidth="200">
+<!-- Top-level StackPane so that the controller’s rootPane is non-null -->
+<StackPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.CandidatsController"
+           styleClass="root">
+    <children>
+        <BorderPane>
+            <!-- Top Header -->
+            <top>
+                <HBox spacing="20"
+                      style="-fx-background-color: #ffffff; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);">
                     <padding>
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
-                    <Label text="Total Candidates" styleClass="subtitle"/>
-                    <Label fx:id="totalCandidatesLabel" text="0" styleClass="stats-card-value"/>
-                </VBox>
-            </VBox>
+                    <Label text="Candidates Dashboard" styleClass="title"/>
+                </HBox>
+            </top>
+            <!-- Center Content -->
+            <center>
+                <VBox spacing="20">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <!-- Search Row -->
+                    <HBox spacing="15" alignment="BASELINE_CENTER">
+                        <VBox spacing="2" alignment="CENTER_LEFT">
+                            <TextField fx:id="searchField" promptText="Search by name or prenom..." styleClass="search-field"/>
+                            <!-- Inline error message for search input -->
+                            <Label fx:id="searchError" textFill="red"/>
+                        </VBox>
+                        <Button fx:id="btnSearch" text="Search" styleClass="primary-button"/>
+                    </HBox>
 
-            <!-- Recently Added Candidates Table -->
-            <VBox spacing="10">
-                <Label text="Recently Added Candidates" styleClass="section-title"/>
-                <TableView fx:id="recentCandidatesTable" styleClass="activity-table" prefHeight="300">
-                    <VBox.margin>
-                        <Insets top="10" bottom="10"/>
-                    </VBox.margin>
-                    <columns>
-                        <TableColumn fx:id="colNom" text="Nom" prefWidth="100"/>
-                        <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="100"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
-                        <TableColumn fx:id="colJoinDate" text="Join Date" prefWidth="120"/>
-                    </columns>
-                </TableView>
-            </VBox>
-        </VBox>
-    </center>
-</BorderPane>
+                    <!-- Top Controls -->
+                    <VBox spacing="20">
+                        <Button fx:id="btnAddCandidate" text="Add New Candidate" styleClass="primary-button">
+                            <VBox.margin>
+                                <Insets top="10" bottom="10"/>
+                            </VBox.margin>
+                        </Button>
+                        <VBox styleClass="card" spacing="10" maxWidth="200">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="Total Candidates" styleClass="subtitle"/>
+                            <Label fx:id="totalCandidatesLabel" text="0" styleClass="stats-card-value"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Recently Added Candidates Table -->
+                    <VBox spacing="10">
+                        <Label text="Recently Added Candidates" styleClass="section-title"/>
+                        <TableView fx:id="recentCandidatesTable" styleClass="activity-table" prefHeight="300">
+                            <VBox.margin>
+                                <Insets top="10" bottom="10"/>
+                            </VBox.margin>
+                            <columns>
+                                <TableColumn fx:id="colNom" text="Nom" prefWidth="100"/>
+                                <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="100"/>
+                                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                                <TableColumn fx:id="colJoinDate" text="Join Date" prefWidth="120"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+            </center>
+        </BorderPane>
+    </children>
+</StackPane>

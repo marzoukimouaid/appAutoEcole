@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.AddDocumentController"
+           fx:id="rootPane"
+           stylesheets="@style.css"
+           prefWidth="600" prefHeight="480">
+
+    <!-- ScrollPane so the form won't be cropped -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
+        <content>
+            <!-- Outer container -->
+            <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+
+                <!-- Optional header area -->
+                <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 20;">
+                    <VBox alignment="CENTER_LEFT">
+                        <Label text="Ajouter un Document" styleClass="header-title"/>
+                        <Label text="Complétez les informations pour créer un nouveau document" styleClass="header-subtitle"/>
+                    </VBox>
+                </HBox>
+
+                <!-- "Card" with the form -->
+                <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="600">
+                    <padding>
+                        <Insets top="30" right="30" bottom="30" left="30"/>
+                    </padding>
+
+                    <!-- Grid with 3 columns: label, input, error -->
+                    <GridPane hgap="20" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="120" />
+                            <ColumnConstraints minWidth="200" />
+                            <ColumnConstraints minWidth="200" />
+                        </columnConstraints>
+
+                        <!-- Row 0: Doc Type -->
+                        <Label text="Type :" styleClass="subtitle" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="comboDocType" styleClass="input-field" promptText="Sélectionner le type"
+                                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <!-- No error label needed for docType unless you want one -->
+
+                        <!-- Row 1: Date Obtention -->
+                        <Label text="Date Obtention :" styleClass="subtitle"
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <DatePicker fx:id="dateObtention" styleClass="input-field"
+                                    GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label fx:id="dateObtError" textFill="red"
+                               GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                        <!-- Row 2: Date Expiration -->
+                        <Label text="Date Expiration :" styleClass="subtitle"
+                               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <DatePicker fx:id="dateExpiration" styleClass="input-field"
+                                    GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label fx:id="dateExpError" textFill="red"
+                               GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+                        <!-- Row 3: Scanned Doc as image file -->
+                        <Label text="Document scanné :" styleClass="subtitle"
+                               GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <Button fx:id="btnChooseDoc" text="Choisir le fichier" styleClass="file-button"
+                                GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label fx:id="docError" textFill="red"
+                               GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+
+                        <!-- Row 4: Cost -->
+                        <Label text="Coût :" styleClass="subtitle"
+                               GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCost" styleClass="input-field"
+                                   promptText="ex: 100.00"
+                                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label fx:id="costError" textFill="red"
+                               GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+                    </GridPane>
+
+                    <!-- Only one button: “Valider” -->
+                    <HBox alignment="CENTER">
+                        <Button fx:id="btnSubmit" text="Valider" styleClass="primary-button"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+</StackPane>

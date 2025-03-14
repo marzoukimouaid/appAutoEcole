@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.VehiculeViewController"
+           fx:id="rootPane"
+           stylesheets="@style.css"
+           prefWidth="800" prefHeight="600">
+
+    <!-- ScrollPane for a modern, sleek scroll, preventing content from being cut off -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
+
+        <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+            <!-- Header Title -->
+            <Label fx:id="lblTitle" text="Détails du Véhicule" styleClass="title" />
+
+            <!-- Grid with main vehicle info -->
+            <GridPane hgap="20" vgap="15" alignment="CENTER">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <!-- Row 0 -->
+                <Label text="Immatriculation:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label fx:id="lblImmatriculation" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                <!-- Row 1 -->
+                <Label text="Marque:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label fx:id="lblMarque" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                <!-- Row 2 -->
+                <Label text="Date de mise en service:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label fx:id="lblDateMiseEnService" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                <!-- Row 3 -->
+                <Label text="Kilométrage total:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <Label fx:id="lblKilometrage" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                <!-- Row 4 -->
+                <Label text="Km restant entretien:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <Label fx:id="lblKmRestant" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                <!-- Row 5 -->
+                <Label text="Type:" styleClass="subtitle"
+                       GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                <Label fx:id="lblType" styleClass="subtitle"
+                       GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            </GridPane>
+
+            <!-- Buttons for adding Document & Maintenance -->
+            <HBox alignment="CENTER" spacing="12">
+                <Button fx:id="btnAddDocument" text="Ajouter un Document" styleClass="primary-button"/>
+                <Button fx:id="btnAddMaintenance" text="Ajouter un Entretien" styleClass="primary-button"/>
+            </HBox>
+
+            <!-- DOCUMENTS SECTION -->
+            <Label text="Documents Récents" styleClass="subtitle"/>
+            <TableView fx:id="tableDocuments" prefHeight="180" maxHeight="180" />
+
+            <!-- MAINTENANCE SECTION -->
+            <Label text="Historique de Maintenance" styleClass="subtitle"/>
+            <TableView fx:id="tableMaintenance" prefHeight="180" maxHeight="180" />
+
+            <!-- AnchorPane for embedding forms (like AddDocument) in the same screen, if desired -->
+            <AnchorPane fx:id="docFormContainer" prefHeight="250" minHeight="200"/>
+        </VBox>
+    </ScrollPane>
+</StackPane>

@@ -6,7 +6,7 @@
 <HBox fx:id="root"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="AutoEcole.controller.NotificationController"
+      fx:controller="controller.NotificationController"
       alignment="CENTER_LEFT"
       spacing="10"
       maxWidth="400" minWidth="400"

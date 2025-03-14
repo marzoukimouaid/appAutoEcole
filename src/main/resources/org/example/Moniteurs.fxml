@@ -5,58 +5,76 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="Secretaire.controller.MoniteursController"
-            styleClass="root">
-    <!-- Top Header -->
-    <top>
-        <HBox spacing="20" style="-fx-background-color: #ffffff; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-            <Label text="Moniteurs Dashboard" styleClass="title"/>
-        </HBox>
-    </top>
-    <!-- Center Content -->
-    <center>
-        <VBox spacing="20">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-            <!-- Top Controls: Add Moniteur button and Total Moniteurs card -->
-            <VBox spacing="20">
-                <Button fx:id="btnAddMoniteur" text="Add New Moniteur" styleClass="primary-button">
-                    <VBox.margin>
-                        <Insets top="10" bottom="10"/>
-                    </VBox.margin>
-                </Button>
-                <VBox styleClass="card" spacing="10" maxWidth="200">
+<StackPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.MoniteursController"
+           styleClass="root">
+    <children>
+        <BorderPane>
+            <!-- Top Header -->
+            <top>
+                <HBox spacing="20"
+                      style="-fx-background-color: #ffffff; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.3, 0, 2);">
                     <padding>
                         <Insets top="20" right="20" bottom="20" left="20"/>
                     </padding>
-                    <Label text="Total Moniteurs" styleClass="subtitle"/>
-                    <Label fx:id="totalMoniteursLabel" text="0" styleClass="stats-card-value"/>
+                    <Label text="Moniteurs Dashboard" styleClass="title"/>
+                </HBox>
+            </top>
+            <!-- Center Content -->
+            <center>
+                <VBox spacing="20">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+
+                    <!-- Search Bar with inline error -->
+                    <HBox spacing="15" alignment="BASELINE_CENTER">
+                        <VBox spacing="2">
+                            <TextField fx:id="searchField" promptText="Rechercher par nom ou prénom..." styleClass="search-field"/>
+                            <Label fx:id="searchError" textFill="red"/>
+                        </VBox>
+                        <Button fx:id="btnSearch" text="Chercher" styleClass="primary-button"/>
+                    </HBox>
+
+                    <!-- Top Controls -->
+                    <VBox spacing="20">
+                        <Button fx:id="btnAddMoniteur" text="Add New Moniteur" styleClass="primary-button">
+                            <VBox.margin>
+                                <Insets top="10" bottom="10"/>
+                            </VBox.margin>
+                        </Button>
+                        <VBox styleClass="card" spacing="10" maxWidth="200">
+                            <padding>
+                                <Insets top="20" right="20" bottom="20" left="20"/>
+                            </padding>
+                            <Label text="Total Moniteurs" styleClass="subtitle"/>
+                            <Label fx:id="totalMoniteursLabel" text="0" styleClass="stats-card-value"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Recently Added Moniteurs Table -->
+                    <VBox spacing="10">
+                        <Label text="Recently Added Moniteurs" styleClass="section-title"/>
+                        <TableView fx:id="recentMoniteursTable" styleClass="activity-table" prefHeight="300">
+                            <VBox.margin>
+                                <Insets top="10" bottom="10"/>
+                            </VBox.margin>
+                            <columns>
+                                <TableColumn fx:id="colNom" text="Nom" prefWidth="100"/>
+                                <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="100"/>
+                                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                                <TableColumn fx:id="colPermis" text="Permis Type" prefWidth="120"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
                 </VBox>
-            </VBox>
-            <!-- Recently Added Moniteurs Table -->
-            <VBox spacing="10">
-                <Label text="Recently Added Moniteurs" styleClass="section-title"/>
-                <TableView fx:id="recentMoniteursTable" styleClass="activity-table" prefHeight="300">
-                    <VBox.margin>
-                        <Insets top="10" bottom="10"/>
-                    </VBox.margin>
-                    <columns>
-                        <TableColumn fx:id="colNom" text="Nom" prefWidth="100"/>
-                        <TableColumn fx:id="colPrenom" text="Prénom" prefWidth="100"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
-                        <TableColumn fx:id="colPermis" text="Permis Type" prefWidth="120"/>
-                    </columns>
-                </TableView>
-            </VBox>
-        </VBox>
-    </center>
-</BorderPane>
+            </center>
+        </BorderPane>
+    </children>
+</StackPane>
