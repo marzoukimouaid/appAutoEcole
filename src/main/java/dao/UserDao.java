@@ -4,24 +4,20 @@ import Utils.ConnexionDB;
 import entite.User;
 import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDao {
     private static final Connection conn = ConnexionDB.getInstance();
 
     /**
      * Authenticate user by verifying the hashed password.
-     *
-     * @param username The username provided by the user.
-     * @param password The raw password entered by the user.
-     * @return A User object if authentication is successful, otherwise null.
      */
     public User getUserByUsernameAndPassword(String username, String password) {
         String sql = "SELECT id, username, password, role FROM users WHERE username = ?";
-
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 String storedHash = rs.getString("password");
                 if (BCrypt.checkpw(password, storedHash)) {
@@ -40,20 +36,13 @@ public class UserDao {
 
     /**
      * Create a new user with a hashed password.
-     *
-     * @param username The username to create.
-     * @param password The raw password to be hashed and stored.
-     * @param role     The role of the user (secretaire, candidat, ingenieur).
-     * @return True if the user was created successfully, otherwise false.
      */
     public boolean createUser(String username, String password, String role) {
         if (userExists(username)) {
             return false; // Prevent duplicate usernames
         }
-
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.setString(2, hashedPassword);
@@ -68,9 +57,6 @@ public class UserDao {
 
     /**
      * Check if a user already exists in the database.
-     *
-     * @param username The username to check.
-     * @return True if the user exists, otherwise false.
      */
     private boolean userExists(String username) {
         String sql = "SELECT username FROM users WHERE username = ?";
@@ -100,9 +86,6 @@ public class UserDao {
 
     /**
      * Deletes a user by their id.
-     *
-     * @param userId The id of the user.
-     * @return true if deletion was successful; false otherwise.
      */
     public boolean deleteUserById(int userId) {
         String sql = "DELETE FROM users WHERE id = ?";
@@ -113,5 +96,28 @@ public class UserDao {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * NEW: Retrieves all users having the given role.
+     */
+    public List<User> getUsersByRole(String role) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT id, username, role FROM users WHERE role = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, role);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("role")
+                );
+                users.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
     }
 }

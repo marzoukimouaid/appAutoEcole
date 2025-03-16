@@ -12,13 +12,18 @@ public class DossierCandidat {
     private int candidateId;
     private String permisType;
 
+    // New fields for the number of sessions
+    private int nombreSeancesConduite;
+    private int nombreSeancesCode;
+
     // Default constructor
     public DossierCandidat() {
     }
 
-    // Constructor without id (for creation, as id is auto-generated)
+    // Constructor without id (for creation)
     public DossierCandidat(String cinUrl, String certificatMedicalUrl, String photoIdentiteUrl,
-                           LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType) {
+                           LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType,
+                           int nombreSeancesConduite, int nombreSeancesCode) {
         this.cinUrl = cinUrl;
         this.certificatMedicalUrl = certificatMedicalUrl;
         this.photoIdentiteUrl = photoIdentiteUrl;
@@ -26,11 +31,14 @@ public class DossierCandidat {
         this.updatedAt = updatedAt;
         this.candidateId = candidateId;
         this.permisType = permisType;
+        this.nombreSeancesConduite = nombreSeancesConduite;
+        this.nombreSeancesCode = nombreSeancesCode;
     }
 
     // Full constructor with id
     public DossierCandidat(int id, String cinUrl, String certificatMedicalUrl, String photoIdentiteUrl,
-                           LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType) {
+                           LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType,
+                           int nombreSeancesConduite, int nombreSeancesCode) {
         this.id = id;
         this.cinUrl = cinUrl;
         this.certificatMedicalUrl = certificatMedicalUrl;
@@ -39,6 +47,8 @@ public class DossierCandidat {
         this.updatedAt = updatedAt;
         this.candidateId = candidateId;
         this.permisType = permisType;
+        this.nombreSeancesConduite = nombreSeancesConduite;
+        this.nombreSeancesCode = nombreSeancesCode;
     }
 
     // Getters and setters
@@ -89,5 +99,17 @@ public class DossierCandidat {
     }
     public void setPermisType(String permisType) {
         this.permisType = permisType;
+    }
+    public int getNombreSeancesConduite() {
+        return nombreSeancesConduite;
+    }
+    public void setNombreSeancesConduite(int nombreSeancesConduite) {
+        this.nombreSeancesConduite = nombreSeancesConduite;
+    }
+    public int getNombreSeancesCode() {
+        return nombreSeancesCode;
+    }
+    public void setNombreSeancesCode(int nombreSeancesCode) {
+        this.nombreSeancesCode = nombreSeancesCode;
     }
 }

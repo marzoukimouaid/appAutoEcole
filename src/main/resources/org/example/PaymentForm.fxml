@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.PaymentFormController"
+           fx:id="rootPane">
+    <children>
+        <VBox alignment="CENTER" spacing="10" styleClass="card" maxWidth="500">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label text="Informations de paiement" styleClass="title"/>
+
+            <!-- Cardholder Name -->
+            <VBox spacing="5" alignment="CENTER_LEFT">
+                <HBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Nom sur la carte:"/>
+                    <TextField fx:id="cardholderNameField" promptText="Nom complet" styleClass="input-field"/>
+                </HBox>
+                <Label fx:id="cardholderNameError" textFill="red"/>
+            </VBox>
+
+            <!-- Card Number -->
+            <VBox spacing="5" alignment="CENTER_LEFT">
+                <HBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Numéro de carte:"/>
+                    <TextField fx:id="cardNumberField" promptText="16 chiffres" styleClass="input-field"/>
+                </HBox>
+                <Label fx:id="cardNumberError" textFill="red"/>
+            </VBox>
+
+            <!-- Expiration Date and CVV -->
+            <VBox spacing="5" alignment="CENTER_LEFT">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <VBox spacing="3">
+                        <Label text="Date d'expiration:"/>
+                        <HBox spacing="3">
+                            <ComboBox fx:id="expiryMonthCombo" promptText="Mois" styleClass="input-field"/>
+                            <ComboBox fx:id="expiryYearCombo" promptText="Année" styleClass="input-field"/>
+                        </HBox>
+                    </VBox>
+                    <VBox spacing="3">
+                        <Label text="CVV:"/>
+                        <TextField fx:id="cvvField" promptText="CVV" styleClass="input-field" maxWidth="80"/>
+                    </VBox>
+                </HBox>
+                <Label fx:id="expiryError" textFill="red"/>
+                <Label fx:id="cvvError" textFill="red"/>
+            </VBox>
+
+            <!-- Billing Address -->
+            <VBox spacing="5" alignment="CENTER_LEFT">
+                <HBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Adresse de facturation:"/>
+                    <TextField fx:id="billingAddressField" promptText="Adresse" styleClass="input-field"/>
+                </HBox>
+                <Label fx:id="billingAddressError" textFill="red"/>
+            </VBox>
+
+            <!-- Confirm Payment Button -->
+            <Button fx:id="confirmButton"
+                    text="Confirmer le paiement"
+                    styleClass="primary-button"
+                    onAction="#handleConfirmPayment"/>
+        </VBox>
+    </children>
+</StackPane>

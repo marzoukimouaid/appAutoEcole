@@ -12,40 +12,40 @@ public class AutoEcoleDao {
 
     private static final Connection conn = ConnexionDB.getInstance();
 
-    public void initializeAutoEcole(String name, String address, String phone, String email) {
-        String sql = "INSERT INTO auto_ecole (name, address, telephone, email) VALUES (?, ?, ?, ?)";
-
+    // Updated method with two new parameters: prixSeanceConduit and prixSeanceCode.
+    public void initializeAutoEcole(String name, String address, String phone, String email,
+                                    double prixSeanceConduit, double prixSeanceCode) {
+        String sql = "INSERT INTO auto_ecole (name, address, telephone, email, prix_seance_conduit, prix_seance_code) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, name);
             stmt.setString(2, address);
             stmt.setString(3, phone);
             stmt.setString(4, email);
-
+            stmt.setDouble(5, prixSeanceConduit);
+            stmt.setDouble(6, prixSeanceCode);
             stmt.executeUpdate();
             System.out.println("Auto-école enregistrée avec succès !");
-
         } catch (SQLException e) {
             System.out.println("Erreur lors de l'insertion : " + e.getMessage());
         }
     }
 
-
-
-
-
     public List<String[]> fetchAutoEcoleData() {
         List<String[]> dataList = new ArrayList<>();
-        String sql = "SELECT name, address, telephone, email FROM auto_ecole";
+        String sql = "SELECT name, address, telephone, email, prix_seance_conduit, prix_seance_code FROM auto_ecole";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                String[] rowData = new String[4];
+                String[] rowData = new String[6];
                 rowData[0] = rs.getString("name");
                 rowData[1] = rs.getString("address");
                 rowData[2] = rs.getString("telephone");
                 rowData[3] = rs.getString("email");
+                rowData[4] = rs.getString("prix_seance_conduit");
+                rowData[5] = rs.getString("prix_seance_code");
                 dataList.add(rowData);
             }
 
@@ -54,6 +54,4 @@ public class AutoEcoleDao {
         }
         return dataList;
     }
-
-
 }

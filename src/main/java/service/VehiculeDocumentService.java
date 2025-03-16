@@ -8,16 +8,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Service layer for VehiculeDocument,
- * now includes 'cost' in the entity if the user sets it.
+ * Service layer for VehiculeDocument.
  */
 public class VehiculeDocumentService {
 
     private final VehiculeDocumentDao documentDao = new VehiculeDocumentDao();
 
     public boolean createDocument(VehiculeDocument doc) {
-        // Potentially validate cost here (e.g. cost >= 0)
-        // Then pass doc to the DAO
         return documentDao.create(doc);
     }
 
@@ -34,7 +31,6 @@ public class VehiculeDocumentService {
     }
 
     public boolean updateDocument(VehiculeDocument doc) {
-        // Again, could validate cost if needed
         return documentDao.update(doc);
     }
 
@@ -43,13 +39,16 @@ public class VehiculeDocumentService {
     }
 
     /**
-     * Finds documents that will expire within the next 'daysAhead' days.
+     * Finds documents that will expire within the next 'daysAhead' days
+     * and that have not been notified yet.
      */
     public List<VehiculeDocument> findDocumentsExpiringSoon(int daysAhead) {
         LocalDate threshold = LocalDate.now().plusDays(daysAhead);
         return documentDao.findAll()
                 .stream()
-                .filter(d -> d.getDateExpiration() != null && d.getDateExpiration().isBefore(threshold))
+                .filter(d -> d.getDateExpiration() != null
+                        && !d.getDateExpiration().isAfter(threshold)
+                        && !d.isNotified())
                 .collect(Collectors.toList());
     }
 }

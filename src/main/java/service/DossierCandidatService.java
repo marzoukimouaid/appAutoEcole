@@ -5,7 +5,6 @@ import dao.ProfileDao;
 import dao.UserDao;
 import Utils.ImgBBUtil;
 import entite.DossierCandidat;
-
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,22 +13,20 @@ import java.util.Optional;
 public class DossierCandidatService {
 
     private final DossierCandidatDao dossierDao = new DossierCandidatDao();
-    private final ProfileDao profileDao = new ProfileDao(); // Added for profile deletion
-    private final UserDao userDao = new UserDao();           // Added for user deletion
+    private final ProfileDao profileDao = new ProfileDao(); // For profile deletion
+    private final UserDao userDao = new UserDao();           // For user deletion
 
     /**
      * Creates a new dossier candidat. It uploads images (if provided) to ImgBB and sets their URLs.
-     * All three files (CIN, certificat, photo) are required.
-     * If any upload fails, the method returns false.
      *
-     * @param dossier         The dossier candidat data (without image URLs).
-     * @param cinFile         The File for the CIN image (required).
-     * @param certificatFile  The File for the medical certificate image (required).
-     * @param photoFile       The File for the identity photo image (required).
+     * @param dossier The dossier candidat data (including new session counts).
+     * @param cinFile The File for the CIN image.
+     * @param certificatFile The File for the medical certificate image.
+     * @param photoFile The File for the identity photo image.
      * @return true if creation was successful; false otherwise.
      */
     public boolean createDossier(DossierCandidat dossier, File cinFile, File certificatFile, File photoFile) {
-        // Ensure CIN file is provided and upload is successful
+        // Upload CIN file
         if (cinFile != null) {
             String uploadedCinUrl = ImgBBUtil.uploadImageToImgBB(cinFile);
             if (uploadedCinUrl != null) {
@@ -43,7 +40,7 @@ public class DossierCandidatService {
             return false;
         }
 
-        // Ensure certificat file is provided and upload is successful
+        // Upload certificat file
         if (certificatFile != null) {
             String uploadedCertificatUrl = ImgBBUtil.uploadImageToImgBB(certificatFile);
             if (uploadedCertificatUrl != null) {
@@ -57,7 +54,7 @@ public class DossierCandidatService {
             return false;
         }
 
-        // Ensure photo file is provided and upload is successful
+        // Upload photo file
         if (photoFile != null) {
             String uploadedPhotoUrl = ImgBBUtil.uploadImageToImgBB(photoFile);
             if (uploadedPhotoUrl != null) {
@@ -83,9 +80,6 @@ public class DossierCandidatService {
 
     /**
      * Retrieves the dossier candidat for a given candidate.
-     *
-     * @param candidateId The candidate's id.
-     * @return An Optional containing the dossier if found; otherwise, empty.
      */
     public Optional<DossierCandidat> getDossierByCandidateId(int candidateId) {
         return dossierDao.getDossierCandidatByCandidateId(candidateId);
@@ -93,21 +87,13 @@ public class DossierCandidatService {
 
     /**
      * Retrieves all dossier candidats.
-     *
-     * @return A list of DossierCandidat.
      */
     public List<DossierCandidat> getAllDossiers() {
         return dossierDao.getAllDossierCandidats();
     }
 
     /**
-     * Deletes a candidate in cascade:
-     * - Deletes the dossier record,
-     * - Deletes the associated profile (by user_id),
-     * - Deletes the user record.
-     *
-     * @param candidateId The candidate's ID.
-     * @return true if all deletions are successful; false otherwise.
+     * Deletes the dossier and associated records for a candidate.
      */
     public boolean deleteCandidateCascade(int candidateId) {
         boolean dossierDeleted = dossierDao.deleteDossierCandidate(candidateId);

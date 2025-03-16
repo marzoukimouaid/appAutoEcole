@@ -2,6 +2,7 @@ package service;
 
 import dao.UserDao;
 import entite.User;
+import java.util.List;
 
 public class UserService {
     private final UserDao userDAO = new UserDao();
@@ -16,5 +17,12 @@ public class UserService {
 
     public int getUserIdByUsername(String username) {
         return userDAO.getUserIdByUsername(username);
+    }
+
+    /**
+     * NEW: Retrieves all users that have the role "secretaire".
+     */
+    public List<User> getSecretaires() {
+        return userDAO.getUsersByRole("secretaire");
     }
 }

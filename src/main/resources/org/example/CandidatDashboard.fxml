@@ -7,29 +7,24 @@
 <BorderPane fx:id="root"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controller.SecretaireController"
+            fx:controller="controller.CandidateController"
             prefWidth="1024" prefHeight="600"
             stylesheets="@style.css">
 
-    <!-- ###### LEFT SIDEBAR ###### -->
+    <!-- LEFT SIDEBAR -->
     <left>
         <VBox fx:id="sidebar" styleClass="sidebar">
             <Label fx:id="autoEcoleNameLabel" text="My Auto Ecole" styleClass="auto-ecole-label"/>
-            <Button fx:id="btnCandidats" text="Candidats" styleClass="sidebar-button" onAction="#handleCandidats"/>
-            <Button fx:id="btnMoniteurs" text="Moniteurs" styleClass="sidebar-button" onAction="#handleMoniteurs"/>
-            <Button fx:id="btnAnalytics" text="Analytics" styleClass="sidebar-button" onAction="#handleAnalytics"/>
-            <Button fx:id="btnVehicules" text="Véhicules" styleClass="sidebar-button" onAction="#handleVehicules"/>
+            <Button fx:id="btnEmploi" text="Emploi des Séances" styleClass="sidebar-button" onAction="#handleEmploi"/>
             <Button fx:id="btnPaiements" text="Paiements" styleClass="sidebar-button" onAction="#handlePaiements"/>
-            <Button fx:id="btnSeances" text="Séances" styleClass="sidebar-button" onAction="#handleSeances"/>
-            <Button fx:id="btnInscription" text="Inscription" styleClass="sidebar-button" onAction="#handleInscription"/>
         </VBox>
     </left>
 
-    <!-- ###### TOP NAVIGATION BAR ###### -->
+    <!-- TOP NAVIGATION BAR -->
     <top>
         <HBox styleClass="top-bar" spacing="15">
             <Button fx:id="btnToggleSidebar" styleClass="hamburger-button" onAction="#toggleSidebar"/>
-            <Label fx:id="pageTitle" text="Dashboard" styleClass="title"/>
+            <Label fx:id="pageTitle" text="Candidate Dashboard" styleClass="title"/>
             <Pane HBox.hgrow="ALWAYS"/>
 
             <!-- Notification MenuButton with bell icon and badge -->
@@ -37,11 +32,9 @@
                 <graphic>
                     <StackPane>
                         <FontIcon fx:id="notificationIcon" iconLiteral="fas-bell" iconSize="20"/>
-                        <!-- Unread notifications badge -->
                         <Label fx:id="notificationBadge" text="0" styleClass="notification-badge" visible="false"/>
                     </StackPane>
                 </graphic>
-                <!-- Items will be populated dynamically -->
             </MenuButton>
 
             <MenuButton fx:id="profileMenu" styleClass="profile-menu">
@@ -53,8 +46,18 @@
         </HBox>
     </top>
 
-    <!-- ###### CENTER CONTENT ###### -->
+    <!-- CENTER CONTENT -->
     <center>
-        <StackPane fx:id="contentArea" styleClass="dashboard-content"/>
+        <!-- A VBox containing (1) the dismissable banner area, (2) the main content area -->
+        <VBox fx:id="mainCenterContainer" spacing="10">
+
+            <!-- This container is hidden by default. We'll show it in code if user has unpaid payments. -->
+            <StackPane fx:id="unpaidBannerContainer" visible="false" managed="false">
+                <!-- We'll dynamically add the dismissable banner node here in CandidateController -->
+            </StackPane>
+
+            <!-- The actual main content area for Emploi/Paiements pages -->
+            <StackPane fx:id="contentArea" styleClass="dashboard-content"/>
+        </VBox>
     </center>
 </BorderPane>

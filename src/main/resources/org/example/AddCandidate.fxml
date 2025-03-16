@@ -20,7 +20,6 @@
         <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
             <content>
                 <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
-
                     <!-- Header -->
                     <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-container">
                         <VBox alignment="CENTER_LEFT">
@@ -28,13 +27,11 @@
                             <Label text="Complétez le formulaire pour créer un nouveau compte candidat" styleClass="header-subtitle"/>
                         </VBox>
                     </HBox>
-
                     <!-- Main Card Container -->
                     <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="600">
                         <padding>
                             <Insets top="30" right="30" bottom="30" left="30"/>
                         </padding>
-
                         <!-- Form Grid with three columns: label, input, error -->
                         <GridPane hgap="15" vgap="10" alignment="CENTER">
                             <columnConstraints>
@@ -42,7 +39,6 @@
                                 <ColumnConstraints minWidth="200" />
                                 <ColumnConstraints minWidth="200" />
                             </columnConstraints>
-
                             <!-- Username -->
                             <Label text="Nom d'utilisateur:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                             <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="input-field"
@@ -114,6 +110,19 @@
                             <Button fx:id="btnChoosePhoto" text="Choisir le fichier" styleClass="file-button"
                                     GridPane.rowIndex="11" GridPane.columnIndex="1"/>
                             <Label fx:id="photoError" textFill="red" GridPane.rowIndex="11" GridPane.columnIndex="2"/>
+
+                            <!-- New fields for sessions and payment mode -->
+                            <Label text="Nombre de séances conduites:" GridPane.rowIndex="12" GridPane.columnIndex="0"/>
+                            <TextField fx:id="seancesConduiteField" promptText="Ex: 10" styleClass="input-field" GridPane.rowIndex="12" GridPane.columnIndex="1"/>
+                            <Label fx:id="seancesConduiteError" textFill="red" GridPane.rowIndex="12" GridPane.columnIndex="2"/>
+
+                            <Label text="Nombre de séances code:" GridPane.rowIndex="13" GridPane.columnIndex="0"/>
+                            <TextField fx:id="seancesCodeField" promptText="Ex: 5" styleClass="input-field" GridPane.rowIndex="13" GridPane.columnIndex="1"/>
+                            <Label fx:id="seancesCodeError" textFill="red" GridPane.rowIndex="13" GridPane.columnIndex="2"/>
+
+                            <Label text="Mode de paiement:" GridPane.rowIndex="14" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="modePaiementComboBox" promptText="Choisir mode de paiement" styleClass="input-field" GridPane.rowIndex="14" GridPane.columnIndex="1"/>
+                            <Label fx:id="modePaiementError" textFill="red" GridPane.rowIndex="14" GridPane.columnIndex="2"/>
                         </GridPane>
 
                         <!-- Action Button -->

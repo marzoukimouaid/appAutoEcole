@@ -892,6 +892,22 @@
 
 /* Existing styles for search-field and primary-button remain unchanged */
 /* … */
+.notification-menu.notification-unread .notification-icon {
+    -fx-fill: red;
+}
+
+.notification-badge {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-padding: 2 4;
+    -fx-background-radius: 10;
+    -fx-min-width: 20;
+    -fx-alignment: center;
+    /* Position the badge at the top right corner */
+    -fx-translate-x: 10;
+    -fx-translate-y: -10;
+}
 
 
 

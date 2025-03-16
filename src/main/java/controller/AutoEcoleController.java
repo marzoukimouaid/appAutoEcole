@@ -16,6 +16,8 @@ public class AutoEcoleController {
 
     @FXML
     private TextField nameField, addressField, phoneField, emailField;
+    @FXML
+    private TextField prixSeanceConduitField, prixSeanceCodeField; // New fields for session prices
 
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
 
@@ -25,21 +27,27 @@ public class AutoEcoleController {
         String address = addressField.getText().trim();
         String phone = phoneField.getText().trim();
         String email = emailField.getText().trim();
+        String prixConduitStr = prixSeanceConduitField.getText().trim();
+        String prixCodeStr = prixSeanceCodeField.getText().trim();
 
-
-        if (!validateInputs(name, address, phone, email)) {
+        // Validate all fields
+        if (!validateInputs(name, address, phone, email, prixConduitStr, prixCodeStr)) {
             return;
         }
 
+        // Parse the prices
+        double prixSeanceConduit = Double.parseDouble(prixConduitStr);
+        double prixSeanceCode = Double.parseDouble(prixCodeStr);
 
-        autoEcoleService.initializeAutoEcole(name, address, phone, email);
-
+        // Pass all fields to the service layer
+        autoEcoleService.initializeAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);
 
         AlertUtils.showAlert("Succès", "L'auto-école a été initialisée avec succès.", Alert.AlertType.INFORMATION);
         switchToLoginPage();
     }
 
-    private boolean validateInputs(String name, String address, String phone, String email) {
+    private boolean validateInputs(String name, String address, String phone, String email,
+                                   String prixConduitStr, String prixCodeStr) {
         if (name.length() < 3) {
             AlertUtils.showAlert("Erreur", "Le nom doit contenir au moins 3 caractères.", Alert.AlertType.ERROR);
             return false;
@@ -56,15 +64,34 @@ public class AutoEcoleController {
             AlertUtils.showAlert("Erreur", "L'adresse e-mail n'est pas valide.", Alert.AlertType.ERROR);
             return false;
         }
+        try {
+            double prixConduit = Double.parseDouble(prixConduitStr);
+            if (prixConduit < 0) {
+                AlertUtils.showAlert("Erreur", "Le prix de la séance conduite ne peut être négatif.", Alert.AlertType.ERROR);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            AlertUtils.showAlert("Erreur", "Le prix de la séance conduite doit être un nombre valide.", Alert.AlertType.ERROR);
+            return false;
+        }
+        try {
+            double prixCode = Double.parseDouble(prixCodeStr);
+            if (prixCode < 0) {
+                AlertUtils.showAlert("Erreur", "Le prix de la séance code ne peut être négatif.", Alert.AlertType.ERROR);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            AlertUtils.showAlert("Erreur", "Le prix de la séance code doit être un nombre valide.", Alert.AlertType.ERROR);
+            return false;
+        }
         return true;
     }
 
     private void switchToLoginPage() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml")); // Update path if needed
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) nameField.getScene().getWindow(); // Get current stage
+            Stage stage = (Stage) nameField.getScene().getWindow();
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
@@ -73,6 +100,4 @@ public class AutoEcoleController {
             AlertUtils.showAlert("Erreur", "Impossible de charger la page de connexion.", Alert.AlertType.ERROR);
         }
     }
-
-
 }

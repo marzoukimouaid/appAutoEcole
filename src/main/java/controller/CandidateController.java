@@ -1,113 +1,206 @@
 package controller;
 
 import entite.Notification;
+import entite.Payment;
+import entite.PaymentInstallment;
+import entite.PaymentInstallment.Status;
 import entite.Profile;
 import entite.User;
-import javafx.animation.KeyValue;
-import javafx.animation.ParallelTransition;
-import service.NotificationService;
-import service.ProfileService;
+import javafx.geometry.Insets;
 import service.AutoEcoleService;
+import service.NotificationService;
+import service.PaymentInstallmentService;
+import service.PaymentService;
+import service.ProfileService;
+import service.UserService;
 import Utils.AlertUtils;
 import Utils.SessionManager;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.ParallelTransition;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
-import javafx.scene.shape.Rectangle;
+
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SecretaireController {
+public class CandidateController {
 
     @FXML private BorderPane root;
     @FXML private VBox sidebar;
     @FXML private StackPane contentArea;
     @FXML private Label pageTitle;
     @FXML private Button btnToggleSidebar;
+    @FXML private MenuButton notificationMenu;
+    @FXML private Label notificationBadge;
     @FXML private MenuButton profileMenu;
-    @FXML private MenuButton notificationMenu; // Notification MenuButton
-    @FXML private Label notificationBadge;     // Badge label (red circle with unread count)
+
+    // Container for a dismissable banner for unpaid payments
+    @FXML private StackPane unpaidBannerContainer;
 
     // Sidebar buttons
-    @FXML private Button btnCandidats, btnMoniteurs, btnAnalytics, btnVehicules, btnPaiements, btnSeances, btnInscription;
-    @FXML private Label autoEcoleNameLabel;  // Displays the Auto-Ecole name
-    @FXML private ImageView profileImage;    // Navbar profile image
+    @FXML private Button btnEmploi, btnPaiements;
+    @FXML private Label autoEcoleNameLabel;
+    @FXML private ImageView profileImage;
 
     private final ProfileService profileService = new ProfileService();
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
     private final NotificationService notificationService = new NotificationService();
+    private final PaymentService paymentService = new PaymentService();
+    private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
+    private final UserService userService = new UserService();
+
     private User currentUser;
     private boolean sidebarVisible = true;
-    private Timeline notificationTimeline; // For periodic updates
+    private Timeline notificationTimeline;
 
     @FXML
     public void initialize() {
-        // Set up sidebar and icons.
-        setIconsForSidebar();
-        setupSidebarClip();
-
-        // Load current user from session.
+        // Load the current user from session.
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             System.out.println("No user in session. Redirecting to login...");
             switchToLoginPage();
             return;
         }
+        setIconsForSidebar();
+        setupSidebarClip();
         loadAutoEcoleName();
         loadUserProfilePicture();
-
-        // When the notifications dropdown is about to be shown, mark all notifications as read.
+        // Check for upcoming installments due in the next 2 days and create notifications.
+        checkUpcomingInstallments();
+        // Update notifications whenever the dropdown is shown.
         notificationMenu.setOnShowing(e -> {
             markAllNotificationsAsRead();
             updateNotifications();
         });
-        // Also update notifications on initialization.
         updateNotifications();
-
-        // Create a Timeline to update notifications (badge and dropdown) every 5 seconds.
-        notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> updateNotifications()));
+        notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> updateNotifications()));
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
+
+        // Load default page.
+        handleEmploi();
+
+        // Check for any unpaid payments.
+        checkUnpaidPayments();
+
+
     }
 
     /**
-     * Loads and displays the Auto-Ecole name from the DB.
+     * Checks if the candidate has any unpaid payments.
+     * For a full payment, if its status is "PENDING" it is unpaid.
+     * For installment payments, if any installment due before today is still PENDING
+     * (or if its status from the DB is "NOTIFIED", it is treated as pending), then it's considered unpaid.
      */
+    private void checkUnpaidPayments() {
+        boolean hasUnpaid = false;
+        List<Payment> payments = paymentService.getPaymentsForUser(currentUser.getId());
+        for (Payment p : payments) {
+            if ("FULL".equalsIgnoreCase(p.getPaymentType()) && "PENDING".equalsIgnoreCase(p.getStatus())) {
+                hasUnpaid = true;
+                break;
+            } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
+                List<PaymentInstallment> installments = installmentService.getInstallmentsByPaymentId(p.getId());
+                for (PaymentInstallment inst : installments) {
+                    // Use a try-catch in case a status from the database is not recognized.
+                    try {
+                        // If installment is overdue and status is PENDING, then mark as unpaid.
+                        if (inst.getDueDate().isBefore(LocalDate.now()) && inst.getStatus() == PaymentInstallment.Status.PENDING) {
+                            hasUnpaid = true;
+                            break;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // If the DB returned a status "NOTIFIED" (which is not in our enum),
+                        // treat it as if it were still pending (or alternatively, skip notification).
+                        if (e.getMessage().contains("NOTIFIED")) {
+                            hasUnpaid = true;
+                            break;
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+            }
+            if (hasUnpaid) break;
+        }
+        if (hasUnpaid) {
+            createUnpaidWarningBanner("Vous avez des paiements impayés. Veuillez consulter la section Paiements.");
+        }
+    }
+
+    /**
+     * Creates a dismissable banner at the top of the content area to warn about unpaid payments.
+     */
+    private void createUnpaidWarningBanner(String message) {
+        unpaidBannerContainer.setVisible(true);
+        unpaidBannerContainer.setManaged(true);
+        unpaidBannerContainer.getChildren().clear();
+
+        HBox bannerBox = new HBox(10);
+        bannerBox.setMaxWidth(Double.MAX_VALUE);
+        bannerBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        VBox.setMargin(bannerBox, new Insets(10, 20, 0, 20));
+
+        bannerBox.setStyle(
+                "-fx-background-color: #ffeeba;" +  // Light yellow warning color
+                        "-fx-background-radius: 6;" +
+                        "-fx-padding: 10;"
+        );
+
+        Label warningLabel = new Label(message);
+        warningLabel.setStyle("-fx-text-fill: #856404; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button closeButton = new Button("X");
+        closeButton.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #856404;" +
+                        "-fx-font-size: 14px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-cursor: hand;"
+        );
+        closeButton.setOnAction(e -> {
+            unpaidBannerContainer.setVisible(false);
+            unpaidBannerContainer.setManaged(false);
+        });
+
+        bannerBox.getChildren().addAll(warningLabel, spacer, closeButton);
+        unpaidBannerContainer.getChildren().add(bannerBox);
+    }
+
     private void loadAutoEcoleName() {
         List<String[]> autoEcoleData = autoEcoleService.getAutoEcoleData();
         String autoEcoleName = !autoEcoleData.isEmpty() ? autoEcoleData.get(0)[0] : "Auto-Ecole Not Found";
         autoEcoleNameLabel.setText(autoEcoleName);
     }
 
-    /**
-     * Retrieves the user's profile and applies the picture to the navbar.
-     */
     private void loadUserProfilePicture() {
         Optional<Profile> profileOptional = profileService.getProfileByUserId(currentUser.getId());
-        if (!profileOptional.isPresent()) {
-            System.out.println("No profile found for user with ID: " + currentUser.getId());
-        }
         profileOptional.ifPresent(profile -> {
             String profilePictureUrl = profile.getPictureUrl();
             if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
@@ -130,9 +223,6 @@ public class SecretaireController {
         sidebar.heightProperty().addListener((obs, oldVal, newVal) -> clipRect.setHeight(newVal.doubleValue()));
     }
 
-    /**
-     * Toggles the sidebar visibility.
-     */
     @FXML
     private void toggleSidebar() {
         double sidebarWidth = 220;
@@ -183,13 +273,9 @@ public class SecretaireController {
         }
     }
 
-    /**
-     * Updates the notification dropdown and badge.
-     */
     private void updateNotifications() {
         if (currentUser == null) return;
         List<Notification> notifications = notificationService.getNotificationsForUser(currentUser.getId());
-        // Update badge with count of unread notifications.
         long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
         if (unreadCount > 0) {
             notificationBadge.setText(String.valueOf(unreadCount));
@@ -197,33 +283,28 @@ public class SecretaireController {
         } else {
             notificationBadge.setVisible(false);
         }
-        // Populate dropdown with the latest three notifications.
-        List<Notification> latestNotifications = notifications.stream().limit(3).collect(Collectors.toList());
+        List<Notification> latest = notifications.stream().limit(3).collect(Collectors.toList());
         notificationMenu.getItems().clear();
-        if (latestNotifications.isEmpty()) {
+        if (latest.isEmpty()) {
             MenuItem emptyItem = new MenuItem("Aucune Notification");
             emptyItem.setDisable(true);
             notificationMenu.getItems().add(emptyItem);
         } else {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            for (Notification notif : latestNotifications) {
+            for (Notification notif : latest) {
                 MenuItem item = new MenuItem(notif.getMessage() + " (" + notif.getCreatedAt().format(formatter) + ")");
                 notificationMenu.getItems().add(item);
             }
         }
     }
 
-    /**
-     * Marks all notifications for the current user as read.
-     */
     private void markAllNotificationsAsRead() {
         List<Notification> notifications = notificationService.getNotificationsForUser(currentUser.getId());
-        notifications.stream().filter(n -> !n.isRead()).forEach(n -> notificationService.markNotificationAsRead(n.getId()));
+        notifications.stream()
+                .filter(n -> !n.isRead())
+                .forEach(n -> notificationService.markNotificationAsRead(n.getId()));
     }
 
-    /**
-     * Navigates to a new view inside the content area.
-     */
     private void loadPage(String fxmlPath, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -233,30 +314,19 @@ public class SecretaireController {
         } catch (IOException e) {
             e.printStackTrace();
             AlertUtils.showAlert("Erreur", "Impossible de charger la page: " + fxmlPath,
-                    javafx.scene.control.Alert.AlertType.ERROR);
+                    Alert.AlertType.ERROR);
         }
     }
 
-    /**
-     * Assigns icons for sidebar buttons and the hamburger button.
-     */
     private void setIconsForSidebar() {
-        btnCandidats.setGraphic(createIcon(FontAwesomeSolid.USER_GRADUATE));
-        btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
-        btnAnalytics.setGraphic(createIcon(FontAwesomeSolid.CHART_LINE));
-        btnVehicules.setGraphic(createIcon(FontAwesomeSolid.CAR));
+        btnEmploi.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
         btnPaiements.setGraphic(createIcon(FontAwesomeSolid.MONEY_BILL_WAVE));
-        btnSeances.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
-        btnInscription.setGraphic(createIcon(FontAwesomeSolid.EDIT));
 
         FontIcon hamburgerIcon = new FontIcon(FontAwesomeSolid.BARS);
         hamburgerIcon.setIconSize(20);
         btnToggleSidebar.setGraphic(hamburgerIcon);
     }
 
-    /**
-     * Helper to create FontAwesome icons.
-     */
     private FontIcon createIcon(FontAwesomeSolid iconType) {
         FontIcon icon = new FontIcon(iconType);
         icon.setIconSize(16);
@@ -264,9 +334,6 @@ public class SecretaireController {
         return icon;
     }
 
-    /**
-     * Switches to the login page.
-     */
     private void switchToLoginPage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml"));
@@ -277,95 +344,67 @@ public class SecretaireController {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            AlertUtils.showAlert("Erreur", "Impossible de charger la page de connexion.",
-                    javafx.scene.control.Alert.AlertType.ERROR);
+            AlertUtils.showAlert("Erreur", "Impossible de charger la page de connexion.", Alert.AlertType.ERROR);
         }
     }
 
-    /**
-     * Handles user logout.
-     */
     @FXML
     private void handleLogout() {
         SessionManager.logout();
         switchToLoginPage();
     }
 
-    /**
-     * Navigates to the profile page.
-     */
     @FXML
     private void handleProfile() {
-        clearSidebarSelection();
-        loadPage("/org/example/Profile.fxml", "Profile");
+        loadPage("/org/example/Profile.fxml", "Mon Profile");
     }
 
     @FXML
-    private void handleCandidats() {
-        loadPage("/org/example/Candidats.fxml", "Candidats");
-        highlightSidebarButton(btnCandidats);
-    }
-
-    @FXML
-    private void handleMoniteurs() {
-        loadPage("/org/example/Moniteurs.fxml", "Moniteurs");
-        highlightSidebarButton(btnMoniteurs);
-    }
-
-    @FXML
-    private void handleAnalytics() {
-        loadPage("/org/example/Analytics.fxml", "Analytics");
-        highlightSidebarButton(btnAnalytics);
-    }
-
-    @FXML
-    private void handleVehicules() {
-        loadPage("/org/example/Vehicules.fxml", "Véhicules");
-        highlightSidebarButton(btnVehicules);
+    private void handleEmploi() {
+        loadPage("/org/example/EmploiDesSeances.fxml", "Emploi des Séances");
+        highlightSidebarButton(btnEmploi);
     }
 
     @FXML
     private void handlePaiements() {
-        loadPage("/org/example/Paiements.fxml", "Paiements");
+        loadPage("/org/example/CandidatePaiements.fxml", "Paiements");
         highlightSidebarButton(btnPaiements);
     }
 
-    @FXML
-    private void handleSeances() {
-        loadPage("/org/example/Seances.fxml", "Séances");
-        highlightSidebarButton(btnSeances);
-    }
-
-    @FXML
-    private void handleInscription() {
-        loadPage("/org/example/Inscription.fxml", "Inscription");
-        highlightSidebarButton(btnInscription);
-    }
-
-    /**
-     * Highlights the clicked sidebar button.
-     */
     private void highlightSidebarButton(Button selectedButton) {
-        btnCandidats.getStyleClass().remove("selected");
-        btnMoniteurs.getStyleClass().remove("selected");
-        btnAnalytics.getStyleClass().remove("selected");
-        btnVehicules.getStyleClass().remove("selected");
+        btnEmploi.getStyleClass().remove("selected");
         btnPaiements.getStyleClass().remove("selected");
-        btnSeances.getStyleClass().remove("selected");
-        btnInscription.getStyleClass().remove("selected");
         selectedButton.getStyleClass().add("selected");
     }
 
     /**
-     * Clears the selection highlight from all sidebar buttons.
+     * Checks for upcoming installment payments that are due in the next 2 days.
+     * For each installment of type INSTALLMENT that is still pending and has not been notified,
+     * if its due date is either tomorrow or the day after tomorrow, a notification is sent to the candidate.
+     * After sending the notification, the installment is marked as notified.
      */
-    private void clearSidebarSelection() {
-        btnCandidats.getStyleClass().remove("selected");
-        btnMoniteurs.getStyleClass().remove("selected");
-        btnAnalytics.getStyleClass().remove("selected");
-        btnVehicules.getStyleClass().remove("selected");
-        btnPaiements.getStyleClass().remove("selected");
-        btnSeances.getStyleClass().remove("selected");
-        btnInscription.getStyleClass().remove("selected");
+    private void checkUpcomingInstallments() {
+        // Retrieve all payments for the current candidate.
+        List<Payment> payments = paymentService.getPaymentsForUser(currentUser.getId());
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate dayAfterTomorrow = today.plusDays(2);
+
+        payments.stream()
+                .filter(p -> "INSTALLMENT".equalsIgnoreCase(p.getPaymentType()))
+                .forEach(payment -> {
+                    List<PaymentInstallment> installments = installmentService.getInstallmentsByPaymentId(payment.getId());
+                    installments.stream()
+                            .filter(inst -> inst.getStatus() == PaymentInstallment.Status.PENDING
+                                    && !inst.isNotified()
+                                    && (inst.getDueDate().isEqual(tomorrow) || inst.getDueDate().isEqual(dayAfterTomorrow)))
+                            .forEach(inst -> {
+                                String message = String.format("Rappel: Votre Tranche de paiement de %.2f TND est due le %s.",
+                                        inst.getAmountDue(), inst.getDueDate());
+                                notificationService.sendNotification(currentUser.getId(), message);
+                                inst.setNotified(true);
+                                installmentService.updateInstallment(inst);
+                            });
+                });
     }
 }

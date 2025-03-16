@@ -1,38 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controller.AddMaintenanceController"
-      spacing="10" alignment="TOP_LEFT"
-      style="-fx-background-color: #F5F5F5; -fx-padding: 20;"
-      prefWidth="600" prefHeight="220">
+<?import javafx.scene.control.ScrollPane?>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.AddMaintenanceController"
+           fx:id="rootPane"
+           stylesheets="@style.css"
+           prefWidth="600" prefHeight="480">
 
-    <Label text="Ajouter un Entretien" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
-    <Label text="Complétez les informations pour créer un nouveau entretien" style="-fx-font-size: 14; -fx-text-fill: #666;" />
+    <!-- ScrollPane so the form won't be cropped -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
+        <content>
+            <!-- Outer container -->
+            <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
 
-    <Label text="Date Entretien:"/>
-    <DatePicker fx:id="dateMaintenance" />
+                <!-- Header area -->
+                <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 20;">
+                    <VBox alignment="CENTER_LEFT">
+                        <Label text="Ajouter un Entretien" styleClass="header-title"/>
+                        <Label text="Complétez les informations pour créer un nouveau entretien" styleClass="header-subtitle"/>
+                    </VBox>
+                </HBox>
 
-    <Label text="Type Entretien:"/>
-    <TextField fx:id="txtTypeMaintenance" />
+                <!-- Card container for the form -->
+                <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="600">
+                    <padding>
+                        <Insets top="30" right="30" bottom="30" left="30"/>
+                    </padding>
 
-    <Label text="Description:"/>
-    <TextField fx:id="txtDescription" />
+                    <!-- GridPane for the form fields -->
+                    <GridPane hgap="20" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="120" />
+                            <ColumnConstraints minWidth="200" />
+                            <ColumnConstraints minWidth="200" />
+                        </columnConstraints>
 
-    <Label text="Coût:"/>
-    <TextField fx:id="txtCost" />
+                        <!-- Row 0: Date Entretien -->
+                        <Label text="Date Entretien :" styleClass="subtitle" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <DatePicker fx:id="dateMaintenance" styleClass="input-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label fx:id="dateMaintError" textFill="red" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
-    <Label text="Lien Facture:"/>
-    <TextField fx:id="txtScannedInvoice" />
+                        <!-- Row 1: Type Entretien -->
+                        <Label text="Type Entretien :" styleClass="subtitle" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtTypeMaintenance" styleClass="input-field" promptText="ex: Révision" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label fx:id="typeMaintError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
 
-    <HBox spacing="12">
-        <Button text="Enregistrer" fx:id="btnSave" />
-        <Button text="Annuler" fx:id="btnCancel" />
-    </HBox>
-</VBox>
+                        <!-- Row 2: Description -->
+                        <Label text="Description :" styleClass="subtitle" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtDescription" styleClass="input-field" promptText="Entrez la description" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label fx:id="descError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+                        <!-- Row 3: Coût -->
+                        <Label text="Coût :" styleClass="subtitle" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCost" styleClass="input-field" promptText="ex: 100.00" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label fx:id="costError" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+
+                        <!-- Row 4: Facture scannée as file uploader -->
+                        <Label text="Facture scannée :" styleClass="subtitle" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <Button fx:id="btnChooseInvoice" text="Choisir le fichier" styleClass="file-button" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label fx:id="invoiceError" textFill="red" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+                    </GridPane>
+
+                    <!-- Only one button: “Enregistrer” -->
+                    <HBox alignment="CENTER" spacing="12">
+                        <Button fx:id="btnSave" text="Enregistrer" styleClass="primary-button"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+</StackPane>

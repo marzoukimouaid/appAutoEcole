@@ -2,25 +2,38 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
 
-<?import java.net.URL?>
-<StackPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AutoEcoleController">
-   <stylesheets>
-      <URL value="@style.css" />
-   </stylesheets>
+<StackPane xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="controller.AutoEcoleController"
+           prefWidth="800" prefHeight="600"
+           stylesheets="@style.css"
+           alignment="CENTER">
 
-   <VBox alignment="CENTER" spacing="15" maxWidth="400" maxHeight="500" styleClass="card">
+   <!-- Main ScrollPane -->
+   <ScrollPane fitToWidth="true" fitToHeight="true"
+               styleClass="custom-scrollpane"
+               style="-fx-background-color: transparent;">
+      <content>
+         <!-- Inner StackPane to center content horizontally & vertically -->
+         <StackPane alignment="CENTER" maxWidth="Infinity" maxHeight="Infinity">
+            <VBox alignment="CENTER" spacing="15" maxWidth="400" styleClass="card">
 
-      <Label text="Bienvenue !" styleClass="title"/>
-      <Label text="Commençons par configurer votre Auto-Ecole." styleClass="subtitle"/>
+               <Label text="Bienvenue !" styleClass="title"/>
+               <Label text="Commençons par configurer votre Auto-Ecole." styleClass="subtitle"/>
 
-      <TextField promptText="Nom" fx:id="nameField" styleClass="input-field"/>
-      <TextField promptText="Adresse" fx:id="addressField" styleClass="input-field"/>
-      <TextField promptText="Numéro de téléphone" fx:id="phoneField" styleClass="input-field"/>
-      <TextField promptText="Adresse e-mail" fx:id="emailField" styleClass="input-field"/>
+               <TextField promptText="Nom" fx:id="nameField" styleClass="input-field"/>
+               <TextField promptText="Adresse" fx:id="addressField" styleClass="input-field"/>
+               <TextField promptText="Numéro de téléphone" fx:id="phoneField" styleClass="input-field"/>
+               <TextField promptText="Adresse e-mail" fx:id="emailField" styleClass="input-field"/>
 
-      <Button fx:id="continueButton" text="Continuer" styleClass="primary-button" onAction="#initializeAutoEcole"/>
+               <!-- New fields for session prices -->
+               <TextField promptText="Prix séance conduite" fx:id="prixSeanceConduitField" styleClass="input-field"/>
+               <TextField promptText="Prix séance code" fx:id="prixSeanceCodeField" styleClass="input-field"/>
 
-   </VBox>
+               <Button fx:id="continueButton" text="Continuer" styleClass="primary-button"
+                       onAction="#initializeAutoEcole"/>
+            </VBox>
+         </StackPane>
+      </content>
+   </ScrollPane>
 </StackPane>
