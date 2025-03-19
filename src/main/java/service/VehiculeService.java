@@ -20,6 +20,10 @@ public class VehiculeService {
         return vehiculeDao.getVehiculeById(id);
     }
 
+    public Optional<Vehicule> getVehiculeByImmatriculation(String immatriculation) {
+        return vehiculeDao.getVehiculeByImmatriculation(immatriculation);
+    }
+
     public List<Vehicule> getAllVehicules() {
         return vehiculeDao.getAllVehicules();
     }

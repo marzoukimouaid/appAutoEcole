@@ -70,6 +70,9 @@ public class UserDao {
         return false;
     }
 
+    /**
+     * Returns the user ID for a given username.
+     */
     public int getUserIdByUsername(String username) {
         String sql = "SELECT id FROM users WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -82,6 +85,28 @@ public class UserDao {
             e.printStackTrace();
         }
         return -1; // Return -1 if user not found
+    }
+
+    /**
+     * NEW: Retrieves a User object by username.
+     * Returns null if no such user exists.
+     */
+    public User getUserByUsername(String username) {
+        String sql = "SELECT id, username, role FROM users WHERE username = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("role")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -99,7 +124,7 @@ public class UserDao {
     }
 
     /**
-     * NEW: Retrieves all users having the given role.
+     * Retrieves all users having the given role.
      */
     public List<User> getUsersByRole(String role) {
         List<User> users = new ArrayList<>();

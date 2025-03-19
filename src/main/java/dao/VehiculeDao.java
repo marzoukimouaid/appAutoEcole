@@ -3,7 +3,6 @@ package dao;
 import entite.Vehicule;
 import entite.Vehicule.VehicleType;
 import Utils.ConnexionDB;
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -57,11 +56,33 @@ public class VehiculeDao {
         return false;
     }
 
-
     public Optional<Vehicule> getVehiculeById(int id) {
         String sql = "SELECT * FROM vehicules WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Vehicule vehicule = new Vehicule();
+                    vehicule.setId(rs.getInt("id"));
+                    vehicule.setImmatriculation(rs.getString("immatriculation"));
+                    vehicule.setMarque(rs.getString("marque"));
+                    vehicule.setDateMiseEnService(rs.getDate("date_mise_en_service").toLocalDate());
+                    vehicule.setKilometrageTotal(rs.getInt("kilometrage_total"));
+                    vehicule.setKmRestantEntretien(rs.getInt("km_restant_entretien"));
+                    vehicule.setType(VehicleType.valueOf(rs.getString("type")));
+                    return Optional.of(vehicule);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Vehicule> getVehiculeByImmatriculation(String immatriculation) {
+        String sql = "SELECT * FROM vehicules WHERE immatriculation = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, immatriculation);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Vehicule vehicule = new Vehicule();
