@@ -121,4 +121,19 @@ public class SeanceCodeDao {
         }
         return seance;
     }
+
+    public List<SeanceCode> getAllSeances() {
+        List<SeanceCode> seances = new ArrayList<>();
+        String sql = "SELECT * FROM seance_code ORDER BY session_datetime DESC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                seances.add(mapResultSetToSeanceCode(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return seances;
+    }
+
 }

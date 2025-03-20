@@ -2,69 +2,56 @@ package controller;
 
 import entite.SeanceCode;
 import entite.SeanceConduit;
+import entite.Profile;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-
+import javafx.scene.control.Button;
 import service.SeanceCodeService;
 import service.SeanceConduitService;
-import Utils.SessionManager;
+import service.UserService;
+import service.ProfileService;
 
 import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-/**
- * Controller that manages both "Séance Conduit" and "Séance Code" in one page.
- * Clicking a button to insert a seance loads the form in the same "red area."
- */
 public class SecretaireSeancesController {
 
-    @FXML
-    private StackPane rootPane;  // The top-level container from SecretaireSeances.fxml
+    @FXML private BorderPane rootPane;
+    @FXML private VBox mainContainer;
+    @FXML private VBox seanceListContainer;
+    @FXML private Button btnInsertConduit;
+    @FXML private Button btnInsertCode;
 
-    @FXML
-    private VBox seanceListContainer; // Where we place the list of seance "cards"
-
-    @FXML
-    private Button btnInsertConduit;
-
-    @FXML
-    private Button btnInsertCode;
-
-    private final SeanceCodeService codeService = new SeanceCodeService();
-    private final SeanceConduitService conduitService = new SeanceConduitService();
+    private final SeanceCodeService seanceCodeService = new SeanceCodeService();
+    private final SeanceConduitService seanceConduitService = new SeanceConduitService();
+    private final UserService userService = new UserService();
+    private final ProfileService profileService = new ProfileService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @FXML
     public void initialize() {
-        // Load and display the list of seances
         loadSeances();
     }
 
-    /**
-     * Loads both SeanceCode and SeanceConduit from the DB for the current user,
-     * merges them, sorts by sessionDatetime descending, and displays them.
-     */
     private void loadSeances() {
         seanceListContainer.getChildren().clear();
 
-        int userId = SessionManager.getCurrentUser().getId();
-        List<SeanceCode> codeList = codeService.getSeancesByCandidatId(userId);
-        List<SeanceConduit> conduitList = conduitService.getSeancesByCandidatId(userId);
+        List<SeanceCode> codeList = seanceCodeService.getAllSeances();
+        List<SeanceConduit> conduitList = seanceConduitService.getAllSeances();
 
-        // Merge into a single list of Objects
         List<Object> allSeances = new ArrayList<>();
         allSeances.addAll(codeList);
         allSeances.addAll(conduitList);
 
-        // Sort newest to oldest
+        // Sort descending by date/time
         allSeances.sort((o1, o2) -> {
             LocalDateTime dt1 = (o1 instanceof SeanceCode)
                     ? ((SeanceCode) o1).getSessionDatetime()
@@ -75,22 +62,51 @@ public class SecretaireSeancesController {
             return dt2.compareTo(dt1);
         });
 
-        // Create a simple "card" for each seance
         for (Object seance : allSeances) {
             VBox card = createSeanceCard(seance);
             seanceListContainer.getChildren().add(card);
         }
     }
 
-    /**
-     * Creates a small VBox "card" that displays the seance info.
-     */
     private VBox createSeanceCard(Object seance) {
-        VBox card = new VBox(5);
+        VBox card = new VBox(10);
         card.getStyleClass().add("card");
+        card.setMinWidth(300);
+        card.setMaxWidth(Double.MAX_VALUE);
 
-        Label lblType = new Label();
-        Label lblDate = new Label();
+        javafx.scene.control.Label lblType = new javafx.scene.control.Label();
+        lblType.getStyleClass().add("title");
+
+        javafx.scene.control.Label lblDate = new javafx.scene.control.Label();
+        lblDate.getStyleClass().add("subtitle");
+
+        int candidateId, moniteurId;
+        if (seance instanceof SeanceCode) {
+            candidateId = ((SeanceCode) seance).getCandidatId();
+            moniteurId = ((SeanceCode) seance).getMoniteurId();
+        } else {
+            candidateId = ((SeanceConduit) seance).getCandidatId();
+            moniteurId = ((SeanceConduit) seance).getMoniteurId();
+        }
+
+        Optional<Profile> candidateProfileOpt = profileService.getProfileByUserId(candidateId);
+        Optional<Profile> moniteurProfileOpt = profileService.getProfileByUserId(moniteurId);
+
+        String candidateFullName = candidateProfileOpt
+                .map(p -> p.getNom() + " " + p.getPrenom()).orElse("N/A");
+        String moniteurFullName = moniteurProfileOpt
+                .map(p -> p.getNom() + " " + p.getPrenom()).orElse("N/A");
+
+        javafx.scene.control.Label lblCandidate = new javafx.scene.control.Label("Candidat: " + candidateFullName);
+        lblCandidate.getStyleClass().add("subtitle");
+        javafx.scene.control.Label lblMoniteur = new javafx.scene.control.Label("Moniteur: " + moniteurFullName);
+        lblMoniteur.getStyleClass().add("subtitle");
+
+        VBox detailsBox = new VBox(5);
+
+        javafx.scene.control.Button btnInspect = new javafx.scene.control.Button("Inspect");
+        btnInspect.getStyleClass().add("inspect-button");
+        btnInspect.setOnAction(e -> openDetailsPage(seance));
 
         if (seance instanceof SeanceCode) {
             SeanceCode sc = (SeanceCode) seance;
@@ -99,38 +115,86 @@ public class SecretaireSeancesController {
         } else if (seance instanceof SeanceConduit) {
             SeanceConduit sc = (SeanceConduit) seance;
             lblType.setText("Séance Conduit");
-            lblDate.setText("Date/Heure: " + sc.getSessionDatetime().format(dtf)
-                    + " | Lieu: (" + sc.getLatitude() + ", " + sc.getLongitude() + ")");
+            lblDate.setText("Date/Heure: " + sc.getSessionDatetime().format(dtf));
+            javafx.scene.control.Label lblLocation = new javafx.scene.control.Label(
+                    "Lieu: (" + sc.getLatitude() + ", " + sc.getLongitude() + ")"
+            );
+            lblLocation.getStyleClass().add("subtitle");
+            detailsBox.getChildren().add(lblLocation);
         }
-        card.getChildren().addAll(lblType, lblDate);
+
+        card.getChildren().addAll(lblType, lblDate, lblCandidate, lblMoniteur);
+        if (!detailsBox.getChildren().isEmpty()) {
+            card.getChildren().add(detailsBox);
+        }
+        javafx.scene.layout.HBox buttonContainer = new javafx.scene.layout.HBox();
+        buttonContainer.setStyle("-fx-alignment: CENTER_RIGHT;");
+        buttonContainer.getChildren().add(btnInspect);
+        card.getChildren().add(buttonContainer);
+
         return card;
     }
 
-    /**
-     * Called when the user clicks "Insérer Séance Conduit."
-     * We load InsertSeanceConduit.fxml into the same area.
-     */
+    private void openDetailsPage(Object seance) {
+        try {
+            FXMLLoader loader;
+            Parent detailsPage;
+            if (seance instanceof SeanceCode) {
+                URL resource = getClass().getResource("/org/example/SeanceCodeDetails.fxml");
+                if (resource == null) {
+                    throw new IllegalStateException("Cannot find FXML file: /org/example/SeanceCodeDetails.fxml");
+                }
+                loader = new FXMLLoader(resource);
+                detailsPage = loader.load();
+                SeanceCodeDetailsController codeDetailsController = loader.getController();
+                codeDetailsController.setSeance((SeanceCode) seance);
+
+                // >>> Inject self as the parent <<<
+                codeDetailsController.setParentController(this);
+
+            } else if (seance instanceof SeanceConduit) {
+                URL resource = getClass().getResource("/org/example/SeanceConduitDetails.fxml");
+                if (resource == null) {
+                    throw new IllegalStateException("Cannot find FXML file: /org/example/SeanceConduitDetails.fxml");
+                }
+                loader = new FXMLLoader(resource);
+                detailsPage = loader.load();
+                SeanceConduitDetailsController conduitDetailsController = loader.getController();
+                conduitDetailsController.setSeance((SeanceConduit) seance);
+
+                // >>> Inject self as the parent <<<
+                conduitDetailsController.setParentController(this);
+
+            } else {
+                return;
+            }
+            // Show the details page in the center of our SecretaireSeances.fxml
+            rootPane.setCenter(detailsPage);
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     @FXML
     private void handleInsertConduit() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceConduit.fxml"));
             Parent insertPage = loader.load();
+
             InsertSeanceConduitController controller = loader.getController();
             controller.setParentController(this);
-            // Optionally hide the top buttons here if desired:
+
+            // Hide the two insert buttons if you prefer
             btnInsertConduit.setVisible(false);
             btnInsertCode.setVisible(false);
-            // Replace the rootPane content with the insertion form.
-            rootPane.getChildren().setAll(insertPage);
+
+            rootPane.setCenter(insertPage);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Called when the user clicks "Insérer Séance Code."
-     * We do the same approach, but load InsertSeanceCode.fxml instead.
-     */
     @FXML
     private void handleInsertCode() {
         try {
@@ -140,37 +204,53 @@ public class SecretaireSeancesController {
             InsertSeanceCodeController controller = loader.getController();
             controller.setParentController(this);
 
-            Parent sceneRoot = btnInsertCode.getScene().getRoot();
-            StackPane contentArea = (StackPane) sceneRoot.lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(insertPage);
-            } else {
-                rootPane.getChildren().setAll(insertPage);
-            }
+            rootPane.setCenter(insertPage);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Public method that other controllers (the insert forms) can call
-     * once a seance is created, to return to this page and refresh.
+     * Called by child controllers after creation or edition of a seance
+     * so we jump back to the "SecretaireSeances.fxml" main listing.
      */
     public void returnToSeancesPage() {
         try {
-            // Reload this same FXML so it resets to the updated list.
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/SecretaireSeances.fxml"));
             Parent seancesPage = loader.load();
+            rootPane.setCenter(seancesPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            // Show the new page in the same content area
-            Parent sceneRoot = rootPane.getScene().getRoot();
-            StackPane contentArea = (StackPane) sceneRoot.lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(seancesPage);
-            } else {
-                // If no contentArea found, fallback
-                rootPane.getChildren().setAll(seancesPage);
-            }
+    // >>> New method: let a child do handleEdit by calling us <<<
+    public void openEditCodePage(SeanceCode seance) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceCode.fxml"));
+            Parent editPage = loader.load();
+
+            InsertSeanceCodeController controller = loader.getController();
+            controller.setParentController(this);
+            controller.setSeance(seance); // pass the existing seance for editing
+
+            rootPane.setCenter(editPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // >>> The same idea for Conduit
+    public void openEditConduitPage(SeanceConduit seance) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceConduit.fxml"));
+            Parent editPage = loader.load();
+
+            InsertSeanceConduitController controller = loader.getController();
+            controller.setParentController(this);
+            controller.setSeance(seance);
+
+            rootPane.setCenter(editPage);
         } catch (IOException e) {
             e.printStackTrace();
         }

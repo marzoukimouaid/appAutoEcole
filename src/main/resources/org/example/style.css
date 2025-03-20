@@ -909,6 +909,41 @@
     -fx-translate-y: -10;
 }
 
+.edit-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #f1c40f; /* Yellow border */
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #f1c40f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-cursor: hand;
+}
+.edit-button:hover {
+    -fx-background-color: #f1c40f;
+    -fx-text-fill: white;
+}
+
+.edit-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #f1c40f; /* Yellow border */
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #f1c40f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-cursor: hand;
+}
+.edit-button:hover {
+    -fx-background-color: #f1c40f;
+    -fx-text-fill: white;
+}
+
+
 
 
 

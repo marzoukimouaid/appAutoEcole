@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
-<?import javafx.geometry.Pos?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
-<StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="controller.InsertSeanceConduitController"
-           fx:id="rootPane">
-    <children>
-        <ScrollPane fitToWidth="true" fitToHeight="true"
-                    styleClass="custom-scrollpane"
+<BorderPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.InsertSeanceConduitController"
+            styleClass="root">
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane"
                     style="-fx-background-color: transparent;">
             <content>
                 <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area"
@@ -26,10 +23,11 @@
                     <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-container">
                         <VBox alignment="CENTER_LEFT">
                             <Label text="Insérer Séance Conduit" styleClass="header-title"/>
-                            <Label text="Complétez le formulaire pour créer une nouvelle séance de conduite" styleClass="header-subtitle"/>
+                            <Label text="Complétez le formulaire pour créer une nouvelle séance de conduite"
+                                   styleClass="header-subtitle"/>
                         </VBox>
                     </HBox>
-                    <!-- Card Container -->
+                    <!-- Form Container -->
                     <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="800"
                           style="-fx-padding: 30 30 30 30;">
                         <GridPane hgap="15" vgap="10" alignment="CENTER">
@@ -40,39 +38,42 @@
                             </columnConstraints>
                             <!-- Candidate Username -->
                             <Label text="Nom d'utilisateur du Candidat:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                            <TextField fx:id="candidateUsernameField" promptText="Nom d'utilisateur candidat" styleClass="input-field"
-                                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <TextField fx:id="candidateUsernameField" promptText="Nom d'utilisateur candidat"
+                                       styleClass="input-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                             <Label fx:id="candidateError" textFill="red" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
                             <!-- Moniteur Username -->
                             <Label text="Nom d'utilisateur du Moniteur:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <TextField fx:id="moniteurUsernameField" promptText="Nom d'utilisateur moniteur" styleClass="input-field"
-                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <TextField fx:id="moniteurUsernameField" promptText="Nom d'utilisateur moniteur"
+                                       styleClass="input-field" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                             <Label fx:id="moniteurError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-                            <!-- Vehicule Immatriculation -->
+                            <!-- Véhicule Immatriculation -->
                             <Label text="Immatriculation du Véhicule:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtVehiculeImmatriculation" promptText="xxxtunisiaxxxx" styleClass="input-field"
-                                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <TextField fx:id="txtVehiculeImmatriculation" promptText="xxxtunisiaxxxx"
+                                       styleClass="input-field" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                             <Label fx:id="vehiculeError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
                             <!-- Date/Heure -->
                             <Label text="Date/Heure (yyyy-MM-dd HH:mm):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtSessionDatetime" promptText="2025-03-16 14:30" styleClass="input-field"
-                                       GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <TextField fx:id="txtSessionDatetime" promptText="2025-03-16 14:30"
+                                       styleClass="input-field" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                             <Label fx:id="datetimeError" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
                             <!-- Map Label -->
-                            <Label text="Sélectionnez la position sur la carte:" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
+                            <Label text="Sélectionnez la position sur la carte:" GridPane.rowIndex="4"
+                                   GridPane.columnIndex="0" GridPane.columnSpan="3"/>
                             <!-- Map WebView -->
                             <WebView fx:id="mapView" minWidth="600" minHeight="400" pickOnBounds="true"
                                      GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
                             <!-- Map Error Label -->
-                            <Label fx:id="mapError" textFill="red" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
+                            <Label fx:id="mapError" textFill="red" GridPane.rowIndex="6"
+                                   GridPane.columnIndex="0" GridPane.columnSpan="3"/>
                         </GridPane>
                         <!-- Submit Button -->
                         <HBox alignment="CENTER" spacing="20">
-                            <Button text="Créer Séance Conduit" onAction="#handleSubmit" styleClass="primary-button"/>
+                            <Button fx:id="btnSubmit" text="Créer Séance Conduit" onAction="#handleSubmit"
+                                    styleClass="primary-button"/>
                         </HBox>
                     </VBox>
                 </VBox>
             </content>
         </ScrollPane>
-    </children>
-</StackPane>
+    </center>
+</BorderPane>

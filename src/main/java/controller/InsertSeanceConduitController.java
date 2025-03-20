@@ -1,17 +1,13 @@
 package controller;
 
-import entite.SeanceCode;
-import entite.SeanceConduit;
-import entite.User;
+import entite.*;
 import entite.Vehicule;
 import entite.VehiculeDocument;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
@@ -23,6 +19,7 @@ import service.VehiculeDocumentService;
 import service.PaymentService;
 import service.PaymentInstallmentService;
 import javafx.scene.control.Alert.AlertType;
+
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 
@@ -36,35 +33,36 @@ import java.util.stream.Stream;
 
 public class InsertSeanceConduitController {
 
-    @FXML private StackPane rootPane;
+    @FXML private BorderPane rootPane;
     @FXML private TextField candidateUsernameField;
     @FXML private Label candidateError;
     @FXML private TextField moniteurUsernameField;
     @FXML private Label moniteurError;
-    @FXML private TextField txtVehiculeImmatriculation; // New field for vehicle immatriculation
+    @FXML private TextField txtVehiculeImmatriculation;
     @FXML private Label vehiculeError;
     @FXML private TextField txtSessionDatetime;
     @FXML private Label datetimeError;
     @FXML private WebView mapView;
     @FXML private Label mapError;
+    @FXML private Button btnSubmit;
 
     private SecretaireSeancesController parentController;
+    private SeanceConduit editingSeance = null;
+
     private final SeanceConduitService conduitService = new SeanceConduitService();
-    private final SeanceCodeService codeService = new SeanceCodeService();
+    private final SeanceCodeService seanceCodeService = new SeanceCodeService();
     private final UserService userService = new UserService();
     private final VehiculeService vehiculeService = new VehiculeService();
     private final VehiculeDocumentService vehiculeDocumentService = new VehiculeDocumentService();
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService paymentInstallmentService = new PaymentInstallmentService();
 
-    // Date/time format: "yyyy-MM-dd HH:mm"
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // Coordinates selected from the map.
+    // We'll store the chosen lat/lng in these fields:
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
 
-    // Maximum allowed conduit sessions for a candidate.
     private static final int MAX_CONDUIT_SEANCES = 20;
 
     @FXML
@@ -72,37 +70,85 @@ public class InsertSeanceConduitController {
         System.out.println("InsertSeanceConduitController: initialize() called.");
         WebEngine engine = mapView.getEngine();
         engine.setJavaScriptEnabled(true);
+
+        // Listen for map load completion:
         engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-            System.out.println("WebEngine state changed: " + newState);
             if (newState == Worker.State.SUCCEEDED) {
-                System.out.println("Map HTML loaded successfully. Setting javaConnector...");
                 try {
+                    // Provide a Java->JS bridge for setCoordinates(...)
                     JSObject window = (JSObject) engine.executeScript("window");
                     window.setMember("javaConnector", new JavaConnector());
-                    System.out.println("javaConnector set successfully!");
+                    System.out.println("JavaConnector set successfully.");
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    System.out.println("Failed to set javaConnector: " + ex.getMessage());
+                }
+
+                // <<< ADDED: If we are editing an existing seance and it has lat/lng, place a marker:
+                if (editingSeance != null) {
+                    double lat = editingSeance.getLatitude();
+                    double lng = editingSeance.getLongitude();
+                    // If it's not (0.0, 0.0), let's show the marker
+                    if (Math.abs(lat) > 0.0001 || Math.abs(lng) > 0.0001) {
+                        // For example, zoom to 13 near that location
+                        String script =
+                                "map.setView([" + lat + "," + lng + "], 13);" +
+                                        "if (!marker) { marker = L.marker([" + lat + "," + lng + "]).addTo(map); } " +
+                                        "else { marker.setLatLng([" + lat + "," + lng + "]); }";
+                        engine.executeScript(script);
+                    }
                 }
             }
         });
+
+        // Load your leafletMap.html resource from your /resources path:
         try {
+            // Make sure the path is correct for your environment
             String url = getClass().getResource("/org/example/leafletMap.html").toExternalForm();
-            System.out.println("Attempting to load map from: " + url);
             engine.load(url);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    // This setter is called by the parent "SecretaireSeancesController"
     public void setParentController(SecretaireSeancesController parent) {
         this.parentController = parent;
     }
 
+    // <<< ADDED: store the lat/lng from the existing SeanceConduit
+    public void setSeance(SeanceConduit seance) {
+        this.editingSeance = seance;
+        User candidate = userService.getUserById(seance.getCandidatId());
+        User moniteur = userService.getUserById(seance.getMoniteurId());
+
+        if (candidate != null) {
+            candidateUsernameField.setText(candidate.getUsername());
+        }
+        if (moniteur != null) {
+            moniteurUsernameField.setText(moniteur.getUsername());
+        }
+
+        // If we have a valid vehiculeId, fill immatriculation
+        if (seance.getVehiculeId() > 0) {
+            vehiculeService.getVehiculeById(seance.getVehiculeId())
+                    .ifPresent(v -> txtVehiculeImmatriculation.setText(v.getImmatriculation()));
+        }
+
+        // The session date/time
+        txtSessionDatetime.setText(seance.getSessionDatetime().format(dtf));
+        btnSubmit.setText("Mettre à jour Séance Conduit");
+
+        // Store lat/lng so we can re-show them on the map
+        selectedLatitude = seance.getLatitude();
+        selectedLongitude = seance.getLongitude();
+    }
+
     @FXML
     private void handleSubmit() {
-        // Poll the map engine for marker coordinates.
+        System.out.println("InsertSeanceConduitController.handleSubmit: called.");
         try {
+            // The user might have placed a marker or re-placed it
+            // We run a small script: if marker not null, getLatLng
             Object result = mapView.getEngine().executeScript("marker ? marker.getLatLng() : null");
             if (result != null && result instanceof JSObject) {
                 JSObject latlng = (JSObject) result;
@@ -110,15 +156,11 @@ public class InsertSeanceConduitController {
                 Object lngObj = latlng.getMember("lng");
                 selectedLatitude = Double.parseDouble(latObj.toString());
                 selectedLongitude = Double.parseDouble(lngObj.toString());
-                System.out.println("Polled coordinates: " + selectedLatitude + ", " + selectedLongitude);
-            } else {
-                System.out.println("No marker found via polling.");
+                System.out.println("Coordinates selected: " + selectedLatitude + ", " + selectedLongitude);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        System.out.println("handleSubmit() called. Current lat/lng = " + selectedLatitude + ", " + selectedLongitude);
         clearErrors();
         boolean valid = true;
 
@@ -139,7 +181,7 @@ public class InsertSeanceConduitController {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Immatriculation du véhicule requise");
             valid = false;
         } else {
-            // Validate immatriculation pattern: xxxtunisiaxxxx (digits only, case insensitive)
+            // This was your pattern check, you can keep or remove
             String immatriculationPattern = "(?i)^[0-9]{3}tunis[0-9]{4}$";
             if (!vehiculeImmatriculation.matches(immatriculationPattern)) {
                 setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisiaxxxx");
@@ -150,16 +192,18 @@ public class InsertSeanceConduitController {
             setFieldError(txtSessionDatetime, datetimeError, "Date/Heure requise");
             valid = false;
         }
+
+        // Make sure user selected a location:
         if (selectedLatitude == 0.0 && selectedLongitude == 0.0) {
             setMapError("Veuillez sélectionner une position sur la carte.");
             valid = false;
         }
         if (!valid) {
-            System.out.println("Validation failed, not creating seance.");
+            System.out.println("Validation failed; aborting submission.");
             return;
         }
 
-        // Fetch vehicle by immatriculation.
+        // Lookup the vehicule
         Optional<Vehicule> optVehicule = vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation);
         if (!optVehicule.isPresent()) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Véhicule non trouvé");
@@ -167,7 +211,7 @@ public class InsertSeanceConduitController {
         }
         Vehicule vehicule = optVehicule.get();
 
-        // Check that the vehicle has non-expired documents for all required types.
+        // Check that vehicle documents are up to date
         List<VehiculeDocument> docs = vehiculeDocumentService.getDocumentsForVehicule(vehicule.getId());
         boolean hasVignette = docs.stream().anyMatch(d -> d.getDocType() == VehiculeDocument.DocType.VIGNETTE
                 && d.getDateExpiration() != null && d.getDateExpiration().isAfter(LocalDate.now()));
@@ -182,129 +226,107 @@ public class InsertSeanceConduitController {
             return;
         }
 
-        // Parse session datetime.
         LocalDateTime sessionDatetime;
         try {
             sessionDatetime = LocalDateTime.parse(datetimeStr, dtf);
         } catch (Exception e) {
             setFieldError(txtSessionDatetime, datetimeError, "Format invalide (yyyy-MM-dd HH:mm)");
-            System.out.println("Date parse failed: " + e.getMessage());
             return;
         }
-
-        // Check that the session datetime is in the future.
         if (!sessionDatetime.isAfter(LocalDateTime.now())) {
             setFieldError(txtSessionDatetime, datetimeError, "La date doit être dans le futur");
-            System.out.println("Session datetime is not in the future: " + sessionDatetime);
             return;
         }
-
-        // Enforce working hours: session must start between 08:00 and 17:00.
         int hour = sessionDatetime.getHour();
         if (hour < 8 || hour >= 17) {
             setFieldError(txtSessionDatetime, datetimeError, "La séance doit commencer entre 8:00 et 17:00");
-            System.out.println("Session time out of working hours: " + sessionDatetime);
             return;
         }
 
-        // Check candidate availability.
         User candidate = userService.getUserByUsername(candidateUsername);
         if (candidate == null) {
             setFieldError(candidateUsernameField, candidateError, "Candidat introuvable");
-            System.out.println("Candidate not found.");
             return;
         }
         if (!"candidat".equalsIgnoreCase(candidate.getRole())) {
             setFieldError(candidateUsernameField, candidateError, "L'utilisateur n'est pas un candidat");
-            System.out.println("User found but role != candidat");
             return;
         }
         List<SeanceConduit> candidateConduitSeances = conduitService.getSeancesByCandidatId(candidate.getId());
         if (candidateConduitSeances.size() >= MAX_CONDUIT_SEANCES) {
             setFieldError(candidateUsernameField, candidateError, "Nombre maximum de séances de conduite atteint");
-            System.out.println("Candidate has reached max conduit sessions.");
             return;
         }
-        List<SeanceCode> candidateCodeSeances = codeService.getSeancesByCandidatId(candidate.getId());
+        List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
         boolean candidateBusy = Stream.concat(
-                candidateConduitSeances.stream().map(SeanceConduit::getSessionDatetime),
-                candidateCodeSeances.stream().map(SeanceCode::getSessionDatetime)
+                candidateConduitSeances.stream().map(sc -> sc.getSessionDatetime()),
+                candidateCodeSeances.stream().map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
             setFieldError(candidateUsernameField, candidateError, "Le candidat a une autre séance à cette heure");
-            System.out.println("Candidate is busy within 60 minutes of " + sessionDatetime);
             return;
         }
 
-        // Check moniteur availability.
         User moniteur = userService.getUserByUsername(moniteurUsername);
         if (moniteur == null) {
             setFieldError(moniteurUsernameField, moniteurError, "Moniteur introuvable");
-            System.out.println("Moniteur not found.");
             return;
         }
         if (!"moniteur".equalsIgnoreCase(moniteur.getRole())) {
             setFieldError(moniteurUsernameField, moniteurError, "L'utilisateur n'est pas un moniteur");
-            System.out.println("User found but role != moniteur");
             return;
         }
         List<SeanceConduit> moniteurConduit = conduitService.getSeancesByMoniteurId(moniteur.getId());
-        List<SeanceCode> moniteurCode = codeService.getSeancesByMoniteurId(moniteur.getId());
+        List<SeanceCode> moniteurCode = seanceCodeService.getSeancesByMoniteurId(moniteur.getId());
         boolean moniteurBusy = Stream.concat(
-                moniteurConduit.stream().map(SeanceConduit::getSessionDatetime),
-                moniteurCode.stream().map(SeanceCode::getSessionDatetime)
+                moniteurConduit.stream().map(sc -> sc.getSessionDatetime()),
+                moniteurCode.stream().map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
             setFieldError(moniteurUsernameField, moniteurError, "Moniteur indisponible à cette heure");
-            System.out.println("Moniteur is busy within 60 minutes of " + sessionDatetime);
             return;
         }
 
-        // Check candidate payment conditions.
-        List<entite.Payment> payments = paymentService.getPaymentsForUser(candidate.getId());
-        for (entite.Payment p : payments) {
-            if ("FULL".equalsIgnoreCase(p.getPaymentType())) {
-                if (!"PAID".equalsIgnoreCase(p.getStatus())) {
-                    setFieldError(candidateUsernameField, candidateError, "Le paiement complet n'a pas été réglé");
-                    System.out.println("Candidate has an unpaid full payment.");
-                    return;
-                }
-            } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
-                List<entite.PaymentInstallment> installments = paymentInstallmentService.getInstallmentsByPaymentId(p.getId());
-                boolean hasOverdueUnpaid = installments.stream().anyMatch(inst ->
-                        inst.getDueDate().isBefore(LocalDate.now()) && inst.getStatus() == entite.PaymentInstallment.Status.PENDING);
-                if (hasOverdueUnpaid) {
-                    setFieldError(candidateUsernameField, candidateError, "Les paiements par facilités ne sont pas à jour");
-                    System.out.println("Candidate has an overdue unpaid installment.");
-                    return;
-                }
+        if (editingSeance == null) {
+            // Creating a new seance
+            SeanceConduit newSeance = new SeanceConduit(
+                    candidate.getId(),
+                    moniteur.getId(),
+                    vehicule.getId(),
+                    sessionDatetime,
+                    selectedLatitude,
+                    selectedLongitude
+            );
+            boolean created = conduitService.createSeanceConduit(newSeance);
+            if (created) {
+                NotificationUtil.showNotification(rootPane, "Séance Conduit créée avec succès !", NotificationType.SUCCESS);
+                clearForm();
+            } else {
+                showError("Erreur", "Impossible de créer la séance conduit.");
             }
-        }
-
-        // All validations passed; create the SeanceConduit.
-        System.out.println("Creating SeanceConduit with vehiculeId=" + vehicule.getId() + ", lat=" + selectedLatitude + ", lon=" + selectedLongitude);
-        SeanceConduit seance = new SeanceConduit(
-                candidate.getId(),
-                moniteur.getId(),
-                vehicule.getId(),
-                sessionDatetime,
-                selectedLatitude,
-                selectedLongitude
-        );
-        boolean created = conduitService.createSeanceConduit(seance);
-        if (created) {
-            System.out.println("SeanceConduit created successfully.");
-            // Show success notification and clear form fields (stay on same page)
-            NotificationUtil.showNotification(rootPane, "Séance Conduit créée avec succès !", NotificationType.SUCCESS);
-            clearForm();
         } else {
-            System.out.println("Failed to create SeanceConduit in DB.");
-            showError("Erreur", "Impossible de créer la séance conduit.");
+            // Editing an existing seance
+            editingSeance.setCandidatId(candidate.getId());
+            editingSeance.setMoniteurId(moniteur.getId());
+            editingSeance.setVehiculeId(vehicule.getId()); // Make sure to update the vehicle ID
+            editingSeance.setSessionDatetime(sessionDatetime);
+            editingSeance.setLatitude(selectedLatitude);
+            editingSeance.setLongitude(selectedLongitude);
+
+            boolean updated = conduitService.updateSeanceConduit(editingSeance);
+            if (updated) {
+                NotificationUtil.showNotification(rootPane, "Séance Conduit mise à jour avec succès !", NotificationType.SUCCESS);
+                clearForm();
+                if (parentController != null) {
+                    parentController.returnToSeancesPage();
+                }
+            } else {
+                showError("Erreur", "Impossible de mettre à jour la séance conduit.");
+            }
         }
     }
 
     private void clearErrors() {
-        System.out.println("clearErrors() called.");
         candidateUsernameField.getStyleClass().remove("error");
         moniteurUsernameField.getStyleClass().remove("error");
         txtVehiculeImmatriculation.getStyleClass().remove("error");
@@ -319,7 +341,6 @@ public class InsertSeanceConduitController {
     }
 
     private void setFieldError(TextField field, Label errorLabel, String message) {
-        System.out.println("setFieldError: " + message);
         if (!field.getStyleClass().contains("error")) {
             field.getStyleClass().add("error");
         }
@@ -329,7 +350,6 @@ public class InsertSeanceConduitController {
     }
 
     private void setMapError(String message) {
-        System.out.println("setMapError: " + message);
         if (!mapView.getStyleClass().contains("error")) {
             mapView.getStyleClass().add("error");
         }
@@ -337,7 +357,6 @@ public class InsertSeanceConduitController {
     }
 
     private void showError(String header, String content) {
-        System.out.println("showError: " + content);
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Erreur");
         alert.setHeaderText(header);
@@ -350,22 +369,20 @@ public class InsertSeanceConduitController {
         moniteurUsernameField.clear();
         txtVehiculeImmatriculation.clear();
         txtSessionDatetime.clear();
-        // Optionally leave the map marker as is; here we only clear error messages.
         clearErrors();
+        editingSeance = null;
+        btnSubmit.setText("Créer Séance Conduit");
     }
 
     /**
-     * Inner class exposed to JavaScript.
-     * When the user clicks on the map, JavaScript calls window.javaConnector.setCoordinates(lat, lng)
-     * to update the selected coordinates.
+     * This class is exposed to JavaScript so that the map can call setCoordinates(...)
+     * whenever the user places or drags a marker.
      */
     public class JavaConnector {
         public void setCoordinates(double lat, double lng) {
-            System.out.println("JavaConnector.setCoordinates called with lat=" + lat + ", lng=" + lng);
             Platform.runLater(() -> {
                 selectedLatitude = lat;
                 selectedLongitude = lng;
-                System.out.println("Coordinates selected: " + lat + ", " + lng);
                 mapView.getStyleClass().remove("error");
                 mapError.setText("");
             });

@@ -26,6 +26,11 @@ public class SeanceConduitService {
         return seanceConduitDao.findByMoniteurId(moniteurId);
     }
 
+    // NEW: Get all seances
+    public List<SeanceConduit> getAllSeances() {
+        return seanceConduitDao.getAllSeances();
+    }
+
     public boolean updateSeanceConduit(SeanceConduit seance) {
         return seanceConduitDao.update(seance);
     }

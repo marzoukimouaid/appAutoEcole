@@ -26,6 +26,11 @@ public class SeanceCodeService {
         return seanceCodeDao.findByMoniteurId(moniteurId);
     }
 
+    // NEW: Get all seances
+    public List<SeanceCode> getAllSeances() {
+        return seanceCodeDao.getAllSeances();
+    }
+
     public boolean updateSeanceCode(SeanceCode seance) {
         return seanceCodeDao.update(seance);
     }

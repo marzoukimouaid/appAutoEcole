@@ -34,6 +34,25 @@ public class UserDao {
         return null; // Authentication failed
     }
 
+    public User getUserById(int id) {
+        String sql = "SELECT id, username, role FROM users WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("role")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
     /**
      * Create a new user with a hashed password.
      */

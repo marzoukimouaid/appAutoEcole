@@ -109,6 +109,20 @@ public class SeanceConduitDao {
         }
         return false;
     }
+    public List<SeanceConduit> getAllSeances() {
+        List<SeanceConduit> seances = new ArrayList<>();
+        String sql = "SELECT * FROM seance_conduit ORDER BY session_datetime DESC";
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                seances.add(mapResultSetToSeanceConduit(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return seances;
+    }
+
 
     private SeanceConduit mapResultSetToSeanceConduit(ResultSet rs) throws SQLException {
         SeanceConduit seance = new SeanceConduit();

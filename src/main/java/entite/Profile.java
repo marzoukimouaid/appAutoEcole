@@ -14,7 +14,8 @@ public class Profile {
 
     public Profile() {}
 
-    public Profile(int userId, String nom, String prenom, String email, String pictureUrl, LocalDate birthday, int tel, String addresse) {
+    public Profile(int userId, String nom, String prenom, String email,
+                   String pictureUrl, LocalDate birthday, int tel, String addresse) {
         this.userId = userId;
         this.nom = nom;
         this.prenom = prenom;
@@ -25,11 +26,16 @@ public class Profile {
         this.addresse = addresse;
     }
 
+    // Add this helper method:
+    public String getFullName() {
+        String last = (nom == null) ? "" : nom;
+        String first = (prenom == null) ? "" : prenom;
+        return (last + " " + first).trim();
+    }
 
     public int getTel() {
         return tel;
     }
-
     public void setTel(int tel) {
         this.tel = tel;
     }
@@ -37,7 +43,6 @@ public class Profile {
     public String getAddresse() {
         return addresse;
     }
-
     public void setAddresse(String addresse) {
         this.addresse = addresse;
     }
@@ -45,7 +50,6 @@ public class Profile {
     public int getUserId() {
         return userId;
     }
-
     public void setUserId(int userId) {
         this.userId = userId;
     }
@@ -53,7 +57,6 @@ public class Profile {
     public String getNom() {
         return nom;
     }
-
     public void setNom(String nom) {
         this.nom = nom;
     }
@@ -61,7 +64,6 @@ public class Profile {
     public String getPrenom() {
         return prenom;
     }
-
     public void setPrenom(String prenom) {
         this.prenom = prenom;
     }
@@ -69,7 +71,6 @@ public class Profile {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
     }
@@ -77,7 +78,6 @@ public class Profile {
     public String getPictureUrl() {
         return pictureUrl;
     }
-
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
     }
@@ -85,7 +85,6 @@ public class Profile {
     public LocalDate getBirthday() {
         return birthday;
     }
-
     public void setBirthday(LocalDate birthday) {
         this.birthday = birthday;
     }
