@@ -1,16 +1,33 @@
 package Utils;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.util.Base64;
-import java.net.URLEncoder;
+import java.util.Iterator;
 
 public class ImgBBUtil {
 
-    // Load the API key from your config.json via ConfigReader
     private static final String API_KEY = ConfigReader.getKey("imgbb_api_key");
     private static final String UPLOAD_URL = "https://api.imgbb.com/1/upload?key=" + API_KEY;
+
+    // Threshold in bytes; if the image is larger than this, compress it.
+    private static final long SIZE_THRESHOLD = 500_000; // 500 KB
+    // Target dimensions for scaling down if needed.
+    private static final int TARGET_WIDTH = 800;
+    private static final int TARGET_HEIGHT = 800;
+    // JPEG quality (0.0 to 1.0, where 1.0 is best quality but larger file)
+    private static final float JPEG_QUALITY = 0.7f;
 
     /**
      * Uploads an image file to ImgBB.
@@ -21,21 +38,18 @@ public class ImgBBUtil {
     public static String uploadImageToImgBB(File imageFile) {
         HttpURLConnection connection = null;
         try {
-            // Read and encode the image file to Base64
-            byte[] fileContent = Files.readAllBytes(imageFile.toPath());
-            String encodedImage = Base64.getEncoder().encodeToString(fileContent);
+            byte[] imageBytes = getImageBytes(imageFile);
+            String encodedImage = Base64.getEncoder().encodeToString(imageBytes);
             String postData = "image=" + URLEncoder.encode(encodedImage, "UTF-8");
 
             URL url = new URL(UPLOAD_URL);
             connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
-            // Set connection and read timeouts (5 seconds)
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            // Send the POST data
             try (OutputStream os = connection.getOutputStream();
                  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"))) {
                 writer.write(postData);
@@ -44,7 +58,6 @@ public class ImgBBUtil {
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Read the response
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
                     StringBuilder response = new StringBuilder();
                     String line;
@@ -52,13 +65,14 @@ public class ImgBBUtil {
                         response.append(line);
                     }
                     String responseString = response.toString();
-                    // A simple parsing; in production, use a JSON parser
                     int urlIndex = responseString.indexOf("\"url\":\"");
                     if (urlIndex != -1) {
                         int start = urlIndex + 7;
                         int end = responseString.indexOf("\"", start);
                         if (end != -1) {
-                            return responseString.substring(start, end);
+                            String urlFromResponse = responseString.substring(start, end);
+                            // Unescape the URL by replacing "\/" with "/"
+                            return urlFromResponse.replace("\\/", "/");
                         }
                     }
                 }
@@ -81,5 +95,74 @@ public class ImgBBUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the image bytes either as is or after compression if the file size is above a threshold.
+     *
+     * @param imageFile the image file.
+     * @return byte array of image data.
+     * @throws IOException if an I/O error occurs.
+     */
+    private static byte[] getImageBytes(File imageFile) throws IOException {
+        if (imageFile.length() > SIZE_THRESHOLD) {
+            return compressImage(imageFile, JPEG_QUALITY, TARGET_WIDTH, TARGET_HEIGHT);
+        } else {
+            return Files.readAllBytes(imageFile.toPath());
+        }
+    }
+
+    /**
+     * Compresses the image by scaling it down (if necessary) and re-encoding it as a JPEG with the given quality.
+     *
+     * @param inputFile the original image file.
+     * @param quality   JPEG compression quality (0.0 to 1.0).
+     * @param maxWidth  maximum width for the compressed image.
+     * @param maxHeight maximum height for the compressed image.
+     * @return a byte array of the compressed image.
+     * @throws IOException if an I/O error occurs.
+     */
+    private static byte[] compressImage(File inputFile, float quality, int maxWidth, int maxHeight) throws IOException {
+        BufferedImage originalImage = ImageIO.read(inputFile);
+        if (originalImage == null) {
+            throw new IOException("Could not read image file: " + inputFile.getAbsolutePath());
+        }
+
+        int originalWidth = originalImage.getWidth();
+        int originalHeight = originalImage.getHeight();
+
+        // Calculate new dimensions while maintaining aspect ratio.
+        double scale = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+        int newWidth = (int) (originalWidth * scale);
+        int newHeight = (int) (originalHeight * scale);
+
+        // Create a new buffered image with the new dimensions and draw the scaled image.
+        BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = scaledImage.createGraphics();
+        // Use high-quality scaling hints
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+
+        // Prepare to write the image as JPEG with compression.
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+            if (!writers.hasNext()) {
+                throw new IllegalStateException("No JPEG writers found");
+            }
+            ImageWriter writer = writers.next();
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            if (param.canWriteCompressed()) {
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(quality);
+            }
+            writer.setOutput(ios);
+            writer.write(null, new IIOImage(scaledImage, null, null), param);
+            writer.dispose();
+        }
+        return baos.toByteArray();
     }
 }

@@ -37,7 +37,7 @@ public class InsertSeanceCodeController {
     private final PaymentInstallmentService paymentInstallmentService = new PaymentInstallmentService();
     private final DossierCandidatService dossierService = new DossierCandidatService();
     private final MoniteurService moniteurService = new MoniteurService();
-
+    private final NotificationService notificationService = new NotificationService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final int MAX_CODE_SEANCES = 20;
 
@@ -174,7 +174,10 @@ public class InsertSeanceCodeController {
             SeanceCode newSeance = new SeanceCode(candidate.getId(), moniteur.getId(), sessionDatetime);
             boolean created = seanceCodeService.createSeanceCode(newSeance);
             if (created) {
-                // >>> NEW: Show success notification <<<
+                notificationService.sendNotification(candidate.getId(),
+                        "Vous Avez une nouvelle Seance Code le "+sessionDatetime+".");
+                notificationService.sendNotification(moniteur.getId(),
+                        "Vous Avez une nouvelle Seance Code pour surveiller le "+sessionDatetime+".");
                 showSuccessNotification("Séance Code créée avec succès !");
 
                 clearForm();

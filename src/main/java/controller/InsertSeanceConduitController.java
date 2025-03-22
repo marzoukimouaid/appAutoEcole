@@ -3,6 +3,8 @@ package controller;
 import entite.*;
 import entite.Vehicule;
 import entite.VehiculeDocument;
+import entite.DossierCandidat;
+import entite.Moniteur;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
@@ -11,13 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
-import service.SeanceCodeService;
-import service.SeanceConduitService;
-import service.UserService;
-import service.VehiculeService;
-import service.VehiculeDocumentService;
-import service.PaymentService;
-import service.PaymentInstallmentService;
+import service.*;
 import javafx.scene.control.Alert.AlertType;
 
 import Utils.NotificationUtil;
@@ -56,14 +52,16 @@ public class InsertSeanceConduitController {
     private final VehiculeDocumentService vehiculeDocumentService = new VehiculeDocumentService();
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService paymentInstallmentService = new PaymentInstallmentService();
-
+    private final NotificationService notificationService = new NotificationService();
+    // Used to fetch candidate's dossier (which stores permis type and max sessions)
+    private final DossierCandidatService dossierCandidatService = new DossierCandidatService();
+    // Used to fetch the moniteur's details (including permis type)
+    private final MoniteurService moniteurService = new MoniteurService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // We'll store the chosen lat/lng in these fields:
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
-
-    private static final int MAX_CONDUIT_SEANCES = 20;
 
     @FXML
     public void initialize() {
@@ -83,13 +81,11 @@ public class InsertSeanceConduitController {
                     ex.printStackTrace();
                 }
 
-                // <<< ADDED: If we are editing an existing seance and it has lat/lng, place a marker:
+                // If editing an existing seance with valid lat/lng, show the marker:
                 if (editingSeance != null) {
                     double lat = editingSeance.getLatitude();
                     double lng = editingSeance.getLongitude();
-                    // If it's not (0.0, 0.0), let's show the marker
                     if (Math.abs(lat) > 0.0001 || Math.abs(lng) > 0.0001) {
-                        // For example, zoom to 13 near that location
                         String script =
                                 "map.setView([" + lat + "," + lng + "], 13);" +
                                         "if (!marker) { marker = L.marker([" + lat + "," + lng + "]).addTo(map); } " +
@@ -100,9 +96,8 @@ public class InsertSeanceConduitController {
             }
         });
 
-        // Load your leafletMap.html resource from your /resources path:
+        // Load your leafletMap.html resource:
         try {
-            // Make sure the path is correct for your environment
             String url = getClass().getResource("/org/example/leafletMap.html").toExternalForm();
             engine.load(url);
         } catch (Exception e) {
@@ -110,12 +105,12 @@ public class InsertSeanceConduitController {
         }
     }
 
-    // This setter is called by the parent "SecretaireSeancesController"
+    // Called by the parent "SecretaireSeancesController"
     public void setParentController(SecretaireSeancesController parent) {
         this.parentController = parent;
     }
 
-    // <<< ADDED: store the lat/lng from the existing SeanceConduit
+    // Used to populate the form for editing an existing seance.
     public void setSeance(SeanceConduit seance) {
         this.editingSeance = seance;
         User candidate = userService.getUserById(seance.getCandidatId());
@@ -128,17 +123,14 @@ public class InsertSeanceConduitController {
             moniteurUsernameField.setText(moniteur.getUsername());
         }
 
-        // If we have a valid vehiculeId, fill immatriculation
         if (seance.getVehiculeId() > 0) {
             vehiculeService.getVehiculeById(seance.getVehiculeId())
                     .ifPresent(v -> txtVehiculeImmatriculation.setText(v.getImmatriculation()));
         }
 
-        // The session date/time
         txtSessionDatetime.setText(seance.getSessionDatetime().format(dtf));
         btnSubmit.setText("Mettre à jour Séance Conduit");
 
-        // Store lat/lng so we can re-show them on the map
         selectedLatitude = seance.getLatitude();
         selectedLongitude = seance.getLongitude();
     }
@@ -147,8 +139,6 @@ public class InsertSeanceConduitController {
     private void handleSubmit() {
         System.out.println("InsertSeanceConduitController.handleSubmit: called.");
         try {
-            // The user might have placed a marker or re-placed it
-            // We run a small script: if marker not null, getLatLng
             Object result = mapView.getEngine().executeScript("marker ? marker.getLatLng() : null");
             if (result != null && result instanceof JSObject) {
                 JSObject latlng = (JSObject) result;
@@ -181,7 +171,6 @@ public class InsertSeanceConduitController {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Immatriculation du véhicule requise");
             valid = false;
         } else {
-            // This was your pattern check, you can keep or remove
             String immatriculationPattern = "(?i)^[0-9]{3}tunis[0-9]{4}$";
             if (!vehiculeImmatriculation.matches(immatriculationPattern)) {
                 setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisiaxxxx");
@@ -192,8 +181,6 @@ public class InsertSeanceConduitController {
             setFieldError(txtSessionDatetime, datetimeError, "Date/Heure requise");
             valid = false;
         }
-
-        // Make sure user selected a location:
         if (selectedLatitude == 0.0 && selectedLongitude == 0.0) {
             setMapError("Veuillez sélectionner une position sur la carte.");
             valid = false;
@@ -203,7 +190,6 @@ public class InsertSeanceConduitController {
             return;
         }
 
-        // Lookup the vehicule
         Optional<Vehicule> optVehicule = vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation);
         if (!optVehicule.isPresent()) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Véhicule non trouvé");
@@ -211,7 +197,6 @@ public class InsertSeanceConduitController {
         }
         Vehicule vehicule = optVehicule.get();
 
-        // Check that vehicle documents are up to date
         List<VehiculeDocument> docs = vehiculeDocumentService.getDocumentsForVehicule(vehicule.getId());
         boolean hasVignette = docs.stream().anyMatch(d -> d.getDocType() == VehiculeDocument.DocType.VIGNETTE
                 && d.getDateExpiration() != null && d.getDateExpiration().isAfter(LocalDate.now()));
@@ -253,8 +238,14 @@ public class InsertSeanceConduitController {
             return;
         }
         List<SeanceConduit> candidateConduitSeances = conduitService.getSeancesByCandidatId(candidate.getId());
-        if (candidateConduitSeances.size() >= MAX_CONDUIT_SEANCES) {
-            setFieldError(candidateUsernameField, candidateError, "Nombre maximum de séances de conduite atteint");
+        Optional<DossierCandidat> dossierOpt = dossierCandidatService.getDossierByCandidateId(candidate.getId());
+        if (!dossierOpt.isPresent()) {
+            setFieldError(candidateUsernameField, candidateError, "Dossier candidat introuvable");
+            return;
+        }
+        int maxSeances = dossierOpt.get().getNombreSeancesConduite();
+        if (candidateConduitSeances.size() >= maxSeances) {
+            setFieldError(candidateUsernameField, candidateError, "Nombre maximum de séances de conduite atteint (" + maxSeances + ")");
             return;
         }
         List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
@@ -276,6 +267,46 @@ public class InsertSeanceConduitController {
             setFieldError(moniteurUsernameField, moniteurError, "L'utilisateur n'est pas un moniteur");
             return;
         }
+
+        // New check: Ensure that the candidate's permis type, moniteur's permis type, and véhicule type all match.
+        Optional<Moniteur> moniteurOpt = moniteurService.getMoniteurByUserId(moniteur.getId());
+        if (!moniteurOpt.isPresent()) {
+            setFieldError(moniteurUsernameField, moniteurError, "Détails du moniteur introuvables");
+            return;
+        }
+        Moniteur moniteurEntity = moniteurOpt.get();
+        String candidatePermis = dossierOpt.get().getPermisType(); // e.g., "A", "B", or "C"
+        String moniteurPermis = moniteurEntity.getPermisType().name(); // e.g., "A", "B", or "C"
+        if (!candidatePermis.equalsIgnoreCase(moniteurPermis)) {
+            setFieldError(moniteurUsernameField, moniteurError, "Le permis du candidat et du moniteur ne correspondent pas");
+            return;
+        }
+        Vehicule.VehicleType vehiculeType = vehicule.getType();
+        boolean vehiculeMatches = false;
+        switch (candidatePermis.toUpperCase()) {
+            case "A":
+                vehiculeMatches = vehiculeType == Vehicule.VehicleType.MOTO;
+                break;
+            case "B":
+                vehiculeMatches = vehiculeType == Vehicule.VehicleType.VOITURE;
+                break;
+            case "C":
+                vehiculeMatches = vehiculeType == Vehicule.VehicleType.CAMION;
+                break;
+            default:
+                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Type de permis candidat invalide");
+                return;
+        }
+        if (!vehiculeMatches) {
+            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le type du véhicule ne correspond pas au permis du candidat");
+            return;
+        }
+        // NEW: Check if the vehicle has remaining kilometrage before maintenance.
+        if (vehicule.getKmRestantEntretien() <= 0) {
+            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le véhicule nécessite un entretien (kilométrage restant insuffisant).");
+            return;
+        }
+
         List<SeanceConduit> moniteurConduit = conduitService.getSeancesByMoniteurId(moniteur.getId());
         List<SeanceCode> moniteurCode = seanceCodeService.getSeancesByMoniteurId(moniteur.getId());
         boolean moniteurBusy = Stream.concat(
@@ -288,7 +319,6 @@ public class InsertSeanceConduitController {
         }
 
         if (editingSeance == null) {
-            // Creating a new seance
             SeanceConduit newSeance = new SeanceConduit(
                     candidate.getId(),
                     moniteur.getId(),
@@ -299,16 +329,19 @@ public class InsertSeanceConduitController {
             );
             boolean created = conduitService.createSeanceConduit(newSeance);
             if (created) {
+                notificationService.sendNotification(candidate.getId(),
+                        "Vous Avez une nouvelle Séance Conduit le " + sessionDatetime + ".");
+                notificationService.sendNotification(moniteur.getId(),
+                        "Vous Avez une nouvelle Séance Conduit pour surveiller le " + sessionDatetime + ".");
                 NotificationUtil.showNotification(rootPane, "Séance Conduit créée avec succès !", NotificationType.SUCCESS);
                 clearForm();
             } else {
                 showError("Erreur", "Impossible de créer la séance conduit.");
             }
         } else {
-            // Editing an existing seance
             editingSeance.setCandidatId(candidate.getId());
             editingSeance.setMoniteurId(moniteur.getId());
-            editingSeance.setVehiculeId(vehicule.getId()); // Make sure to update the vehicle ID
+            editingSeance.setVehiculeId(vehicule.getId());
             editingSeance.setSessionDatetime(sessionDatetime);
             editingSeance.setLatitude(selectedLatitude);
             editingSeance.setLongitude(selectedLongitude);
@@ -375,7 +408,7 @@ public class InsertSeanceConduitController {
     }
 
     /**
-     * This class is exposed to JavaScript so that the map can call setCoordinates(...)
+     * Exposed to JavaScript so that the map can call setCoordinates(...)
      * whenever the user places or drags a marker.
      */
     public class JavaConnector {

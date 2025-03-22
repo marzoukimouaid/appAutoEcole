@@ -269,6 +269,8 @@ public class InsertExamenCodeController {
             if (created) {
                 notificationService.sendNotification(candidate.getId(),
                         "Votre inscription à l'examen code a été créée avec succès.");
+                notificationService.sendNotification(moniteur.getId(),
+                        "Vous Avez une nouvelle Examen Code pour surveiller.");
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToExamInscriptionsPage();

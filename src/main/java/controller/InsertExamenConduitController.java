@@ -7,22 +7,11 @@ import entite.SeanceCode;
 import entite.SeanceConduit;
 import entite.User;
 import entite.Vehicule;
-import entite.VehiculeDocument;
 import entite.Payment;
 import entite.PaymentInstallment;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
-import service.DossierCandidatService;
-import service.ExamenConduitService;
-import service.ExamenCodeService;
-import service.SeanceCodeService;
-import service.SeanceConduitService;
-import service.UserService;
-import service.VehiculeDocumentService;
-import service.VehiculeService;
-import service.PaymentService;
-import service.PaymentInstallmentService;
-import service.MoniteurService;
+import service.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -80,7 +69,7 @@ public class InsertExamenConduitController {
     private final PaymentInstallmentService paymentInstallmentService = new PaymentInstallmentService();
     private final DossierCandidatService dossierService = new DossierCandidatService();
     private final MoniteurService moniteurService = new MoniteurService();
-
+    private final NotificationService notificationService = new NotificationService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // Map coordinates (set via JS bridge)
@@ -265,65 +254,62 @@ public class InsertExamenConduitController {
             return;
         }
 
-        // Payment check: ensure candidate's payment is in order.
-        List<Payment> payments = paymentService.getPaymentsForUser(candidate.getId());
-        if (payments.isEmpty()) {
-            setFieldError(candidateUsernameField, candidateError, "Aucun paiement trouvé pour ce candidat");
+        // New check: Ensure that the candidate's permis type, moniteur's permis type, and véhicule type all match.
+        Optional<Vehicule> optVehicule = vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation);
+        if (!optVehicule.isPresent()) {
+            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Véhicule non trouvé");
             return;
         }
-        for (Payment p : payments) {
-            if ("FULL".equalsIgnoreCase(p.getPaymentType())) {
-                if (!p.getStatus().equalsIgnoreCase("PAID")) {
-                    setFieldError(candidateUsernameField, candidateError, "Le paiement complet n'a pas été réglé");
-                    return;
-                }
-            } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
-                if (p.getStatus().equalsIgnoreCase("PENDING")) {
-                    List<PaymentInstallment> installments = paymentInstallmentService.getInstallmentsByPaymentId(p.getId());
-                    boolean overdue = installments.stream().anyMatch(inst ->
-                            inst.getDueDate().isBefore(LocalDate.now()) &&
-                                    inst.getStatus() == PaymentInstallment.Status.PENDING
-                    );
-                    if (overdue) {
-                        setFieldError(candidateUsernameField, candidateError, "Une ou plusieurs échéances sont en retard");
-                        return;
-                    }
-                }
-            }
-        }
-
-        // For new exam, ensure candidate does not already have an exam conduit with status PENDING or PASSED.
-        if (editingExam == null) {
-            List<ExamenConduit> candidateExamConduits = examenConduitService.getExamenConduitsByCandidatId(candidate.getId());
-            boolean alreadyHasExam = candidateExamConduits.stream().anyMatch(e ->
-                    e.getStatus() == ExamenConduit.ExamStatus.PENDING || e.getStatus() == ExamenConduit.ExamStatus.PASSED
-            );
-            if (alreadyHasExam) {
-                setFieldError(candidateUsernameField, candidateError, "Le candidat a déjà un examen conduit en cours ou réussi");
+        Vehicule vehicule = optVehicule.get();
+        Vehicule.VehicleType vehiculeType = vehicule.getType();
+        boolean vehiculeMatches = false;
+        switch (dossier.getPermisType().toUpperCase()) {
+            case "A":
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.MOTO);
+                break;
+            case "B":
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.VOITURE);
+                break;
+            case "C":
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.CAMION);
+                break;
+            default:
+                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Type de permis candidat invalide");
                 return;
-            }
+        }
+        if (!vehiculeMatches) {
+            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le type du véhicule ne correspond pas au permis du candidat");
+            return;
+        }
+        // NEW: Check if the vehicle has remaining kilometrage.
+        if (vehicule.getKmRestantEntretien() <= 0) {
+            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le véhicule nécessite un entretien (kilométrage restant insuffisant).");
+            return;
         }
 
-        // Check candidate availability (across seances and exam conduit registrations) within a 60-minute window.
+        // Conflict check: Exclude the exam conduit currently being updated (if any)
         boolean candidateBusy = Stream.concat(
                 Stream.concat(
                         seanceCodeService.getSeancesByCandidatId(candidate.getId()).stream().map(SeanceCode::getSessionDatetime),
                         seanceConduitService.getSeancesByCandidatId(candidate.getId()).stream().map(SeanceConduit::getSessionDatetime)
                 ),
-                examenConduitService.getExamenConduitsByCandidatId(candidate.getId()).stream().map(e -> e.getExamDatetime())
+                examenConduitService.getExamenConduitsByCandidatId(candidate.getId()).stream()
+                        .filter(e -> editingExam == null || e.getId() != editingExam.getId())
+                        .map(e -> e.getExamDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
             setFieldError(candidateUsernameField, candidateError, "Le candidat a une autre séance ou examen à cette heure");
             return;
         }
 
-        // Check moniteur availability (across seances and exam conduit registrations) within a 60-minute window.
         boolean moniteurBusy = Stream.concat(
                 Stream.concat(
                         seanceCodeService.getSeancesByMoniteurId(moniteur.getId()).stream().map(SeanceCode::getSessionDatetime),
                         seanceConduitService.getSeancesByMoniteurId(moniteur.getId()).stream().map(SeanceConduit::getSessionDatetime)
                 ),
-                examenConduitService.getExamenConduitsByMoniteurId(moniteur.getId()).stream().map(e -> e.getExamDatetime())
+                examenConduitService.getExamenConduitsByMoniteurId(moniteur.getId()).stream()
+                        .filter(e -> editingExam == null || e.getId() != editingExam.getId())
+                        .map(e -> e.getExamDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
             setFieldError(moniteurUsernameField, moniteurError, "Le moniteur a une autre séance ou examen à cette heure");
@@ -335,9 +321,7 @@ public class InsertExamenConduitController {
             ExamenConduit newExam = new ExamenConduit(
                     candidate.getId(),
                     moniteur.getId(),
-                    vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation)
-                            .map(Vehicule::getId)
-                            .orElse(0),
+                    vehicule.getId(),
                     examDatetime,
                     selectedLatitude,
                     selectedLongitude
@@ -346,6 +330,10 @@ public class InsertExamenConduitController {
             // By default, paiement_status remains PENDING.
             boolean created = examenConduitService.createExamenConduit(newExam);
             if (created) {
+                notificationService.sendNotification(candidate.getId(),
+                        "Votre inscription à l'examen Conduit a été créée avec succès le " + newExam.getExamDatetime() + ".");
+                notificationService.sendNotification(moniteur.getId(),
+                        "Vous Avez une nouvelle Examen Conduit pour surveiller le " + newExam.getExamDatetime() + ".");
                 Platform.runLater(() -> {
                     StackPane notificationParent = getNotificationParent();
                     NotificationUtil.showNotification(notificationParent, "Examen Conduit créé avec succès !", NotificationType.SUCCESS);
@@ -357,9 +345,7 @@ public class InsertExamenConduitController {
         } else {
             editingExam.setCandidatId(candidate.getId());
             editingExam.setMoniteurId(moniteur.getId());
-            editingExam.setVehiculeId(vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation)
-                    .map(Vehicule::getId)
-                    .orElse(0));
+            editingExam.setVehiculeId(vehicule.getId());
             editingExam.setExamDatetime(examDatetime);
             editingExam.setPrice(price);
             editingExam.setLatitude(selectedLatitude);
@@ -383,7 +369,6 @@ public class InsertExamenConduitController {
     private StackPane getNotificationParent() {
         if (rootPane.getScene() == null) {
             System.err.println("Scene is not set. Waiting for scene to be set...");
-            // Add a listener and return a fallback StackPane.
             final StackPane[] stackHolder = new StackPane[1];
             rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
                 if (newScene != null) {
