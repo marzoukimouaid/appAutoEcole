@@ -6,9 +6,11 @@ import entite.Profile;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import service.SeanceCodeService;
 import service.SeanceConduitService;
 import service.UserService;
@@ -62,9 +64,17 @@ public class SecretaireSeancesController {
             return dt2.compareTo(dt1);
         });
 
-        for (Object seance : allSeances) {
-            VBox card = createSeanceCard(seance);
-            seanceListContainer.getChildren().add(card);
+        // If no seances are found, add an indicative label
+        if (allSeances.isEmpty()) {
+            Label noSeanceLabel = new Label("Aucune séance trouvée");
+            noSeanceLabel.getStyleClass().add("no-data-label"); // Define this class in your CSS.
+            seanceListContainer.getChildren().add(noSeanceLabel);
+        } else {
+            // Otherwise, create and add cards for each seance.
+            for (Object seance : allSeances) {
+                VBox card = createSeanceCard(seance);
+                seanceListContainer.getChildren().add(card);
+            }
         }
     }
 
@@ -74,10 +84,10 @@ public class SecretaireSeancesController {
         card.setMinWidth(300);
         card.setMaxWidth(Double.MAX_VALUE);
 
-        javafx.scene.control.Label lblType = new javafx.scene.control.Label();
+        Label lblType = new Label();
         lblType.getStyleClass().add("title");
 
-        javafx.scene.control.Label lblDate = new javafx.scene.control.Label();
+        Label lblDate = new Label();
         lblDate.getStyleClass().add("subtitle");
 
         int candidateId, moniteurId;
@@ -97,9 +107,9 @@ public class SecretaireSeancesController {
         String moniteurFullName = moniteurProfileOpt
                 .map(p -> p.getNom() + " " + p.getPrenom()).orElse("N/A");
 
-        javafx.scene.control.Label lblCandidate = new javafx.scene.control.Label("Candidat: " + candidateFullName);
+        Label lblCandidate = new Label("Candidat: " + candidateFullName);
         lblCandidate.getStyleClass().add("subtitle");
-        javafx.scene.control.Label lblMoniteur = new javafx.scene.control.Label("Moniteur: " + moniteurFullName);
+        Label lblMoniteur = new Label("Moniteur: " + moniteurFullName);
         lblMoniteur.getStyleClass().add("subtitle");
 
         VBox detailsBox = new VBox(5);
@@ -116,9 +126,7 @@ public class SecretaireSeancesController {
             SeanceConduit sc = (SeanceConduit) seance;
             lblType.setText("Séance Conduit");
             lblDate.setText("Date/Heure: " + sc.getSessionDatetime().format(dtf));
-            javafx.scene.control.Label lblLocation = new javafx.scene.control.Label(
-                    "Lieu: (" + sc.getLatitude() + ", " + sc.getLongitude() + ")"
-            );
+            Label lblLocation = new Label("Lieu: (" + sc.getLatitude() + ", " + sc.getLongitude() + ")");
             lblLocation.getStyleClass().add("subtitle");
             detailsBox.getChildren().add(lblLocation);
         }
@@ -127,7 +135,7 @@ public class SecretaireSeancesController {
         if (!detailsBox.getChildren().isEmpty()) {
             card.getChildren().add(detailsBox);
         }
-        javafx.scene.layout.HBox buttonContainer = new javafx.scene.layout.HBox();
+        HBox buttonContainer = new HBox();
         buttonContainer.setStyle("-fx-alignment: CENTER_RIGHT;");
         buttonContainer.getChildren().add(btnInspect);
         card.getChildren().add(buttonContainer);
@@ -148,10 +156,7 @@ public class SecretaireSeancesController {
                 detailsPage = loader.load();
                 SeanceCodeDetailsController codeDetailsController = loader.getController();
                 codeDetailsController.setSeance((SeanceCode) seance);
-
-                // >>> Inject self as the parent <<<
                 codeDetailsController.setParentController(this);
-
             } else if (seance instanceof SeanceConduit) {
                 URL resource = getClass().getResource("/org/example/SeanceConduitDetails.fxml");
                 if (resource == null) {
@@ -161,16 +166,12 @@ public class SecretaireSeancesController {
                 detailsPage = loader.load();
                 SeanceConduitDetailsController conduitDetailsController = loader.getController();
                 conduitDetailsController.setSeance((SeanceConduit) seance);
-
-                // >>> Inject self as the parent <<<
                 conduitDetailsController.setParentController(this);
-
             } else {
                 return;
             }
-            // Show the details page in the center of our SecretaireSeances.fxml
+            // Display the details page in the center of the main layout.
             rootPane.setCenter(detailsPage);
-
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -181,14 +182,10 @@ public class SecretaireSeancesController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceConduit.fxml"));
             Parent insertPage = loader.load();
-
             InsertSeanceConduitController controller = loader.getController();
             controller.setParentController(this);
-
-            // Hide the two insert buttons if you prefer
             btnInsertConduit.setVisible(false);
             btnInsertCode.setVisible(false);
-
             rootPane.setCenter(insertPage);
         } catch (IOException e) {
             e.printStackTrace();
@@ -200,10 +197,8 @@ public class SecretaireSeancesController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceCode.fxml"));
             Parent insertPage = loader.load();
-
             InsertSeanceCodeController controller = loader.getController();
             controller.setParentController(this);
-
             rootPane.setCenter(insertPage);
         } catch (IOException e) {
             e.printStackTrace();
@@ -211,8 +206,7 @@ public class SecretaireSeancesController {
     }
 
     /**
-     * Called by child controllers after creation or edition of a seance
-     * so we jump back to the "SecretaireSeances.fxml" main listing.
+     * Called by child controllers after creation or edition of a seance so we jump back to the main listing.
      */
     public void returnToSeancesPage() {
         try {
@@ -224,32 +218,28 @@ public class SecretaireSeancesController {
         }
     }
 
-    // >>> New method: let a child do handleEdit by calling us <<<
+    // Method to open the edit page for a SeanceCode.
     public void openEditCodePage(SeanceCode seance) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceCode.fxml"));
             Parent editPage = loader.load();
-
             InsertSeanceCodeController controller = loader.getController();
             controller.setParentController(this);
-            controller.setSeance(seance); // pass the existing seance for editing
-
+            controller.setSeance(seance);
             rootPane.setCenter(editPage);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // >>> The same idea for Conduit
+    // Method to open the edit page for a SeanceConduit.
     public void openEditConduitPage(SeanceConduit seance) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceConduit.fxml"));
             Parent editPage = loader.load();
-
             InsertSeanceConduitController controller = loader.getController();
             controller.setParentController(this);
             controller.setSeance(seance);
-
             rootPane.setCenter(editPage);
         } catch (IOException e) {
             e.printStackTrace();

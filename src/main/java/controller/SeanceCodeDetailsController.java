@@ -1,7 +1,9 @@
 package controller;
 
 import entite.SeanceCode;
+import entite.User;
 import entite.Profile;
+import Utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -9,10 +11,18 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import service.SeanceCodeService;
 import service.ProfileService;
-import service.UserService;
 
 import java.util.Optional;
 
+/**
+ * SeanceCodeDetailsController
+ *
+ *  - candidate => read only
+ *  - secretaire => can edit & delete
+ *  - moniteur => read only
+ *
+ * setParentController(...) to let secretarial parent handle navigation
+ */
 public class SeanceCodeDetailsController {
 
     @FXML private Label lblTitle;
@@ -23,14 +33,36 @@ public class SeanceCodeDetailsController {
     @FXML private Button btnDelete;
 
     private SeanceCode seance;
-    private final SeanceCodeService codeService = new SeanceCodeService();
-    private final ProfileService profileService = new ProfileService();
-    private final UserService userService = new UserService();
 
-    // >>> ADD THIS: reference to the parent controller <<<
+    // Possibly the same parent as seances: e.g. SecretaireSeancesController
     private SecretaireSeancesController parentController;
 
-    // >>> Provide a setter so the parent can inject itself <<<
+    private final SeanceCodeService codeService = new SeanceCodeService();
+    private final ProfileService profileService = new ProfileService();
+
+    @FXML
+    public void initialize() {
+        // Hide all by default
+        btnEdit.setVisible(false);
+        btnDelete.setVisible(false);
+
+        // role-based logic
+        User currentUser = SessionManager.getCurrentUser();
+        if (currentUser != null) {
+            switch (currentUser.getRole()) {
+                case "candidate":
+                    break;
+                case "secretaire":
+                    btnEdit.setVisible(true);
+                    btnDelete.setVisible(true);
+                    break;
+                case "moniteur":
+                    // read only
+                    break;
+            }
+        }
+    }
+
     public void setParentController(SecretaireSeancesController parentController) {
         this.parentController = parentController;
     }
@@ -42,56 +74,43 @@ public class SeanceCodeDetailsController {
 
     private void loadDetails() {
         lblTitle.setText("Détails de la Séance Code");
-        lblDate.setText("Date/Heure: " + seance.getSessionDatetime().toString());
+        lblDate.setText("Date/Heure: " + seance.getSessionDatetime());
 
-        String candidateFullName = profileService.getProfileByUserId(seance.getCandidatId())
-                .map(Profile::getFullName)    // If you have getFullName, or do p -> p.getNom()+" "+p.getPrenom()
+        String candidateName = profileService.getProfileByUserId(seance.getCandidatId())
+                .map(p-> p.getNom() + " " + p.getPrenom())
+                .orElse("N/A");
+        String moniteurName = profileService.getProfileByUserId(seance.getMoniteurId())
+                .map(p-> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
 
-        String moniteurFullName = profileService.getProfileByUserId(seance.getMoniteurId())
-                .map(Profile::getFullName)
-                .orElse("N/A");
-
-        lblCandidate.setText("Candidat: " + candidateFullName);
-        lblMoniteur.setText("Moniteur: " + moniteurFullName);
+        lblCandidate.setText("Candidat: " + candidateName);
+        lblMoniteur.setText("Moniteur: " + moniteurName);
     }
 
     @FXML
     private void handleEdit() {
-        // >>> Instead of rewriting the center from here,
-        // >>> just tell the parent to open the edit page:
         if (parentController != null) {
-            parentController.openEditCodePage(seance);
+            // e.g. parentController.openEditSeanceCodePage(seance);
+            System.out.println("handleEdit SeanceCode (secretaire)...");
         }
     }
 
     @FXML
     private void handleDelete() {
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Confirmer la suppression");
-        confirmAlert.setHeaderText("Voulez-vous vraiment supprimer cette séance ?");
-        confirmAlert.setContentText("Cette action est irréversible.");
-        Optional<ButtonType> result = confirmAlert.showAndWait();
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmer");
+        confirm.setHeaderText("Voulez-vous vraiment supprimer cette Séance Code ?");
+        confirm.setContentText("Action irréversible.");
+        Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            boolean deleted = codeService.deleteSeanceCode(seance.getId());
-            if (deleted) {
-                Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
-                infoAlert.setTitle("Suppression réussie");
-                infoAlert.setHeaderText(null);
-                infoAlert.setContentText("La séance a été supprimée avec succès.");
-                infoAlert.showAndWait();
-
-                // When deleted, we can ask parent to reload the list
+            boolean success = codeService.deleteSeanceCode(seance.getId());
+            if (success) {
+                new Alert(Alert.AlertType.INFORMATION,"Séance supprimée.").showAndWait();
                 if (parentController != null) {
-                    parentController.returnToSeancesPage();
+                    // parentController.returnToSeancesPage();
                 }
-
             } else {
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erreur");
-                errorAlert.setHeaderText("Suppression échouée");
-                errorAlert.setContentText("La séance n'a pas pu être supprimée.");
-                errorAlert.showAndWait();
+                new Alert(Alert.AlertType.ERROR,"Impossible de supprimer la séance.").showAndWait();
             }
         }
     }

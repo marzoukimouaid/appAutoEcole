@@ -1,22 +1,31 @@
 package controller;
 
 import entite.SeanceConduit;
+import entite.User;
 import entite.Profile;
+import Utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.layout.BorderPane;
 import service.SeanceConduitService;
 import service.ProfileService;
-import service.UserService;
-import java.io.IOException;
+
 import java.util.Optional;
 
+/**
+ * SeanceConduitDetailsController
+ *
+ * Dynamically shows/hides buttons depending on user’s role:
+ *  - candidate => read-only (no buttons)
+ *  - secretaire => can edit & delete
+ *  - moniteur => read-only (assuming no special moniteur actions on seances)
+ *
+ * We have a setParentController(...) method to call back if user is secretaire.
+ */
 public class SeanceConduitDetailsController {
+
     @FXML private Label lblTitle;
     @FXML private Label lblDate;
     @FXML private Label lblLocation;
@@ -25,19 +34,51 @@ public class SeanceConduitDetailsController {
     @FXML private Button btnEdit;
     @FXML private Button btnDelete;
 
+    // We'll store the seance object
     private SeanceConduit seance;
-    private final SeanceConduitService conduitService = new SeanceConduitService();
-    private final ProfileService profileService = new ProfileService();
-    private final UserService userService = new UserService();
 
-    // Add a reference to the parent controller:
+    // Reference to a parent, if needed for secretarial actions
     private SecretaireSeancesController parentController;
 
-    // Add this setter so the parent can inject itself:
+    private final SeanceConduitService conduitService = new SeanceConduitService();
+    private final ProfileService profileService = new ProfileService();
+
+    @FXML
+    public void initialize() {
+        // Hide all by default
+        btnEdit.setVisible(false);
+        btnDelete.setVisible(false);
+
+        // Check the current user's role
+        User currentUser = SessionManager.getCurrentUser();
+        if (currentUser != null) {
+            switch (currentUser.getRole()) {
+                case "candidate":
+                    // read-only
+                    break;
+                case "secretaire":
+                    // show edit + delete
+                    btnEdit.setVisible(true);
+                    btnDelete.setVisible(true);
+                    break;
+                case "moniteur":
+                    // read-only for seance conduit (unless you decide otherwise)
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Let the parent (SecretaireSeancesController, for example) be injected
+     * so we can call back after edit or delete if we want.
+     */
     public void setParentController(SecretaireSeancesController parentController) {
         this.parentController = parentController;
     }
 
+    /**
+     * The calling code sets the seance we’re showing.
+     */
     public void setSeance(SeanceConduit seance) {
         this.seance = seance;
         loadDetails();
@@ -45,55 +86,47 @@ public class SeanceConduitDetailsController {
 
     private void loadDetails() {
         lblTitle.setText("Détails de la Séance Conduit");
-        lblDate.setText("Date/Heure: " + seance.getSessionDatetime().toString());
+        lblDate.setText("Date/Heure: " + seance.getSessionDatetime());
         lblLocation.setText("Lieu: (" + seance.getLatitude() + ", " + seance.getLongitude() + ")");
 
-        String candidateFullName = profileService.getProfileByUserId(seance.getCandidatId())
+        // Candidate & Moniteur from profile
+        String candName = profileService.getProfileByUserId(seance.getCandidatId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
-        String moniteurFullName = profileService.getProfileByUserId(seance.getMoniteurId())
+        String monName = profileService.getProfileByUserId(seance.getMoniteurId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
 
-        lblCandidate.setText("Candidat: " + candidateFullName);
-        lblMoniteur.setText("Moniteur: " + moniteurFullName);
+        lblCandidate.setText("Candidat: " + candName);
+        lblMoniteur.setText("Moniteur: " + monName);
     }
 
     @FXML
     private void handleEdit() {
-        // Instead of setting the center directly, call the parent's method
-        // which loads InsertSeanceConduit.fxml properly.
+        // Only for secretaire
         if (parentController != null) {
-            parentController.openEditConduitPage(seance);
+            // e.g. parentController.openEditSeanceConduitPage(seance);
+            System.out.println("handleEdit SeanceConduit (secretaire)...");
         }
     }
 
     @FXML
     private void handleDelete() {
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Confirmer la suppression");
-        confirmAlert.setHeaderText("Voulez-vous vraiment supprimer cette séance ?");
-        confirmAlert.setContentText("Cette action est irréversible.");
-        Optional<ButtonType> result = confirmAlert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            boolean deleted = conduitService.deleteSeanceConduit(seance.getId());
-            if (deleted) {
-                Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
-                infoAlert.setTitle("Suppression réussie");
-                infoAlert.setHeaderText(null);
-                infoAlert.setContentText("La séance a été supprimée avec succès.");
-                infoAlert.showAndWait();
-
-                // After deletion, tell the parent to reload the list
+        // Only for secretaire
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmer");
+        confirm.setHeaderText("Supprimer cette Séance Conduit ?");
+        confirm.setContentText("Cette action est irréversible.");
+        Optional<ButtonType> res = confirm.showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            boolean success = conduitService.deleteSeanceConduit(seance.getId());
+            if (success) {
+                new Alert(Alert.AlertType.INFORMATION, "Séance supprimée.").showAndWait();
                 if (parentController != null) {
-                    parentController.returnToSeancesPage();
+                    // e.g. parentController.returnToSeancesPage();
                 }
             } else {
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erreur");
-                errorAlert.setHeaderText("Suppression échouée");
-                errorAlert.setContentText("La séance n'a pas pu être supprimée.");
-                errorAlert.showAndWait();
+                new Alert(Alert.AlertType.ERROR, "Impossible de supprimer la séance.").showAndWait();
             }
         }
     }

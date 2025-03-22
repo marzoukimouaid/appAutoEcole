@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.web.WebView?>
+<?import javafx.scene.control.Button?>
+
+<BorderPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.InsertExamenConduitController"
+            styleClass="root">
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane" style="-fx-background-color: transparent;">
+            <content>
+                <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+                    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-container">
+                        <VBox alignment="CENTER_LEFT">
+                            <Label text="Inscription Examen Conduit" styleClass="header-title"/>
+                            <Label text="Complétez le formulaire pour inscrire un candidat à l'examen de conduite" styleClass="header-subtitle"/>
+                        </VBox>
+                    </HBox>
+                    <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="800" style="-fx-padding: 30;">
+                        <GridPane hgap="15" vgap="10" alignment="CENTER">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="150" />
+                                <ColumnConstraints minWidth="200" />
+                                <ColumnConstraints minWidth="200" />
+                            </columnConstraints>
+                            <Label text="Nom d'utilisateur du Candidat:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="candidateUsernameField" promptText="Nom d'utilisateur candidat" styleClass="input-field"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label fx:id="candidateError" textFill="red" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+                            <Label text="Nom d'utilisateur du Moniteur:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="moniteurUsernameField" promptText="Nom d'utilisateur moniteur" styleClass="input-field"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label fx:id="moniteurError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                            <Label text="Immatriculation du Véhicule:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtVehiculeImmatriculation" promptText="Ex: 123tunis1234" styleClass="input-field"
+                                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label fx:id="vehiculeError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+                            <Label text="Date/Heure (yyyy-MM-dd HH:mm):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtExamDatetime" promptText="2025-03-16 14:30" styleClass="input-field"
+                                       GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label fx:id="datetimeError" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+
+                            <!-- New Price Field -->
+                            <Label text="Prix:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtPrice" promptText="0.00" styleClass="input-field"
+                                       GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                            <Label fx:id="priceError" textFill="red" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+
+                            <Label text="Sélectionnez la position sur la carte:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
+                            <WebView fx:id="mapView" minWidth="600" minHeight="400" pickOnBounds="true"
+                                     GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
+                            <Label fx:id="mapError" textFill="red" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
+                        </GridPane>
+                        <HBox alignment="CENTER" spacing="20">
+                            <Button fx:id="btnSubmit" text="Inscrire Examen Conduit" onAction="#handleSubmit" styleClass="primary-button"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

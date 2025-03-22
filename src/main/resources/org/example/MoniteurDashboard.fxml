@@ -3,20 +3,21 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-
 <BorderPane fx:id="root"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controller.CandidateDashboardController"
+            fx:controller="controller.MoniteurDashboardController"
             prefWidth="1024" prefHeight="600"
             stylesheets="@style.css">
 
     <!-- LEFT SIDEBAR -->
     <left>
         <VBox fx:id="sidebar" styleClass="sidebar">
-            <Label fx:id="autoEcoleNameLabel" text="My Auto Ecole" styleClass="auto-ecole-label"/>
-            <Button fx:id="btnEmploi" text="Emploi des Séances" styleClass="sidebar-button" onAction="#handleEmploi"/>
-            <Button fx:id="btnPaiements" text="Paiements" styleClass="sidebar-button" onAction="#handlePaiements"/>
+            <!-- Name of the Auto-Ecole -->
+            <Label fx:id="autoEcoleNameLabel" text="Moniteur Dashboard" styleClass="auto-ecole-label"/>
+
+            <!-- Single button for Emploi (Seances) -->
+            <Button fx:id="btnEmploi" text="Gestion des Séances" styleClass="sidebar-button" onAction="#handleEmploi"/>
         </VBox>
     </left>
 
@@ -24,7 +25,7 @@
     <top>
         <HBox styleClass="top-bar" spacing="15">
             <Button fx:id="btnToggleSidebar" styleClass="hamburger-button" onAction="#toggleSidebar"/>
-            <Label fx:id="pageTitle" text="Candidate Dashboard" styleClass="title"/>
+            <Label fx:id="pageTitle" text="Moniteur Dashboard" styleClass="title"/>
             <Pane HBox.hgrow="ALWAYS"/>
 
             <!-- Notification MenuButton with bell icon and badge -->
@@ -39,7 +40,7 @@
 
             <MenuButton fx:id="profileMenu" styleClass="profile-menu">
                 <items>
-                    <MenuItem text="Profile" onAction="#handleProfile"/>
+                    <MenuItem text="Mon Profile" onAction="#handleProfile"/>
                     <MenuItem text="Déconnexion" onAction="#handleLogout"/>
                 </items>
             </MenuButton>
@@ -48,15 +49,15 @@
 
     <!-- CENTER CONTENT -->
     <center>
-        <!-- A VBox containing (1) the dismissable banner area, (2) the main content area -->
+        <!-- A VBox containing (1) any banners, (2) the main content area -->
         <VBox fx:id="mainCenterContainer" spacing="10">
-
-            <!-- This container is hidden by default. We'll show it in code if user has unpaid payments. -->
-            <StackPane fx:id="unpaidBannerContainer" visible="false" managed="false">
-                <!-- We'll dynamically add the dismissable banner node here in CandidateController -->
+            <!-- Optionally a banner container if you want to show any messages for the moniteur.
+                 We'll keep it in case you want to display upcoming seance banners, etc. -->
+            <StackPane fx:id="bannerContainer" visible="false" managed="false">
+                <!-- We'll fill this if needed in code. -->
             </StackPane>
 
-            <!-- The actual main content area for Emploi/Paiements pages -->
+            <!-- The actual content area for Seances or Emploi pages. -->
             <StackPane fx:id="contentArea" styleClass="dashboard-content"/>
         </VBox>
     </center>

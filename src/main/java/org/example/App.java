@@ -30,9 +30,20 @@ public class App extends Application {
         // Load either the Login page or the AutoÉcole configuration page.
         String fxmlToLoad = isInitialized ? "Login" : "AutoEcole";
         scene = new Scene(loadFXML(fxmlToLoad), 640, 480);
+
+        // Set up the stage
         stage.setScene(scene);
         stage.setTitle(isInitialized ? "Connexion" : "Configuration Auto-école");
+
+        // 1) Make the window resizable so the maximize icon is enabled
+        stage.setResizable(true);
+
+        // 2) Show it
         stage.show();
+
+        // 3) Center the window on screen (both horizontally & vertically)
+        //    We do this AFTER stage.show() so JavaFX knows final dimensions
+        stage.centerOnScreen();
     }
 
     @Override

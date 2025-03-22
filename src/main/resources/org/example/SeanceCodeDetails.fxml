@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/20" xmlns:fx="http://javafx.com/fxml/1"
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
       fx:controller="controller.SeanceCodeDetailsController"
-      spacing="10" alignment="CENTER" styleClass="card">
+      spacing="10" alignment="CENTER"
+      styleClass="card">
+
     <Label fx:id="lblTitle" styleClass="title"/>
     <Label fx:id="lblDate" styleClass="subtitle"/>
     <Label fx:id="lblCandidate" styleClass="subtitle"/>
     <Label fx:id="lblMoniteur" styleClass="subtitle"/>
+
     <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="btnEdit" text="Edit" styleClass="edit-button" onAction="#handleEdit"/>
-        <Button fx:id="btnDelete" text="Delete" styleClass="delete-button" onAction="#handleDelete"/>
+        <Button fx:id="btnEdit"
+                text="Modifier"
+                styleClass="edit-button"
+                onAction="#handleEdit"/>
+        <Button fx:id="btnDelete"
+                text="Supprimer"
+                styleClass="delete-button"
+                onAction="#handleDelete"/>
     </HBox>
 </VBox>

@@ -3,9 +3,10 @@ package controller;
 import entite.Notification;
 import entite.Payment;
 import entite.PaymentInstallment;
-import entite.PaymentInstallment.Status;
 import entite.Profile;
 import entite.User;
+import entite.ExamenCode;
+import entite.ExamenConduit;  // <-- CHANGES: import for ExamenConduit
 import javafx.geometry.Insets;
 import service.AutoEcoleService;
 import service.NotificationService;
@@ -13,6 +14,9 @@ import service.PaymentInstallmentService;
 import service.PaymentService;
 import service.ProfileService;
 import service.UserService;
+import service.ExamenCodeService;     // <-- CHANGES: import for ExamenCodeService
+import service.ExamenConduitService; // <-- CHANGES: import for ExamenConduitService
+
 import Utils.AlertUtils;
 import Utils.SessionManager;
 import javafx.animation.KeyFrame;
@@ -40,12 +44,13 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;   // <-- CHANGES: for LocalDateTime
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class CandidateController {
+public class CandidateDashboardController {
 
     @FXML private BorderPane root;
     @FXML private VBox sidebar;
@@ -64,12 +69,17 @@ public class CandidateController {
     @FXML private Label autoEcoleNameLabel;
     @FXML private ImageView profileImage;
 
+    // Existing services
     private final ProfileService profileService = new ProfileService();
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
     private final NotificationService notificationService = new NotificationService();
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
     private final UserService userService = new UserService();
+
+    // CHANGES: Services for ExamenCode & ExamenConduit
+    private final ExamenCodeService examenCodeService = new ExamenCodeService();
+    private final ExamenConduitService examenConduitService = new ExamenConduitService();
 
     private User currentUser;
     private boolean sidebarVisible = true;
@@ -84,36 +94,43 @@ public class CandidateController {
             switchToLoginPage();
             return;
         }
+
         setIconsForSidebar();
         setupSidebarClip();
         loadAutoEcoleName();
         loadUserProfilePicture();
-        // Check for upcoming installments due in the next 2 days and create notifications.
+
+        // 1) Check for upcoming installments due in the next 2 days
         checkUpcomingInstallments();
+
+        // 2) CHANGES: Check for upcoming exams in the next 2 days
+        checkUpcomingExams();
+
         // Update notifications whenever the dropdown is shown.
         notificationMenu.setOnShowing(e -> {
             markAllNotificationsAsRead();
             updateNotifications();
         });
+
+        // Update notifications on a 5s timer
         updateNotifications();
         notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> updateNotifications()));
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
 
-        // Load default page.
+        // Load default page (Emploi)
         handleEmploi();
 
         // Check for any unpaid payments.
         checkUnpaidPayments();
-
-
     }
 
     /**
      * Checks if the candidate has any unpaid payments.
      * For a full payment, if its status is "PENDING" it is unpaid.
      * For installment payments, if any installment due before today is still PENDING
-     * (or if its status from the DB is "NOTIFIED", it is treated as pending), then it's considered unpaid.
+     * (or if its status from the DB is "NOTIFIED", it is treated as pending),
+     * then it's considered unpaid.
      */
     private void checkUnpaidPayments() {
         boolean hasUnpaid = false;
@@ -128,13 +145,14 @@ public class CandidateController {
                     // Use a try-catch in case a status from the database is not recognized.
                     try {
                         // If installment is overdue and status is PENDING, then mark as unpaid.
-                        if (inst.getDueDate().isBefore(LocalDate.now()) && inst.getStatus() == PaymentInstallment.Status.PENDING) {
+                        if (inst.getDueDate().isBefore(LocalDate.now())
+                                && inst.getStatus() == PaymentInstallment.Status.PENDING) {
                             hasUnpaid = true;
                             break;
                         }
                     } catch (IllegalArgumentException e) {
                         // If the DB returned a status "NOTIFIED" (which is not in our enum),
-                        // treat it as if it were still pending (or alternatively, skip notification).
+                        // treat it as if it were still pending
                         if (e.getMessage().contains("NOTIFIED")) {
                             hasUnpaid = true;
                             break;
@@ -165,7 +183,7 @@ public class CandidateController {
         VBox.setMargin(bannerBox, new Insets(10, 20, 0, 20));
 
         bannerBox.setStyle(
-                "-fx-background-color: #ffeeba;" +  // Light yellow warning color
+                "-fx-background-color: #ffeeba;" +  // Light yellow
                         "-fx-background-radius: 6;" +
                         "-fx-padding: 10;"
         );
@@ -283,6 +301,7 @@ public class CandidateController {
         } else {
             notificationBadge.setVisible(false);
         }
+
         List<Notification> latest = notifications.stream().limit(3).collect(Collectors.toList());
         notificationMenu.getItems().clear();
         if (latest.isEmpty()) {
@@ -292,7 +311,9 @@ public class CandidateController {
         } else {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             for (Notification notif : latest) {
-                MenuItem item = new MenuItem(notif.getMessage() + " (" + notif.getCreatedAt().format(formatter) + ")");
+                MenuItem item = new MenuItem(
+                        notif.getMessage() + " (" + notif.getCreatedAt().format(formatter) + ")"
+                );
                 notificationMenu.getItems().add(item);
             }
         }
@@ -399,12 +420,72 @@ public class CandidateController {
                                     && !inst.isNotified()
                                     && (inst.getDueDate().isEqual(tomorrow) || inst.getDueDate().isEqual(dayAfterTomorrow)))
                             .forEach(inst -> {
-                                String message = String.format("Rappel: Votre Tranche de paiement de %.2f TND est due le %s.",
-                                        inst.getAmountDue(), inst.getDueDate());
+                                String message = String.format(
+                                        "Rappel: Votre Tranche de paiement de %.2f TND est due le %s.",
+                                        inst.getAmountDue(), inst.getDueDate()
+                                );
                                 notificationService.sendNotification(currentUser.getId(), message);
+
                                 inst.setNotified(true);
                                 installmentService.updateInstallment(inst);
                             });
+                });
+    }
+
+    // CHANGES: New method to check upcoming exams due in the next 2 days, unpaid, and not yet notified.
+    private void checkUpcomingExams() {
+        // We only care about the next 2 days, from now until now+2days
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twoDaysFromNow = now.plusDays(2);
+
+        // 1) Check upcoming code exams
+        List<ExamenCode> codeExams = examenCodeService.getExamenCodesByCandidatId(currentUser.getId());
+        codeExams.stream()
+                .filter(ex -> {
+                    // Exam is in the window: from now until twoDaysFromNow
+                    boolean upcoming = !ex.getExamDatetime().isBefore(now)
+                            && ex.getExamDatetime().isBefore(twoDaysFromNow);
+
+                    // Payment is PENDING
+                    boolean unpaid = (ex.getPaiementStatus() == ExamenCode.PaymentStatus.PENDING);
+
+                    // Not yet notified
+                    boolean notNotified = !ex.isNotified();
+
+                    return upcoming && unpaid && notNotified;
+                })
+                .forEach(ex -> {
+                    // Create a notification
+                    String msg = String.format(
+                            "Rappel: Votre Examen de Code est prévu le %s et n'est pas encore payé.",
+                            ex.getExamDatetime().toLocalDate()
+                    );
+                    notificationService.sendNotification(currentUser.getId(), msg);
+
+                    // Mark the exam as notified in the DB
+                    ex.setNotified(true);
+                    examenCodeService.updateExamenCode(ex);
+                });
+
+        // 2) Check upcoming conduit exams
+        List<ExamenConduit> conduitExams = examenConduitService.getExamenConduitsByCandidatId(currentUser.getId());
+        conduitExams.stream()
+                .filter(ex -> {
+                    boolean upcoming = !ex.getExamDatetime().isBefore(now)
+                            && ex.getExamDatetime().isBefore(twoDaysFromNow);
+                    boolean unpaid = (ex.getPaiementStatus() == ExamenConduit.PaymentStatus.PENDING);
+                    boolean notNotified = !ex.isNotified();
+                    return upcoming && unpaid && notNotified;
+                })
+                .forEach(ex -> {
+                    String msg = String.format(
+                            "Rappel: Votre Examen de Conduite est prévu le %s et n'est pas encore payé.",
+                            ex.getExamDatetime().toLocalDate()
+                    );
+                    notificationService.sendNotification(currentUser.getId(), msg);
+
+                    ex.setNotified(true);
+                    examenConduitService.updateExamenConduit(ex);
                 });
     }
 }

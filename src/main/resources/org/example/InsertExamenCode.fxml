@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+
+<StackPane fx:id="rootStackPane" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controller.InsertExamenCodeController"
+           styleClass="root">
+    <children>
+        <BorderPane fx:id="rootPane" styleClass="root">
+            <center>
+                <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+                    <!-- Header -->
+                    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header-container">
+                        <VBox alignment="CENTER_LEFT">
+                            <Label text="Inscription Examen Code" styleClass="header-title"/>
+                            <Label text="Complétez le formulaire pour inscrire un candidat à l'examen de code" styleClass="header-subtitle"/>
+                        </VBox>
+                    </HBox>
+                    <!-- Form Container -->
+                    <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="800" style="-fx-padding: 30;">
+                        <GridPane hgap="15" vgap="10" alignment="CENTER">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="150" />
+                                <ColumnConstraints minWidth="200" />
+                                <ColumnConstraints minWidth="200" />
+                            </columnConstraints>
+                            <!-- Candidate username -->
+                            <Label text="Nom d'utilisateur du Candidat:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="candidateUsernameField" promptText="Nom d'utilisateur candidat" styleClass="input-field"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label fx:id="candidateError" textFill="red" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+                            <!-- Moniteur username -->
+                            <Label text="Nom d'utilisateur du Moniteur:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="moniteurUsernameField" promptText="Nom d'utilisateur moniteur" styleClass="input-field"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label fx:id="moniteurError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                            <!-- Exam Date/Time -->
+                            <Label text="Date/Heure (yyyy-MM-dd HH:mm):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtExamDatetime" promptText="2025-03-16 14:30" styleClass="input-field"
+                                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label fx:id="datetimeError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+                            <!-- Price Field -->
+                            <Label text="Prix:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtPrice" promptText="0.00" styleClass="input-field"
+                                       GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label fx:id="priceError" textFill="red" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                        </GridPane>
+                        <!-- Submit Button -->
+                        <HBox alignment="CENTER" spacing="20">
+                            <Button fx:id="btnSubmit" text="Inscrire Examen Code" onAction="#handleSubmit" styleClass="primary-button"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </center>
+        </BorderPane>
+    </children>
+</StackPane>

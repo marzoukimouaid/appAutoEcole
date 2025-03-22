@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
+<!-- Outer StackPane with fixed padding acts as the red-highlighted area -->
 <StackPane xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controller.AutoEcoleController"
            prefWidth="800" prefHeight="600"
-           stylesheets="@style.css"
-           alignment="CENTER">
+           stylesheets="@style.css">
+   <!-- This padding creates fixed margins at the top, bottom, left, and right -->
+   <padding>
+      <Insets top="40" right="20" bottom="40" left="20"/>
+   </padding>
 
-   <!-- Main ScrollPane -->
-   <ScrollPane fitToWidth="true" fitToHeight="true"
+   <!-- ScrollPane used to ensure responsiveness; only width is forced to fill -->
+   <ScrollPane fitToWidth="true" fitToHeight="false"
                styleClass="custom-scrollpane"
                style="-fx-background-color: transparent;">
       <content>
-         <!-- Inner StackPane to center content horizontally & vertically -->
-         <StackPane alignment="CENTER" maxWidth="Infinity" maxHeight="Infinity">
+         <!-- Inner StackPane centers the card in the available viewport -->
+         <StackPane alignment="CENTER">
+            <!-- The card (VBox) will size itself naturally and never fill the entire height -->
             <VBox alignment="CENTER" spacing="15" maxWidth="400" styleClass="card">
-
                <Label text="Bienvenue !" styleClass="title"/>
-               <Label text="Commençons par configurer votre Auto-Ecole." styleClass="subtitle"/>
+               <Label text="Commençons par configurer votre Auto-École." styleClass="subtitle"/>
 
                <TextField promptText="Nom" fx:id="nameField" styleClass="input-field"/>
                <TextField promptText="Adresse" fx:id="addressField" styleClass="input-field"/>

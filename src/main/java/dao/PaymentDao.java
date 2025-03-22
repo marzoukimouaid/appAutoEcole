@@ -13,7 +13,8 @@ public class PaymentDao {
     private static final Connection conn = ConnexionDB.getInstance();
 
     public boolean create(Payment payment) {
-        String sql = "INSERT INTO paiements (user_id, total_amount, payment_type, payment_date, status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO paiements (user_id, total_amount, payment_type, payment_date, status) "
+                + "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, payment.getUserId());
             stmt.setDouble(2, payment.getTotalAmount());
@@ -51,6 +52,9 @@ public class PaymentDao {
         return Optional.empty();
     }
 
+    /**
+     * Retrieves all payments belonging to a specific user, ordered by date descending.
+     */
     public List<Payment> findByUserId(int userId) {
         List<Payment> payments = new ArrayList<>();
         String sql = "SELECT * FROM paiements WHERE user_id = ? ORDER BY payment_date DESC";
@@ -67,8 +71,28 @@ public class PaymentDao {
         return payments;
     }
 
+    /**
+     * NEW: Retrieves **all** payment records from the DB,
+     * for use in analytics or general listing.
+     */
+    public List<Payment> findAll() {
+        List<Payment> payments = new ArrayList<>();
+        String sql = "SELECT * FROM paiements ORDER BY payment_date ASC";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Payment payment = mapResultSetToPayment(rs);
+                payments.add(payment);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return payments;
+    }
+
     public boolean update(Payment payment) {
-        String sql = "UPDATE paiements SET total_amount = ?, payment_type = ?, payment_date = ?, status = ? WHERE id = ?";
+        String sql = "UPDATE paiements SET total_amount = ?, payment_type = ?, payment_date = ?, status = ? "
+                + "WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDouble(1, payment.getTotalAmount());
             stmt.setString(2, payment.getPaymentType());
@@ -93,6 +117,7 @@ public class PaymentDao {
         return false;
     }
 
+    // Helper function to map the result set to a Payment object
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setId(rs.getInt("id"));

@@ -61,8 +61,8 @@ public class LoginController {
             fxmlPage = "/org/example/SecretaireDashboard.fxml";
         } else if ("candidat".equals(role)) {
             fxmlPage = "/org/example/CandidatDashboard.fxml";
-        } else if ("ingenieur".equals(role)) {
-            fxmlPage = "/org/example/IngenieurDashboard.fxml";
+        } else if ("moniteur".equals(role)) {
+            fxmlPage = "/org/example/MoniteurDashboard.fxml";
         } else {
             AlertUtils.showAlert("Erreur", "Rôle utilisateur inconnu.", javafx.scene.control.Alert.AlertType.ERROR);
             return;
@@ -75,8 +75,12 @@ public class LoginController {
 
             Scene scene = new Scene(root, 1024, 600);
             stage.setScene(scene);
-            stage.setResizable(false);
+            // Allow resizing (and maximize) while keeping the layout responsive
+            stage.setResizable(true);
             stage.show();
+
+            // Center the window on screen after show
+            stage.centerOnScreen();
         } catch (IOException e) {
             e.printStackTrace();
             AlertUtils.showAlert("Erreur", "Impossible de charger la page.", javafx.scene.control.Alert.AlertType.ERROR);

@@ -2,9 +2,8 @@ package service;
 
 import dao.MoniteurDao;
 import entite.Moniteur;
-import dao.UserDao;
 import dao.ProfileDao;
-
+import dao.UserDao;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +27,7 @@ public class MoniteurService {
     }
 
     /**
-     * Updates an existing moniteur's permis type.
+     * Updates an existing moniteur.
      */
     public boolean updateMoniteur(Moniteur moniteur) {
         return moniteurDao.updateMoniteur(moniteur);
@@ -42,19 +41,12 @@ public class MoniteurService {
     }
 
     /**
-     * Deletes this moniteur, their profile, and their user record in one cascade.
+     * Deletes a moniteur along with their profile and user record (cascade deletion).
      */
     public boolean deleteMoniteurCascade(int userId) {
-        // 1) Delete from moniteurs table
         boolean moniteurDeleted = moniteurDao.deleteMoniteurByUserId(userId);
-
-        // 2) Delete the associated profile
         boolean profileDeleted = profileDao.deleteProfileByUserId(userId);
-
-        // 3) Delete from users table
         boolean userDeleted = userDao.deleteUserById(userId);
-
-        // You can refine success logic if you wish
         return (moniteurDeleted && profileDeleted && userDeleted);
     }
 }

@@ -6,12 +6,13 @@
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controller.SeanceConduitDetailsController"
+      fx:controller="controller.ExamenConduitDetailsController"
       spacing="10" alignment="CENTER"
       styleClass="card">
 
     <Label fx:id="lblTitle" styleClass="title"/>
     <Label fx:id="lblDate" styleClass="subtitle"/>
+    <Label fx:id="lblStatus" styleClass="subtitle"/>
     <Label fx:id="lblLocation" styleClass="subtitle"/>
     <Label fx:id="lblCandidate" styleClass="subtitle"/>
     <Label fx:id="lblMoniteur" styleClass="subtitle"/>
@@ -25,5 +26,9 @@
                 text="Supprimer"
                 styleClass="delete-button"
                 onAction="#handleDelete"/>
+        <Button fx:id="btnMarkPassed"
+                text="Marquer comme Réussi"
+                styleClass="search-button"
+                onAction="#handleMarkPassed"/>
     </HBox>
 </VBox>

@@ -41,4 +41,12 @@ public class PaymentService {
     public boolean deletePayment(int id) {
         return paymentDao.delete(id);
     }
+
+    /**
+     * NEW: Retrieve all payments from the DB,
+     * so that analytics can calculate total revenue easily.
+     */
+    public List<Payment> getAllPayments() {
+        return paymentDao.findAll();
+    }
 }

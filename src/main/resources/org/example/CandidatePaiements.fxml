@@ -11,7 +11,19 @@
       styleClass="content-area"
       prefWidth="800" prefHeight="600">
 
-    <!-- Section: Unpaid Payments (displayed at the top) -->
+    <!-- Section: Unpaid Exams (NEW) -->
+    <Label text="Examens impayés" styleClass="header-title" />
+    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
+        <content>
+            <VBox fx:id="examListContainer" spacing="15" alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <!-- Section: Unpaid Payments (existing) -->
     <Label text="Paiements en attente" styleClass="header-title" />
     <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
         <content>
@@ -23,7 +35,7 @@
         </content>
     </ScrollPane>
 
-    <!-- Section: Payment History -->
+    <!-- Section: Payment History (existing) -->
     <Label text="Historique des paiements" styleClass="header-title" />
     <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
         <content>

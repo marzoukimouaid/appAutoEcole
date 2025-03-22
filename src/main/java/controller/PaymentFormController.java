@@ -3,6 +3,9 @@ package controller;
 import entite.Payment;
 import entite.PaymentInstallment;
 import entite.PaymentInstallment.Status;
+import entite.ExamenCode;         // CHANGES
+import entite.ExamenConduit;     // CHANGES
+
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,10 +13,15 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+
 import Utils.AlertUtils;
 import Utils.NotificationUtil;
+
 import service.PaymentService;
 import service.PaymentInstallmentService;
+import service.ExamenCodeService;       // CHANGES
+import service.ExamenConduitService;    // CHANGES
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -50,21 +58,28 @@ public class PaymentFormController {
     @FXML
     private Button confirmButton;
 
-    // Only one of these will be non-null – the full Payment or an Installment
+    // We might have a Payment, PaymentInstallment, ExamenCode, or ExamenConduit
     private Payment payment;
     private PaymentInstallment installment;
+    // CHANGES: exam references
+    private ExamenCode examCode;
+    private ExamenConduit examConduit;
 
+    // Existing services
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
+    // CHANGES: exam services
+    private final ExamenCodeService examenCodeService = new ExamenCodeService();
+    private final ExamenConduitService examenConduitService = new ExamenConduitService();
 
     @FXML
     public void initialize() {
-        // Populate expiry month (01-12)
+        // Populate month combos (01..12)
         expiryMonthCombo.getItems().clear();
         for (int m = 1; m <= 12; m++) {
             expiryMonthCombo.getItems().add(String.format("%02d", m));
         }
-        // Populate expiry year (current year to next 10 years)
+        // Year combos (current year.. +10)
         expiryYearCombo.getItems().clear();
         int currentYear = LocalDate.now().getYear();
         for (int y = currentYear; y <= currentYear + 10; y++) {
@@ -77,6 +92,7 @@ public class PaymentFormController {
         clearErrors();
         boolean valid = true;
 
+        // Validate card info
         String cardholderName = cardholderNameField.getText().trim();
         if (cardholderName.isEmpty()) {
             cardholderNameError.setText("Nom requis");
@@ -87,7 +103,7 @@ public class PaymentFormController {
         if (cardNumber.isEmpty()) {
             cardNumberError.setText("Numéro de carte requis");
             valid = false;
-        } else if (!cardNumber.matches("\\d{16}")) {  // Only check that it's exactly 16 digits
+        } else if (!cardNumber.matches("\\d{16}")) {
             cardNumberError.setText("Le numéro doit comporter 16 chiffres");
             valid = false;
         }
@@ -115,23 +131,25 @@ public class PaymentFormController {
         }
 
         if (!valid) {
-            return;
+            return; // Stop if any field invalid
         }
 
         boolean updateSuccess = false;
+
+        // 1) If we're paying a Payment in full
         if (payment != null) {
-            // For a full payment, mark the payment as PAID.
             payment.setStatus("PAID");
             updateSuccess = paymentService.updatePayment(payment);
-        } else if (installment != null) {
-            // For an installment payment, mark this installment as PAID.
+        }
+        // 2) If we're paying an Installment
+        else if (installment != null) {
             boolean installmentUpdated = installmentService.markInstallmentAsPaid(installment.getInstallmentId(), LocalDate.now());
             if (!installmentUpdated) {
                 AlertUtils.showAlert("Erreur", "Erreur lors de la mise à jour de l'installment.", Alert.AlertType.ERROR);
                 return;
             }
+            // Possibly check if all installments are now paid => set Payment to PAID
             int paymentId = installment.getPaymentId();
-            // Check if all installments for this payment are now paid.
             var installments = installmentService.getInstallmentsByPaymentId(paymentId);
             boolean allPaid = installments.stream().allMatch(inst -> inst.getStatus() == Status.PAID);
             if (allPaid) {
@@ -140,21 +158,42 @@ public class PaymentFormController {
                     Payment fullPayment = optPayment.get();
                     fullPayment.setStatus("PAID");
                     updateSuccess = paymentService.updatePayment(fullPayment);
+                } else {
+                    updateSuccess = false;
                 }
             } else {
-                updateSuccess = true; // Installment update succeeded
+                updateSuccess = true; // we updated at least the single installment
             }
+        }
+        // 3) CHANGES: If we're paying an ExamenCode
+        else if (examCode != null) {
+            examCode.setPaiementStatus(ExamenCode.PaymentStatus.PAID);
+            examCode.setPaymentDate(LocalDate.now());
+            updateSuccess = examenCodeService.updateExamenCode(examCode);
+        }
+        // 4) CHANGES: If we're paying an ExamenConduit
+        else if (examConduit != null) {
+            examConduit.setPaiementStatus(ExamenConduit.PaymentStatus.PAID);
+            examConduit.setPaymentDate(LocalDate.now());
+            updateSuccess = examenConduitService.updateExamenConduit(examConduit);
         }
 
         if (updateSuccess) {
-            // Instead of an alert, show a sleek success notification.
-            NotificationUtil.showNotification(rootPane, "Paiement effectué avec succès.", NotificationUtil.NotificationType.SUCCESS);
-            // Delay navigation back for 3 seconds so that the notification is visible.
+            NotificationUtil.showNotification(
+                    rootPane,
+                    "Paiement effectué avec succès.",
+                    NotificationUtil.NotificationType.SUCCESS
+            );
+            // Delay 2 seconds so user sees success, then go back
             PauseTransition delay = new PauseTransition(Duration.seconds(2));
             delay.setOnFinished(e -> navigateBack());
             delay.play();
         } else {
-            AlertUtils.showAlert("Erreur", "Erreur lors de la mise à jour du paiement.", Alert.AlertType.ERROR);
+            AlertUtils.showAlert(
+                    "Erreur",
+                    "Erreur lors de la mise à jour du paiement / examen.",
+                    Alert.AlertType.ERROR
+            );
         }
     }
 
@@ -166,23 +205,29 @@ public class PaymentFormController {
         billingAddressError.setText("");
     }
 
-    // Setter methods to allow the previous view to pass Payment or PaymentInstallment objects.
+    // Existing: For Payment or PaymentInstallment
     public void setPayment(Payment payment) {
         this.payment = payment;
     }
-
     public void setInstallment(PaymentInstallment installment) {
         this.installment = installment;
     }
 
+    // CHANGES: For exam code or conduit
+    public void setExamenCode(ExamenCode examCode) {
+        this.examCode = examCode;
+    }
+    public void setExamenConduit(ExamenConduit examConduit) {
+        this.examConduit = examConduit;
+    }
+
     /**
-     * Navigates back to the CandidatePaiements view.
+     * Navigates back to the CandidatePaiements view (CandidatePaiements.fxml).
      */
     private void navigateBack() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/CandidatePaiements.fxml"));
             Parent paymentsPage = loader.load();
-            // Look up the content area (assumed to have fx:id "contentArea") in the current scene.
             StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
             if (contentArea != null) {
                 contentArea.getChildren().setAll(paymentsPage);

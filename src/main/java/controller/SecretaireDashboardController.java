@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SecretaireController {
+public class SecretaireDashboardController {
 
     @FXML private BorderPane root;
     @FXML private VBox sidebar;
@@ -49,7 +49,7 @@ public class SecretaireController {
     @FXML private Label notificationBadge;     // Badge label (red circle with unread count)
 
     // Sidebar buttons
-    @FXML private Button btnCandidats, btnMoniteurs, btnAnalytics, btnVehicules, btnPaiements, btnSeances, btnInscription;
+    @FXML private Button btnCandidats, btnMoniteurs, btnAnalytics, btnVehicules, btnSeances, btnInscription;
     @FXML private Label autoEcoleNameLabel;  // Displays the Auto-Ecole name
     @FXML private ImageView profileImage;    // Navbar profile image
 
@@ -88,6 +88,7 @@ public class SecretaireController {
         notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> updateNotifications()));
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
+        handleCandidats();
     }
 
     /**
@@ -244,7 +245,6 @@ public class SecretaireController {
         btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
         btnAnalytics.setGraphic(createIcon(FontAwesomeSolid.CHART_LINE));
         btnVehicules.setGraphic(createIcon(FontAwesomeSolid.CAR));
-        btnPaiements.setGraphic(createIcon(FontAwesomeSolid.MONEY_BILL_WAVE));
         btnSeances.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
         btnInscription.setGraphic(createIcon(FontAwesomeSolid.EDIT));
 
@@ -301,13 +301,13 @@ public class SecretaireController {
 
     @FXML
     private void handleCandidats() {
-        loadPage("/org/example/Candidats.fxml", "Candidats");
+        loadPage("/org/example/SecretaireCandidats.fxml", "Candidats");
         highlightSidebarButton(btnCandidats);
     }
 
     @FXML
     private void handleMoniteurs() {
-        loadPage("/org/example/Moniteurs.fxml", "Moniteurs");
+        loadPage("/org/example/SecretaireMoniteurs.fxml", "Moniteurs");
         highlightSidebarButton(btnMoniteurs);
     }
 
@@ -319,15 +319,11 @@ public class SecretaireController {
 
     @FXML
     private void handleVehicules() {
-        loadPage("/org/example/Vehicules.fxml", "Véhicules");
+        loadPage("/org/example/SecretaireVehicules.fxml", "Véhicules");
         highlightSidebarButton(btnVehicules);
     }
 
-    @FXML
-    private void handlePaiements() {
-        loadPage("/org/example/Paiements.fxml", "Paiements");
-        highlightSidebarButton(btnPaiements);
-    }
+
 
     @FXML
     private void handleSeances() {
@@ -337,7 +333,7 @@ public class SecretaireController {
 
     @FXML
     private void handleInscription() {
-        loadPage("/org/example/Inscription.fxml", "Inscription");
+        loadPage("/org/example/SecretaireInscriptionExamen.fxml", "Inscription");
         highlightSidebarButton(btnInscription);
     }
 
@@ -349,7 +345,6 @@ public class SecretaireController {
         btnMoniteurs.getStyleClass().remove("selected");
         btnAnalytics.getStyleClass().remove("selected");
         btnVehicules.getStyleClass().remove("selected");
-        btnPaiements.getStyleClass().remove("selected");
         btnSeances.getStyleClass().remove("selected");
         btnInscription.getStyleClass().remove("selected");
         selectedButton.getStyleClass().add("selected");
@@ -362,8 +357,6 @@ public class SecretaireController {
         btnCandidats.getStyleClass().remove("selected");
         btnMoniteurs.getStyleClass().remove("selected");
         btnAnalytics.getStyleClass().remove("selected");
-        btnVehicules.getStyleClass().remove("selected");
-        btnPaiements.getStyleClass().remove("selected");
         btnSeances.getStyleClass().remove("selected");
         btnInscription.getStyleClass().remove("selected");
     }

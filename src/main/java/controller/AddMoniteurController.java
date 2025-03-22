@@ -1,10 +1,10 @@
 package controller;
 
 import entite.Profile;
-import service.ProfileService;
-import service.UserService;
 import entite.Moniteur;
 import entite.Moniteur.PermisType;
+import service.ProfileService;
+import service.UserService;
 import service.MoniteurService;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
@@ -32,6 +32,7 @@ public class AddMoniteurController {
 
     // Moniteur specific fields
     @FXML private ComboBox<String> permisTypeComboBox;
+    @FXML private TextField salaireField; // New field for salary
 
     @FXML private Button btnSubmit;
 
@@ -45,6 +46,7 @@ public class AddMoniteurController {
     @FXML private Label phoneError;
     @FXML private Label addressError;
     @FXML private Label permisTypeError;
+    @FXML private Label salaireError; // New error label for salary
 
     // Root container for notifications – ensure your FXML has this defined.
     @FXML private StackPane rootPane;
@@ -77,6 +79,7 @@ public class AddMoniteurController {
             permisTypeComboBox.getStyleClass().remove("error");
             permisTypeError.setText("");
         });
+        addClearErrorListener(salaireField, salaireError); // Add listener for salary field
 
         btnSubmit.setOnAction(this::handleSubmit);
     }
@@ -152,6 +155,24 @@ public class AddMoniteurController {
             setFieldError(permisTypeComboBox, permisTypeError, "Select permis type");
             valid = false;
         }
+        // Validate salaire.
+        String salaireStr = salaireField.getText().trim();
+        double salaire = 0.0;
+        if (salaireStr.isEmpty()) {
+            setFieldError(salaireField, salaireError, "Salaire required");
+            valid = false;
+        } else {
+            try {
+                salaire = Double.parseDouble(salaireStr);
+                if (salaire <= 0) {
+                    setFieldError(salaireField, salaireError, "Salaire must be positive");
+                    valid = false;
+                }
+            } catch (NumberFormatException e) {
+                setFieldError(salaireField, salaireError, "Invalid salary number");
+                valid = false;
+            }
+        }
 
         if (!valid) {
             return;
@@ -196,12 +217,13 @@ public class AddMoniteurController {
             setFieldError(permisTypeComboBox, permisTypeError, "Invalid permis type");
             return;
         }
+        moniteur.setSalaire(salaire);
         boolean moniteurCreated = moniteurService.createMoniteur(moniteur);
         if (!moniteurCreated) {
             showInlineError("Moniteur creation error");
             return;
         }
-        // Show success notification using NotificationUtil.
+        // Show success notification.
         NotificationUtil.showNotification(rootPane, "Moniteur added successfully!", NotificationType.SUCCESS);
         clearForm();
     }
@@ -216,6 +238,7 @@ public class AddMoniteurController {
         phoneField.clear();
         addressField.clear();
         permisTypeComboBox.getSelectionModel().clearSelection();
+        salaireField.clear();
         clearAllErrors();
     }
 
@@ -229,6 +252,7 @@ public class AddMoniteurController {
         phoneField.getStyleClass().remove("error");
         addressField.getStyleClass().remove("error");
         permisTypeComboBox.getStyleClass().remove("error");
+        salaireField.getStyleClass().remove("error");
 
         usernameError.setText("");
         passwordError.setText("");
@@ -239,6 +263,7 @@ public class AddMoniteurController {
         phoneError.setText("");
         addressError.setText("");
         permisTypeError.setText("");
+        salaireError.setText("");
     }
 
     private void setFieldError(Control field, Label errorLabel, String message) {
@@ -261,10 +286,6 @@ public class AddMoniteurController {
 
     private void showInlineError(String message) {
         System.err.println(message);
-    }
-
-    private void showInlineSuccess(String message) {
-        System.out.println(message);
     }
 
     private boolean isValidPassword(String password) {
