@@ -10,15 +10,22 @@ import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
-import service.*;
-import javafx.scene.control.Alert.AlertType;
-
+import service.DossierCandidatService;
+import service.MoniteurService;
+import service.NotificationService;
+import service.PaymentInstallmentService;
+import service.PaymentService;
+import service.SeanceCodeService;
+import service.SeanceConduitService;
+import service.UserService;
+import service.VehiculeDocumentService;
+import service.VehiculeService;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,9 +60,7 @@ public class InsertSeanceConduitController {
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService paymentInstallmentService = new PaymentInstallmentService();
     private final NotificationService notificationService = new NotificationService();
-    // Used to fetch candidate's dossier (which stores permis type and max sessions)
     private final DossierCandidatService dossierCandidatService = new DossierCandidatService();
-    // Used to fetch the moniteur's details (including permis type)
     private final MoniteurService moniteurService = new MoniteurService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -80,7 +85,6 @@ public class InsertSeanceConduitController {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-
                 // If editing an existing seance with valid lat/lng, show the marker:
                 if (editingSeance != null) {
                     double lat = editingSeance.getLatitude();
@@ -122,15 +126,12 @@ public class InsertSeanceConduitController {
         if (moniteur != null) {
             moniteurUsernameField.setText(moniteur.getUsername());
         }
-
         if (seance.getVehiculeId() > 0) {
             vehiculeService.getVehiculeById(seance.getVehiculeId())
                     .ifPresent(v -> txtVehiculeImmatriculation.setText(v.getImmatriculation()));
         }
-
         txtSessionDatetime.setText(seance.getSessionDatetime().format(dtf));
         btnSubmit.setText("Mettre à jour Séance Conduit");
-
         selectedLatitude = seance.getLatitude();
         selectedLongitude = seance.getLongitude();
     }
@@ -249,8 +250,11 @@ public class InsertSeanceConduitController {
             return;
         }
         List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
+        // Exclude the current seance (if updating) from conflict check.
         boolean candidateBusy = Stream.concat(
-                candidateConduitSeances.stream().map(sc -> sc.getSessionDatetime()),
+                candidateConduitSeances.stream()
+                        .filter(sc -> editingSeance == null || sc.getId() != editingSeance.getId())
+                        .map(sc -> sc.getSessionDatetime()),
                 candidateCodeSeances.stream().map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
@@ -285,13 +289,13 @@ public class InsertSeanceConduitController {
         boolean vehiculeMatches = false;
         switch (candidatePermis.toUpperCase()) {
             case "A":
-                vehiculeMatches = vehiculeType == Vehicule.VehicleType.MOTO;
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.MOTO);
                 break;
             case "B":
-                vehiculeMatches = vehiculeType == Vehicule.VehicleType.VOITURE;
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.VOITURE);
                 break;
             case "C":
-                vehiculeMatches = vehiculeType == Vehicule.VehicleType.CAMION;
+                vehiculeMatches = (vehiculeType == Vehicule.VehicleType.CAMION);
                 break;
             default:
                 setFieldError(txtVehiculeImmatriculation, vehiculeError, "Type de permis candidat invalide");
@@ -301,7 +305,7 @@ public class InsertSeanceConduitController {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le type du véhicule ne correspond pas au permis du candidat");
             return;
         }
-        // NEW: Check if the vehicle has remaining kilometrage before maintenance.
+        // NEW: Check if the vehicle has remaining kilometrage.
         if (vehicule.getKmRestantEntretien() <= 0) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le véhicule nécessite un entretien (kilométrage restant insuffisant).");
             return;
@@ -310,11 +314,13 @@ public class InsertSeanceConduitController {
         List<SeanceConduit> moniteurConduit = conduitService.getSeancesByMoniteurId(moniteur.getId());
         List<SeanceCode> moniteurCode = seanceCodeService.getSeancesByMoniteurId(moniteur.getId());
         boolean moniteurBusy = Stream.concat(
-                moniteurConduit.stream().map(sc -> sc.getSessionDatetime()),
+                moniteurConduit.stream()
+                        .filter(sc -> editingSeance == null || sc.getId() != editingSeance.getId())
+                        .map(sc -> sc.getSessionDatetime()),
                 moniteurCode.stream().map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
-            setFieldError(moniteurUsernameField, moniteurError, "Moniteur indisponible à cette heure");
+            setFieldError(moniteurUsernameField, moniteurError, "Le moniteur a une autre séance à cette heure");
             return;
         }
 
@@ -333,7 +339,7 @@ public class InsertSeanceConduitController {
                         "Vous Avez une nouvelle Séance Conduit le " + sessionDatetime + ".");
                 notificationService.sendNotification(moniteur.getId(),
                         "Vous Avez une nouvelle Séance Conduit pour surveiller le " + sessionDatetime + ".");
-                NotificationUtil.showNotification(rootPane, "Séance Conduit créée avec succès !", NotificationType.SUCCESS);
+                showSuccessNotification("Séance Conduit créée avec succès !");
                 clearForm();
             } else {
                 showError("Erreur", "Impossible de créer la séance conduit.");
@@ -348,7 +354,7 @@ public class InsertSeanceConduitController {
 
             boolean updated = conduitService.updateSeanceConduit(editingSeance);
             if (updated) {
-                NotificationUtil.showNotification(rootPane, "Séance Conduit mise à jour avec succès !", NotificationType.SUCCESS);
+                showSuccessNotification("Séance Conduit mise à jour avec succès !");
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToSeancesPage();
@@ -374,11 +380,18 @@ public class InsertSeanceConduitController {
     }
 
     private void setFieldError(TextField field, Label errorLabel, String message) {
-        if (!field.getStyleClass().contains("error")) {
+        if (field != null && !field.getStyleClass().contains("error")) {
             field.getStyleClass().add("error");
         }
         if (errorLabel != null) {
             errorLabel.setText(message);
+        }
+    }
+
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
         }
     }
 
@@ -390,10 +403,9 @@ public class InsertSeanceConduitController {
     }
 
     private void showError(String header, String content) {
-        Alert alert = new Alert(AlertType.ERROR);
+        Alert alert = new Alert(Alert.AlertType.ERROR, content, ButtonType.OK);
         alert.setTitle("Erreur");
         alert.setHeaderText(header);
-        alert.setContentText(content);
         alert.showAndWait();
     }
 

@@ -8,6 +8,7 @@ import entite.PaymentInstallment;
 import entite.SeanceCode;
 import entite.SeanceConduit;
 import entite.User;
+import javafx.scene.layout.StackPane;
 import service.DossierCandidatService;
 import service.ExamenCodeService;
 import service.MoniteurService;
@@ -24,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -271,6 +271,7 @@ public class InsertExamenCodeController {
                         "Votre inscription à l'examen code a été créée avec succès.");
                 notificationService.sendNotification(moniteur.getId(),
                         "Vous Avez une nouvelle Examen Code pour surveiller.");
+                showSuccessNotification("Examen Code créée avec succès !");
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToExamInscriptionsPage();
@@ -287,6 +288,7 @@ public class InsertExamenCodeController {
             if (updated) {
                 notificationService.sendNotification(candidate.getId(),
                         "Votre inscription à l'examen code a été mise à jour avec succès.");
+                showSuccessNotification("Examen Code mise à jour avec succès !");
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToExamInscriptionsPage();
@@ -324,6 +326,12 @@ public class InsertExamenCodeController {
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
+        }
     }
 
     private void clearForm() {

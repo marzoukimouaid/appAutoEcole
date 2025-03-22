@@ -334,10 +334,7 @@ public class InsertExamenConduitController {
                         "Votre inscription à l'examen Conduit a été créée avec succès le " + newExam.getExamDatetime() + ".");
                 notificationService.sendNotification(moniteur.getId(),
                         "Vous Avez une nouvelle Examen Conduit pour surveiller le " + newExam.getExamDatetime() + ".");
-                Platform.runLater(() -> {
-                    StackPane notificationParent = getNotificationParent();
-                    NotificationUtil.showNotification(notificationParent, "Examen Conduit créé avec succès !", NotificationType.SUCCESS);
-                });
+                showSuccessNotification("Examen Conduit créé avec succès !");
                 clearForm();
             } else {
                 showError("Erreur", "Impossible de créer l'examen conduit.");
@@ -352,10 +349,7 @@ public class InsertExamenConduitController {
             editingExam.setLongitude(selectedLongitude);
             boolean updated = examenConduitService.updateExamenConduit(editingExam);
             if (updated) {
-                Platform.runLater(() -> {
-                    StackPane notificationParent = getNotificationParent();
-                    NotificationUtil.showNotification(notificationParent, "Examen Conduit mis à jour avec succès !", NotificationType.SUCCESS);
-                });
+                showSuccessNotification("Examen Conduit mis à jour avec succès !");
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToExamInscriptionsPage();
@@ -393,6 +387,12 @@ public class InsertExamenConduitController {
             stack.getChildren().add(sceneRoot);
             rootPane.getScene().setRoot(stack);
             return stack;
+        }
+    }
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
         }
     }
 

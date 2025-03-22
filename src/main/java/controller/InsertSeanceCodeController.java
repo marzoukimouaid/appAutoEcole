@@ -5,16 +5,22 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import service.*;
-import Utils.NotificationUtil;
-import Utils.NotificationUtil.NotificationType;
-
+import service.SeanceCodeService;
+import service.SeanceConduitService;
+import service.UserService;
+import service.PaymentService;
+import service.PaymentInstallmentService;
+import service.DossierCandidatService;
+import service.MoniteurService;
+import service.NotificationService;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import Utils.NotificationUtil;
+import Utils.NotificationUtil.NotificationType;
 
 public class InsertSeanceCodeController {
 
@@ -137,49 +143,53 @@ public class InsertSeanceCodeController {
             return;
         }
         Moniteur moniteurEntity = moniteurOpt.get();
-
         if (!dossier.getPermisType().equalsIgnoreCase(moniteurEntity.getPermisType().name())) {
             setFieldError(moniteurUsernameField, moniteurError, "Le permis du candidat ne correspond pas au permis du moniteur");
             return;
         }
 
+        // Conflict check for candidate availability.
         List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
         List<SeanceConduit> candidateConduitSeances = conduitService.getSeancesByCandidatId(candidate.getId());
         boolean candidateBusy = Stream.concat(
                 candidateConduitSeances.stream().map(sc -> sc.getSessionDatetime()),
-                candidateCodeSeances.stream().map(sc -> sc.getSessionDatetime())
+                candidateCodeSeances.stream()
+                        .filter(sc -> editingSeance == null || sc.getId() != editingSeance.getId())
+                        .map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
             setFieldError(candidateUsernameField, candidateError, "Le candidat a une autre séance à cette heure");
             return;
         }
-        if (candidateCodeSeances.size() >= MAX_CODE_SEANCES) {
+        if (editingSeance == null && candidateCodeSeances.size() >= MAX_CODE_SEANCES) {
             setFieldError(candidateUsernameField, candidateError, "Nombre maximum de séances de code atteint");
             return;
         }
 
+        // Conflict check for moniteur availability.
         List<SeanceCode> moniteurCodeSeances = seanceCodeService.getSeancesByMoniteurId(moniteur.getId());
         List<SeanceConduit> moniteurConduitSeances = conduitService.getSeancesByMoniteurId(moniteur.getId());
         boolean moniteurBusy = Stream.concat(
                 moniteurConduitSeances.stream().map(sc -> sc.getSessionDatetime()),
-                moniteurCodeSeances.stream().map(sc -> sc.getSessionDatetime())
+                moniteurCodeSeances.stream()
+                        .filter(sc -> editingSeance == null || sc.getId() != editingSeance.getId())
+                        .map(sc -> sc.getSessionDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(sessionDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
-            setFieldError(moniteurUsernameField, moniteurError, "Moniteur indisponible à cette heure");
+            setFieldError(moniteurUsernameField, moniteurError, "Le moniteur a une autre séance à cette heure");
             return;
         }
 
         if (editingSeance == null) {
-            // Creating a brand-new seance
+            // Creating a new seance code.
             SeanceCode newSeance = new SeanceCode(candidate.getId(), moniteur.getId(), sessionDatetime);
             boolean created = seanceCodeService.createSeanceCode(newSeance);
             if (created) {
                 notificationService.sendNotification(candidate.getId(),
-                        "Vous Avez une nouvelle Seance Code le "+sessionDatetime+".");
+                        "Vous Avez une nouvelle Séance Code le " + sessionDatetime + ".");
                 notificationService.sendNotification(moniteur.getId(),
-                        "Vous Avez une nouvelle Seance Code pour surveiller le "+sessionDatetime+".");
+                        "Vous Avez une nouvelle Séance Code pour surveiller le " + sessionDatetime + ".");
                 showSuccessNotification("Séance Code créée avec succès !");
-
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToSeancesPage();
@@ -188,16 +198,13 @@ public class InsertSeanceCodeController {
                 showError("Erreur", "Impossible de créer la séance code.");
             }
         } else {
-            // Editing existing seance
+            // Editing existing seance code.
             editingSeance.setCandidatId(candidate.getId());
             editingSeance.setMoniteurId(moniteur.getId());
             editingSeance.setSessionDatetime(sessionDatetime);
-
             boolean updated = seanceCodeService.updateSeanceCode(editingSeance);
             if (updated) {
-                // >>> NEW: Show success notification <<<
                 showSuccessNotification("Séance Code mise à jour avec succès !");
-
                 clearForm();
                 if (parentController != null) {
                     parentController.returnToSeancesPage();
@@ -209,8 +216,6 @@ public class InsertSeanceCodeController {
     }
 
     private void showSuccessNotification(String message) {
-        // Grab the StackPane from the Scene. In SecretaireDashboard.fxml, that's fx:id="contentArea".
-        // We'll do a quick lookup by ID:
         StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
         if (contentArea != null) {
             NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
@@ -228,7 +233,7 @@ public class InsertSeanceCodeController {
     }
 
     private void setFieldError(TextField field, Label errorLabel, String message) {
-        if (!field.getStyleClass().contains("error")) {
+        if (field != null && !field.getStyleClass().contains("error")) {
             field.getStyleClass().add("error");
         }
         if (errorLabel != null) {

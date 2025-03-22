@@ -11,19 +11,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import service.SeanceConduitService;
 import service.ProfileService;
-
 import java.util.Optional;
 
-/**
- * SeanceConduitDetailsController
- *
- * Dynamically shows/hides buttons depending on user’s role:
- *  - candidate => read-only (no buttons)
- *  - secretaire => can edit & delete
- *  - moniteur => read-only (assuming no special moniteur actions on seances)
- *
- * We have a setParentController(...) method to call back if user is secretaire.
- */
 public class SeanceConduitDetailsController {
 
     @FXML private Label lblTitle;
@@ -34,10 +23,7 @@ public class SeanceConduitDetailsController {
     @FXML private Button btnEdit;
     @FXML private Button btnDelete;
 
-    // We'll store the seance object
     private SeanceConduit seance;
-
-    // Reference to a parent, if needed for secretarial actions
     private SecretaireSeancesController parentController;
 
     private final SeanceConduitService conduitService = new SeanceConduitService();
@@ -45,85 +31,89 @@ public class SeanceConduitDetailsController {
 
     @FXML
     public void initialize() {
-        // Hide all by default
+        // Hide edit and delete buttons by default.
         btnEdit.setVisible(false);
         btnDelete.setVisible(false);
 
-        // Check the current user's role
+        // Determine button visibility based on the current user's role.
         User currentUser = SessionManager.getCurrentUser();
         if (currentUser != null) {
-            switch (currentUser.getRole()) {
-                case "candidate":
-                    // read-only
-                    break;
+            switch (currentUser.getRole().toLowerCase()) {
                 case "secretaire":
-                    // show edit + delete
                     btnEdit.setVisible(true);
                     btnDelete.setVisible(true);
                     break;
-                case "moniteur":
-                    // read-only for seance conduit (unless you decide otherwise)
+                // Candidates and moniteurs have read-only access in this view.
+                default:
                     break;
             }
         }
     }
 
     /**
-     * Let the parent (SecretaireSeancesController, for example) be injected
-     * so we can call back after edit or delete if we want.
+     * Called by the parent controller to inject itself.
      */
     public void setParentController(SecretaireSeancesController parentController) {
         this.parentController = parentController;
     }
 
     /**
-     * The calling code sets the seance we’re showing.
+     * Sets the SeanceConduit whose details will be displayed.
      */
     public void setSeance(SeanceConduit seance) {
         this.seance = seance;
         loadDetails();
     }
 
+    /**
+     * Loads the seance details into the UI.
+     */
     private void loadDetails() {
         lblTitle.setText("Détails de la Séance Conduit");
         lblDate.setText("Date/Heure: " + seance.getSessionDatetime());
         lblLocation.setText("Lieu: (" + seance.getLatitude() + ", " + seance.getLongitude() + ")");
 
-        // Candidate & Moniteur from profile
-        String candName = profileService.getProfileByUserId(seance.getCandidatId())
+        // Retrieve candidate & moniteur names from their profiles.
+        String candidateName = profileService.getProfileByUserId(seance.getCandidatId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
-        String monName = profileService.getProfileByUserId(seance.getMoniteurId())
+        String moniteurName = profileService.getProfileByUserId(seance.getMoniteurId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
-
-        lblCandidate.setText("Candidat: " + candName);
-        lblMoniteur.setText("Moniteur: " + monName);
+        lblCandidate.setText("Candidat: " + candidateName);
+        lblMoniteur.setText("Moniteur: " + moniteurName);
     }
 
+    /**
+     * Handles the Edit button action.
+     * Opens the InsertSeanceConduit page with the current seance data prefilled.
+     */
     @FXML
     private void handleEdit() {
-        // Only for secretaire
         if (parentController != null) {
-            // e.g. parentController.openEditSeanceConduitPage(seance);
-            System.out.println("handleEdit SeanceConduit (secretaire)...");
+            // Call the parent's method to open the edit page.
+            parentController.openEditConduitPage(seance);
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Parent controller non défini.");
+            alert.showAndWait();
         }
     }
 
+    /**
+     * Handles the Delete button action.
+     */
     @FXML
     private void handleDelete() {
-        // Only for secretaire
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmer");
-        confirm.setHeaderText("Supprimer cette Séance Conduit ?");
-        confirm.setContentText("Cette action est irréversible.");
+        confirm.setTitle("Confirmer la suppression");
+        confirm.setHeaderText("Voulez-vous vraiment supprimer cette séance ?");
         Optional<ButtonType> res = confirm.showAndWait();
         if (res.isPresent() && res.get() == ButtonType.OK) {
-            boolean success = conduitService.deleteSeanceConduit(seance.getId());
-            if (success) {
-                new Alert(Alert.AlertType.INFORMATION, "Séance supprimée.").showAndWait();
+            boolean deleted = conduitService.deleteSeanceConduit(seance.getId());
+            if (deleted) {
+                new Alert(Alert.AlertType.INFORMATION, "Séance supprimée avec succès.").showAndWait();
                 if (parentController != null) {
-                    // e.g. parentController.returnToSeancesPage();
+                    parentController.returnToSeancesPage();
                 }
             } else {
                 new Alert(Alert.AlertType.ERROR, "Impossible de supprimer la séance.").showAndWait();
