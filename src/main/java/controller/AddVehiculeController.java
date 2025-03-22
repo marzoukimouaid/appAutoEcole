@@ -7,8 +7,10 @@ import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 
@@ -34,10 +36,34 @@ public class AddVehiculeController {
 
     private final VehiculeService vehiculeService = new VehiculeService();
 
+    // Fields for edit mode support
+    private boolean isEditMode = false;
+    private Vehicule editingVehicule;
+
     @FXML
     public void initialize() {
         vehiculeTypeComboBox.getItems().addAll("MOTO", "VOITURE", "CAMION");
         btnSubmit.setOnAction(this::handleSubmit);
+    }
+
+    /**
+     * Initializes the form for editing an existing vehicle.
+     * Preloads the vehicle's existing data into the inputs.
+     *
+     * @param vehicule The vehicle record to edit.
+     */
+    public void initData(Vehicule vehicule) {
+        isEditMode = true;
+        editingVehicule = vehicule;
+
+        immatriculationField.setText(vehicule.getImmatriculation());
+        marqueField.setText(vehicule.getMarque());
+        dateMiseEnServicePicker.setValue(vehicule.getDateMiseEnService());
+        kilometrageTotalField.setText(String.valueOf(vehicule.getKilometrageTotal()));
+        kmRestantField.setText(String.valueOf(vehicule.getKmRestantEntretien()));
+        vehiculeTypeComboBox.setValue(vehicule.getType().name());
+
+        btnSubmit.setText("Mettre à jour Véhicule");
     }
 
     private void handleSubmit(ActionEvent event) {
@@ -53,7 +79,9 @@ public class AddVehiculeController {
         } else if (!Pattern.matches(immatriculationPattern, immatriculation)) {
             setFieldError(immatriculationField, immatriculationError, "Invalid format. Expected: xxxTunisxxxx");
             valid = false;
-        } else if (vehiculeService.immatriculationExists(immatriculation)) {
+        }
+        // In create mode, check if immatriculation exists
+        if (!isEditMode && vehiculeService.immatriculationExists(immatriculation)) {
             setFieldError(immatriculationField, immatriculationError, "Ce numéro d'immatriculation existe déjà");
             valid = false;
         }
@@ -65,7 +93,8 @@ public class AddVehiculeController {
             valid = false;
         }
         // Validate date de mise en service
-        if (dateMiseEnServicePicker.getValue() == null) {
+        LocalDate dateMiseEnService = dateMiseEnServicePicker.getValue();
+        if (dateMiseEnService == null) {
             setFieldError(dateMiseEnServicePicker, dateMiseEnServiceError, "Date de mise en service required");
             valid = false;
         }
@@ -97,25 +126,46 @@ public class AddVehiculeController {
             return;
         }
 
-        Vehicule vehicule = new Vehicule();
-        vehicule.setImmatriculation(immatriculation);
-        vehicule.setMarque(marque);
-        vehicule.setDateMiseEnService(dateMiseEnServicePicker.getValue());
-        vehicule.setKilometrageTotal(kmTotal);
-        vehicule.setKmRestantEntretien(kmRestant);
-        try {
-            vehicule.setType(VehicleType.valueOf(vehiculeTypeComboBox.getValue()));
-        } catch (IllegalArgumentException e) {
-            setFieldError(vehiculeTypeComboBox, vehiculeTypeError, "Invalid vehicle type");
-            return;
-        }
-
-        boolean created = vehiculeService.createVehicule(vehicule);
-        if (created) {
-            NotificationUtil.showNotification(rootPane, "Véhicule ajouté avec succès!", NotificationType.SUCCESS);
-            clearForm();
+        // If in edit mode, update the existing record; otherwise, create a new one.
+        if (isEditMode) {
+            editingVehicule.setImmatriculation(immatriculation);
+            editingVehicule.setMarque(marque);
+            editingVehicule.setDateMiseEnService(dateMiseEnService);
+            editingVehicule.setKilometrageTotal(kmTotal);
+            editingVehicule.setKmRestantEntretien(kmRestant);
+            try {
+                editingVehicule.setType(VehicleType.valueOf(vehiculeTypeComboBox.getValue()));
+            } catch (IllegalArgumentException e) {
+                setFieldError(vehiculeTypeComboBox, vehiculeTypeError, "Invalid vehicle type");
+                return;
+            }
+            boolean updated = vehiculeService.updateVehicule(editingVehicule);
+            if (updated) {
+                NotificationUtil.showNotification(rootPane, "Véhicule mis à jour avec succès!", NotificationType.SUCCESS);
+                clearForm();
+            } else {
+                showInlineError("Error updating vehicle");
+            }
         } else {
-            showInlineError("Error creating vehicle");
+            Vehicule vehicule = new Vehicule();
+            vehicule.setImmatriculation(immatriculation);
+            vehicule.setMarque(marque);
+            vehicule.setDateMiseEnService(dateMiseEnService);
+            vehicule.setKilometrageTotal(kmTotal);
+            vehicule.setKmRestantEntretien(kmRestant);
+            try {
+                vehicule.setType(VehicleType.valueOf(vehiculeTypeComboBox.getValue()));
+            } catch (IllegalArgumentException e) {
+                setFieldError(vehiculeTypeComboBox, vehiculeTypeError, "Invalid vehicle type");
+                return;
+            }
+            boolean created = vehiculeService.createVehicule(vehicule);
+            if (created) {
+                NotificationUtil.showNotification(rootPane, "Véhicule ajouté avec succès!", NotificationType.SUCCESS);
+                clearForm();
+            } else {
+                showInlineError("Error creating vehicle");
+            }
         }
     }
 
@@ -127,6 +177,10 @@ public class AddVehiculeController {
         kmRestantField.clear();
         vehiculeTypeComboBox.getSelectionModel().clearSelection();
         clearAllErrors();
+        // Reset edit mode if applicable.
+        isEditMode = false;
+        editingVehicule = null;
+        btnSubmit.setText("Ajouter Véhicule");
     }
 
     private void clearAllErrors() {

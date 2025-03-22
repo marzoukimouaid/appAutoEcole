@@ -4,6 +4,7 @@ import dao.MoniteurDao;
 import entite.Moniteur;
 import dao.ProfileDao;
 import dao.UserDao;
+import entite.Profile;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +28,25 @@ public class MoniteurService {
     }
 
     /**
-     * Updates an existing moniteur.
+     * Updates an existing moniteur (only the moniteur-specific fields).
      */
     public boolean updateMoniteur(Moniteur moniteur) {
         return moniteurDao.updateMoniteur(moniteur);
+    }
+
+    /**
+     * Updates an existing moniteur along with its associated profile.
+     * This method updates the profile record (using ProfileService) and the moniteur record.
+     *
+     * @param moniteur The moniteur object with updated moniteur-specific fields.
+     * @param profile  The profile object with updated profile fields.
+     * @return True if both updates were successful; false otherwise.
+     */
+    public boolean updateMoniteur(Moniteur moniteur, Profile profile) {
+        // Update profile first (no image file handling is needed here; pass null)
+        boolean profileUpdated = new service.ProfileService().createOrUpdateProfile(profile, null);
+        boolean moniteurUpdated = moniteurDao.updateMoniteur(moniteur);
+        return profileUpdated && moniteurUpdated;
     }
 
     /**

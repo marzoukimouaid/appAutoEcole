@@ -14,7 +14,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import service.VehiculeService;
-
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -23,22 +22,14 @@ import java.util.stream.Collectors;
 
 public class SecretaireVehiculeController {
 
-    @FXML
-    private StackPane rootPane;
-    @FXML
-    private Label totalVehiculesLabel;
-    @FXML
-    private Button btnAddVehicule;
-    @FXML
-    private Button btnSearch;
-    @FXML
-    private TextField searchField;
-    @FXML
-    private Label searchError;
-
+    @FXML private StackPane rootPane;
+    @FXML private Label totalVehiculesLabel;
+    @FXML private Button btnAddVehicule;
+    @FXML private Button btnSearch;
+    @FXML private TextField searchField;
+    @FXML private Label searchError;
     // Container for the "recently added" vehicles (default display)
-    @FXML
-    private VBox vehiculesContainer;
+    @FXML private VBox vehiculesContainer;
 
     private ObservableList<Vehicule> vehiculeList;
     private final VehiculeService vehiculeService = new VehiculeService();
@@ -46,9 +37,7 @@ public class SecretaireVehiculeController {
 
     @FXML
     public void initialize() {
-        // Load the default (recently added) vehicles
         refreshVehicules();
-
         btnAddVehicule.setOnAction(e -> openAddVehiculePage());
         btnSearch.setOnAction(e -> performSearch());
     }
@@ -98,17 +87,23 @@ public class SecretaireVehiculeController {
         Label lblType = new Label("Type: " + typeStr);
         lblType.getStyleClass().add("subtitle");
 
-        // Buttons: Inspect + Delete
+        // Create Inspect button
         Button btnInspect = new Button("Inspect");
         btnInspect.getStyleClass().add("inspect-button");
         btnInspect.setOnAction(e -> inspectVehicule(vehicule));
 
+        // Create Edit button
+        Button btnEdit = new Button("Edit");
+        btnEdit.getStyleClass().add("edit-button");
+        btnEdit.setOnAction(e -> editVehicule(vehicule));
+
+        // Create Delete button
         Button btnDelete = new Button("Delete");
         btnDelete.getStyleClass().add("delete-button");
         btnDelete.setOnAction(e -> deleteVehicule(vehicule));
 
         HBox buttonRow = new HBox(10);
-        buttonRow.getChildren().addAll(btnInspect, btnDelete);
+        buttonRow.getChildren().addAll(btnInspect, btnEdit, btnDelete);
 
         card.getChildren().addAll(
                 lblImmatriculation,
@@ -124,15 +119,26 @@ public class SecretaireVehiculeController {
     }
 
     /**
+     * Opens the Add Vehicule page in edit mode and preloads the vehicle's data.
+     */
+    private void editVehicule(Vehicule vehicule) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddVehicule.fxml"));
+            Parent editVehiculePage = loader.load();
+            AddVehiculeController controller = loader.getController();
+            controller.initData(vehicule);
+            rootPane.getChildren().setAll(editVehiculePage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Performs a search filtering vehicles by immatriculation or marque.
-     * Displays the results on a separate SearchResults page,
-     * removing the "Résultats de recherche (Véhicules)" text
-     * and centering the "no results" message.
      */
     private void performSearch() {
         String query = searchField.getText().trim().toLowerCase();
 
-        // Validate that the search field is not empty
         if (query.isEmpty()) {
             if (!searchField.getStyleClass().contains("error")) {
                 searchField.getStyleClass().add("error");
@@ -144,7 +150,6 @@ public class SecretaireVehiculeController {
             searchError.setText("");
         }
 
-        // Filter vehicles
         List<Vehicule> allVehicules = vehiculeService.getAllVehicules();
         List<Vehicule> filtered = allVehicules.stream()
                 .filter(v -> {
@@ -154,42 +159,28 @@ public class SecretaireVehiculeController {
                 })
                 .collect(Collectors.toList());
 
-        // Load the SearchResults page
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/SearchResults.fxml"));
             Parent searchResultsPage = loader.load();
+            controller.SearchResultsController controller = loader.getController();
+            controller.setTitle("Vehicules Search Results");
+            controller.setMessage("Found " + filtered.size() + " matching Vehicule(s)."); // remove subtitle text
 
-            // The controller expects a list of card nodes
-            SearchResultsController controller = loader.getController();
-            // We do NOT set a "title" text, removing the "Résultats de recherche" label
-            controller.setTitle("");
-
-            // Build the card list or "no results" label
             ObservableList<Node> cards = FXCollections.observableArrayList();
             if (filtered.isEmpty()) {
-                // No matches: show a centered "no results" message
-                controller.setMessage(""); // remove any subtitle text
                 Label noResults = new Label("Aucun véhicule ne correspond à la recherche.");
                 noResults.getStyleClass().add("section-title");
-
-                // Create a VBox that centers the label
                 VBox centerBox = new VBox(noResults);
                 centerBox.setAlignment(Pos.CENTER);
                 cards.add(centerBox);
-
             } else {
-                // Some matches found: just skip the "title" text
-                controller.setMessage(""); // no subtitle text either
-                for (Vehicule vehicule : filtered) {
-                    VBox card = createVehiculeCard(vehicule);
+                for (Vehicule v : filtered) {
+                    VBox card = createVehiculeCard(v);
                     cards.add(card);
                 }
             }
             controller.setResults(cards);
-
-            // Show the search results page
             rootPane.getChildren().setAll(searchResultsPage);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -247,7 +238,7 @@ public class SecretaireVehiculeController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddVehicule.fxml"));
             Parent addPage = loader.load();
-            // If there's a StackPane with fx:id="contentArea", we put the new page there.
+
             Parent root = btnAddVehicule.getScene().getRoot();
             StackPane contentArea = (StackPane) root.lookup("#contentArea");
             if (contentArea != null) {

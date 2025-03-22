@@ -2,6 +2,7 @@ package controller;
 
 import entite.DossierCandidat;
 import entite.Profile;
+import entite.User;
 import service.DossierCandidatService;
 import service.PaymentInstallmentService;
 import service.PaymentService;
@@ -73,6 +74,11 @@ public class AddCandidateController {
     private File cinFile;
     private File certificatFile;
     private File photoFile;
+
+    // Flag and objects for edit mode
+    private boolean isEditMode = false;
+    private DossierCandidat editingCandidate;
+    private Profile editingProfile;
 
     // Services – following layered architecture
     private final UserService userService = new UserService();
@@ -168,6 +174,52 @@ public class AddCandidateController {
         btnSubmit.setOnAction(this::handleSubmit);
     }
 
+    /**
+     * Initializes the form for editing a candidate.
+     * Preloads the candidate's old data into the inputs.
+     *
+     * @param dossier the candidate's dossier
+     * @param profile the candidate's profile
+     */
+    public void initData(DossierCandidat dossier, Profile profile) {
+        isEditMode = true;
+        editingCandidate = dossier;
+        editingProfile = profile;
+
+        // Preload user data (username)
+        User existingUser = userService.getUserById(profile.getUserId());
+        if (existingUser != null) {
+            usernameField.setText(existingUser.getUsername());
+        }
+        // Leave password empty (if provided, you could update it)
+        passwordField.clear();
+
+        // Preload profile fields
+        firstNameField.setText(profile.getNom());
+        lastNameField.setText(profile.getPrenom());
+        emailField.setText(profile.getEmail());
+        birthdayPicker.setValue(profile.getBirthday());
+        phoneField.setText(String.valueOf(profile.getTel()));
+        addressField.setText(profile.getAddresse());
+
+        // Preload dossier fields
+        permisTypeComboBox.setValue(dossier.getPermisType());
+        // If your DossierCandidat stores file names, preload button texts accordingly.
+        // For example:
+        // btnChooseCIN.setText(dossier.getCinFileName() != null ? dossier.getCinFileName() : "Choisir le fichier");
+        // btnChooseCertificat.setText(dossier.getCertificatFileName() != null ? dossier.getCertificatFileName() : "Choisir le fichier");
+        // btnChoosePhoto.setText(dossier.getPhotoFileName() != null ? dossier.getPhotoFileName() : "Choisir le fichier");
+        // Otherwise, you may leave them as is.
+
+        seancesConduiteField.setText(String.valueOf(dossier.getNombreSeancesConduite()));
+        seancesCodeField.setText(String.valueOf(dossier.getNombreSeancesCode()));
+        // In edit mode, you might not want to change the payment mode.
+        modePaiementComboBox.setDisable(true);
+
+        // Update the submit button text
+        btnSubmit.setText("Mettre à jour Candidat");
+    }
+
     private void handleSubmit(ActionEvent event) {
         clearAllErrors();
         boolean valid = true;
@@ -177,14 +229,22 @@ public class AddCandidateController {
             setFieldError(usernameField, usernameError, "Username required");
             valid = false;
         }
-        // Validate password
+        // Validate password – in edit mode, password is optional.
         String password = passwordField.getText().trim();
-        if (password.isEmpty()) {
-            setFieldError(passwordField, passwordError, "Password required");
-            valid = false;
-        } else if (!isValidPassword(password)) {
-            setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
-            valid = false;
+        if (!isEditMode) {
+            if (password.isEmpty()) {
+                setFieldError(passwordField, passwordError, "Password required");
+                valid = false;
+            } else if (!isValidPassword(password)) {
+                setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
+                valid = false;
+            }
+        } else {
+            // In edit mode, if a new password is provided, validate it.
+            if (!password.isEmpty() && !isValidPassword(password)) {
+                setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
+                valid = false;
+            }
         }
         // Validate first name
         if (firstNameField.getText().trim().isEmpty()) {
@@ -239,18 +299,20 @@ public class AddCandidateController {
             setFieldError(permisTypeComboBox, permisTypeError, "Select permis type");
             valid = false;
         }
-        // Validate file selections
-        if (cinFile == null) {
-            cinError.setText("CIN image required");
-            valid = false;
-        }
-        if (certificatFile == null) {
-            certificatError.setText("Certificat image required");
-            valid = false;
-        }
-        if (photoFile == null) {
-            photoError.setText("Photo image required");
-            valid = false;
+        // Validate file selections only in create mode.
+        if (!isEditMode) {
+            if (cinFile == null) {
+                cinError.setText("CIN image required");
+                valid = false;
+            }
+            if (certificatFile == null) {
+                certificatError.setText("Certificat image required");
+                valid = false;
+            }
+            if (photoFile == null) {
+                photoError.setText("Photo image required");
+                valid = false;
+            }
         }
         // Validate new fields: session counts and payment mode
         int seancesConduite = 0;
@@ -275,7 +337,7 @@ public class AddCandidateController {
             setFieldError(seancesCodeField, seancesCodeError, "Invalid number");
             valid = false;
         }
-        if (modePaiementComboBox.getValue() == null) {
+        if (!isEditMode && modePaiementComboBox.getValue() == null) {
             setFieldError(modePaiementComboBox, modePaiementError, "Select payment mode");
             valid = false;
         }
@@ -283,104 +345,150 @@ public class AddCandidateController {
             return;
         }
 
-        // Create candidate user
-        String username = usernameField.getText().trim();
-        boolean userCreated = userService.createUser(username, password, "candidat");
-        if (!userCreated) {
-            setFieldError(usernameField, usernameError, "Username might exist");
-            return;
-        }
-        int userId = userService.getUserIdByUsername(username);
-        if (userId == -1) {
-            setFieldError(usernameField, usernameError, "User retrieval error");
-            return;
-        }
-        // Create candidate profile
-        Profile profile = new Profile();
-        profile.setUserId(userId);
-        profile.setNom(firstNameField.getText().trim());
-        profile.setPrenom(lastNameField.getText().trim());
-        profile.setEmail(email);
-        profile.setBirthday(birthdayPicker.getValue());
-        try {
-            profile.setTel(Integer.parseInt(phone));
-        } catch (NumberFormatException e) {
-            profile.setTel(0);
-        }
-        profile.setAddresse(addressField.getText().trim());
-        boolean profileCreated = profileService.createOrUpdateProfile(profile, null);
-        if (!profileCreated) {
-            setFieldError(emailField, emailError, "Profile creation error");
-            return;
-        }
-        // Create candidate dossier
-        DossierCandidat dossier = new DossierCandidat();
-        dossier.setCandidateId(userId);
-        dossier.setPermisType(permisTypeComboBox.getValue());
-        LocalDateTime now = LocalDateTime.now();
-        dossier.setCreatedAt(now);
-        dossier.setUpdatedAt(now);
-        dossier.setNombreSeancesConduite(seancesConduite);
-        dossier.setNombreSeancesCode(seancesCode);
-        boolean dossierCreated = dossierService.createDossier(dossier, cinFile, certificatFile, photoFile);
-        if (!dossierCreated) {
-            showInlineError("Dossier creation error");
-            return;
-        }
-
-        // Payment processing:
-        // Calculate total amount based on auto-école configuration pricing.
-        double totalAmount = 0;
-        try {
-            // Retrieve auto-école data. Assume first record contains pricing info at indices 4 and 5.
-            String[][] autoEcoleData = autoEcoleService.getAutoEcoleData().toArray(new String[0][]);
-            double prixSeanceConduit = Double.parseDouble(autoEcoleData[0][4]);
-            double prixSeanceCode = Double.parseDouble(autoEcoleData[0][5]);
-            totalAmount = (seancesConduite * prixSeanceConduit) + (seancesCode * prixSeanceCode);
-        } catch (Exception e) {
-            e.printStackTrace();
-            showInlineError("Error retrieving auto-école pricing configuration.");
-            return;
-        }
-
-        String modePaiement = modePaiementComboBox.getValue();
-        if ("comptant".equalsIgnoreCase(modePaiement)) {
-            boolean paymentCreated = paymentService.createFullPayment(userId, totalAmount, LocalDate.now());
-            if (!paymentCreated) {
-                showInlineError("Payment creation error");
+        if (isEditMode) {
+            // ---------- Update existing candidate ----------
+            // Update profile fields
+            editingProfile.setNom(firstNameField.getText().trim());
+            editingProfile.setPrenom(lastNameField.getText().trim());
+            editingProfile.setEmail(emailField.getText().trim());
+            editingProfile.setBirthday(birthdayPicker.getValue());
+            try {
+                editingProfile.setTel(Integer.parseInt(phoneField.getText().trim()));
+            } catch (NumberFormatException e) {
+                editingProfile.setTel(0);
+            }
+            editingProfile.setAddresse(addressField.getText().trim());
+            boolean profileUpdated = profileService.createOrUpdateProfile(editingProfile, null);
+            if (!profileUpdated) {
+                setFieldError(emailField, emailError, "Profile update error");
                 return;
             }
-        } else if ("par facilités".equalsIgnoreCase(modePaiement)) {
-            // Create installment payment entry.
-            Optional<entite.Payment> optPayment = paymentService.createInstallmentPayment(userId, totalAmount, LocalDate.now());
-            if (optPayment.isPresent()) {
-                entite.Payment payment = optPayment.get();
-                // Create 12 installment entries (one per month)
-                double installmentAmount = totalAmount / 12;
-                LocalDate startDate = LocalDate.now();
-                for (int i = 1; i <= 12; i++) {
-                    LocalDate dueDate = startDate.plusMonths(i);
-                    entite.PaymentInstallment installment = new entite.PaymentInstallment(
-                            payment.getId(),
-                            i,
-                            dueDate,
-                            installmentAmount,
-                            entite.PaymentInstallment.Status.PENDING
-                    );
-                    boolean installmentCreated = installmentService.createInstallment(installment);
-                    if (!installmentCreated) {
-                        showInlineError("Failed to create installment " + i);
-                    }
+            // Optionally update the user password if provided (implementation depends on userService)
+            if (!password.isEmpty()) {
+                // Example (if updateUserPassword is implemented):
+                // boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
+                // if (!passwordUpdated) { setFieldError(passwordField, passwordError, "Password update error"); return; }
+            }
+            // Update dossier fields
+            editingCandidate.setPermisType(permisTypeComboBox.getValue());
+            editingCandidate.setNombreSeancesConduite(seancesConduite);
+            editingCandidate.setNombreSeancesCode(seancesCode);
+            // In update, if new files are not selected, keep the existing ones.
+            boolean dossierUpdated = dossierService.updateDossier(editingCandidate,
+                    (cinFile != null ? cinFile : null),
+                    (certificatFile != null ? certificatFile : null),
+                    (photoFile != null ? photoFile : null));
+            if (!dossierUpdated) {
+                showInlineError("Dossier update error");
+                return;
+            }
+            showSuccessNotification("Candidat mis à jour avec succès !");
+            clearForm();
+        } else {
+            // ---------- Create new candidate (existing logic) ----------
+            // Create candidate user
+            String username = usernameField.getText().trim();
+            boolean userCreated = userService.createUser(username, password, "candidat");
+            if (!userCreated) {
+                setFieldError(usernameField, usernameError, "Username might exist");
+                return;
+            }
+            int userId = userService.getUserIdByUsername(username);
+            if (userId == -1) {
+                setFieldError(usernameField, usernameError, "User retrieval error");
+                return;
+            }
+            // Create candidate profile
+            Profile profile = new Profile();
+            profile.setUserId(userId);
+            profile.setNom(firstNameField.getText().trim());
+            profile.setPrenom(lastNameField.getText().trim());
+            profile.setEmail(email);
+            profile.setBirthday(birthdayPicker.getValue());
+            try {
+                profile.setTel(Integer.parseInt(phone));
+            } catch (NumberFormatException e) {
+                profile.setTel(0);
+            }
+            profile.setAddresse(addressField.getText().trim());
+            boolean profileCreated = profileService.createOrUpdateProfile(profile, null);
+            if (!profileCreated) {
+                setFieldError(emailField, emailError, "Profile creation error");
+                return;
+            }
+            // Create candidate dossier
+            DossierCandidat dossier = new DossierCandidat();
+            dossier.setCandidateId(userId);
+            dossier.setPermisType(permisTypeComboBox.getValue());
+            LocalDateTime now = LocalDateTime.now();
+            dossier.setCreatedAt(now);
+            dossier.setUpdatedAt(now);
+            dossier.setNombreSeancesConduite(seancesConduite);
+            dossier.setNombreSeancesCode(seancesCode);
+            boolean dossierCreated = dossierService.createDossier(dossier, cinFile, certificatFile, photoFile);
+            if (!dossierCreated) {
+                showInlineError("Dossier creation error");
+                return;
+            }
+
+            // Payment processing:
+            // Calculate total amount based on auto-école configuration pricing.
+            double totalAmount = 0;
+            try {
+                // Retrieve auto-école data. Assume first record contains pricing info at indices 4 and 5.
+                String[][] autoEcoleData = autoEcoleService.getAutoEcoleData().toArray(new String[0][]);
+                double prixSeanceConduit = Double.parseDouble(autoEcoleData[0][4]);
+                double prixSeanceCode = Double.parseDouble(autoEcoleData[0][5]);
+                totalAmount = (seancesConduite * prixSeanceConduit) + (seancesCode * prixSeanceCode);
+            } catch (Exception e) {
+                e.printStackTrace();
+                showInlineError("Error retrieving auto-école pricing configuration.");
+                return;
+            }
+
+            String modePaiement = modePaiementComboBox.getValue();
+            if ("comptant".equalsIgnoreCase(modePaiement)) {
+                boolean paymentCreated = paymentService.createFullPayment(userId, totalAmount, LocalDate.now());
+                if (!paymentCreated) {
+                    showInlineError("Payment creation error");
+                    return;
                 }
-            } else {
-                showInlineError("Installment payment creation error");
-                return;
+            } else if ("par facilités".equalsIgnoreCase(modePaiement)) {
+                Optional<entite.Payment> optPayment = paymentService.createInstallmentPayment(userId, totalAmount, LocalDate.now());
+                if (optPayment.isPresent()) {
+                    entite.Payment payment = optPayment.get();
+                    double installmentAmount = totalAmount / 12;
+                    LocalDate startDate = LocalDate.now();
+                    for (int i = 1; i <= 12; i++) {
+                        LocalDate dueDate = startDate.plusMonths(i);
+                        entite.PaymentInstallment installment = new entite.PaymentInstallment(
+                                payment.getId(),
+                                i,
+                                dueDate,
+                                installmentAmount,
+                                entite.PaymentInstallment.Status.PENDING
+                        );
+                        boolean installmentCreated = installmentService.createInstallment(installment);
+                        if (!installmentCreated) {
+                            showInlineError("Failed to create installment " + i);
+                        }
+                    }
+                } else {
+                    showInlineError("Installment payment creation error");
+                    return;
+                }
             }
-        }
 
-        // Show success notification
-        NotificationUtil.showNotification(rootPane, "Candidate added successfully!", NotificationUtil.NotificationType.SUCCESS);
-        clearForm();
+            showSuccessNotification("Candidat ajouté avec succès !");
+            clearForm();
+        }
+    }
+
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationUtil.NotificationType.SUCCESS);
+        }
     }
 
     private void clearForm() {
@@ -401,8 +509,15 @@ public class AddCandidateController {
         photoFile = null;
         seancesConduiteField.clear();
         seancesCodeField.clear();
-        modePaiementComboBox.getSelectionModel().clearSelection();
+        if (!isEditMode) {
+            modePaiementComboBox.getSelectionModel().clearSelection();
+        }
         clearAllErrors();
+        // Reset edit mode if applicable
+        isEditMode = false;
+        editingCandidate = null;
+        editingProfile = null;
+        btnSubmit.setText("Ajouter Candidat");
     }
 
     private void clearAllErrors() {

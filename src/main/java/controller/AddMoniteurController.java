@@ -3,6 +3,7 @@ package controller;
 import entite.Profile;
 import entite.Moniteur;
 import entite.Moniteur.PermisType;
+import entite.User;
 import service.ProfileService;
 import service.UserService;
 import service.MoniteurService;
@@ -10,8 +11,10 @@ import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.regex.Pattern;
@@ -56,6 +59,11 @@ public class AddMoniteurController {
     private final ProfileService profileService = new ProfileService();
     private final MoniteurService moniteurService = new MoniteurService();
 
+    // Fields for edit mode
+    private boolean isEditMode = false;
+    private Moniteur editingMoniteur;
+    private Profile editingProfile;
+
     @FXML
     public void initialize() {
         // Initialize permis type drop-down with values A, B, and C.
@@ -84,6 +92,42 @@ public class AddMoniteurController {
         btnSubmit.setOnAction(this::handleSubmit);
     }
 
+    /**
+     * Initializes the form for editing a moniteur.
+     * Preloads the moniteur's existing data into the inputs.
+     *
+     * @param moniteur The moniteur record to edit.
+     * @param profile  The associated profile record.
+     */
+    public void initData(Moniteur moniteur, Profile profile) {
+        isEditMode = true;
+        editingMoniteur = moniteur;
+        editingProfile = profile;
+
+        // Preload user data: retrieve existing user and set username.
+        User existingUser = userService.getUserById(profile.getUserId());
+        if (existingUser != null) {
+            usernameField.setText(existingUser.getUsername());
+        }
+        // Leave password empty (if provided, it will update the password via your service if implemented)
+        passwordField.clear();
+
+        // Preload profile fields
+        firstNameField.setText(profile.getNom());
+        lastNameField.setText(profile.getPrenom());
+        emailField.setText(profile.getEmail());
+        birthdayPicker.setValue(profile.getBirthday());
+        phoneField.setText(String.valueOf(profile.getTel()));
+        addressField.setText(profile.getAddresse());
+
+        // Preload moniteur fields
+        permisTypeComboBox.setValue(moniteur.getPermisType().name());
+        salaireField.setText(String.valueOf(moniteur.getSalaire()));
+
+        // Update the submit button text to reflect edit mode.
+        btnSubmit.setText("Mettre à jour Moniteur");
+    }
+
     private void handleSubmit(ActionEvent event) {
         clearAllErrors();
         boolean valid = true;
@@ -95,12 +139,21 @@ public class AddMoniteurController {
         }
         // Validate password.
         String password = passwordField.getText().trim();
-        if (password.isEmpty()) {
-            setFieldError(passwordField, passwordError, "Password required");
-            valid = false;
-        } else if (!isValidPassword(password)) {
-            setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
-            valid = false;
+        if (!isEditMode) {
+            // In create mode, password is required.
+            if (password.isEmpty()) {
+                setFieldError(passwordField, passwordError, "Password required");
+                valid = false;
+            } else if (!isValidPassword(password)) {
+                setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
+                valid = false;
+            }
+        } else {
+            // In edit mode, password is optional. If provided, validate it.
+            if (!password.isEmpty() && !isValidPassword(password)) {
+                setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
+                valid = false;
+            }
         }
         // Validate first name.
         if (firstNameField.getText().trim().isEmpty()) {
@@ -178,54 +231,101 @@ public class AddMoniteurController {
             return;
         }
 
-        // Create moniteur user.
-        String username = usernameField.getText().trim();
-        boolean userCreated = userService.createUser(username, password, "moniteur");
-        if (!userCreated) {
-            setFieldError(usernameField, usernameError, "Username might exist");
-            return;
+        if (isEditMode) {
+            // ---------- Update existing moniteur ----------
+            // Update profile fields
+            editingProfile.setNom(firstNameField.getText().trim());
+            editingProfile.setPrenom(lastNameField.getText().trim());
+            editingProfile.setEmail(email);
+            editingProfile.setBirthday(birthdayPicker.getValue());
+            try {
+                editingProfile.setTel(Integer.parseInt(phone));
+            } catch (NumberFormatException e) {
+                editingProfile.setTel(0);
+            }
+            editingProfile.setAddresse(addressField.getText().trim());
+            boolean profileUpdated = profileService.createOrUpdateProfile(editingProfile, null);
+            if (!profileUpdated) {
+                setFieldError(emailField, emailError, "Profile update error");
+                return;
+            }
+            // Optionally update the user password if provided (implementation depends on your UserService)
+            if (!password.isEmpty()) {
+                // For example, if you have a method updateUserPassword:
+                // boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
+                // if (!passwordUpdated) { setFieldError(passwordField, passwordError, "Password update error"); return; }
+            }
+            // Update moniteur fields
+            try {
+                editingMoniteur.setPermisType(PermisType.valueOf(permisTypeComboBox.getValue()));
+            } catch (IllegalArgumentException e) {
+                setFieldError(permisTypeComboBox, permisTypeError, "Invalid permis type");
+                return;
+            }
+            editingMoniteur.setSalaire(salaire);
+            boolean moniteurUpdated = moniteurService.updateMoniteur(editingMoniteur, editingProfile);
+            if (!moniteurUpdated) {
+                showInlineError("Moniteur update error");
+                return;
+            }
+            showSuccessNotification("Moniteur mis à jour avec succès !");
+            clearForm();
+        } else {
+            // ---------- Create new moniteur ----------
+            String username = usernameField.getText().trim();
+            boolean userCreated = userService.createUser(username, password, "moniteur");
+            if (!userCreated) {
+                setFieldError(usernameField, usernameError, "Username might exist");
+                return;
+            }
+            int userId = userService.getUserIdByUsername(username);
+            if (userId == -1) {
+                setFieldError(usernameField, usernameError, "User retrieval error");
+                return;
+            }
+            // Create profile.
+            Profile profile = new Profile();
+            profile.setUserId(userId);
+            profile.setNom(firstNameField.getText().trim());
+            profile.setPrenom(lastNameField.getText().trim());
+            profile.setEmail(email);
+            profile.setBirthday(birthdayPicker.getValue());
+            try {
+                profile.setTel(Integer.parseInt(phone));
+            } catch (NumberFormatException e) {
+                profile.setTel(0);
+            }
+            profile.setAddresse(addressField.getText().trim());
+            boolean profileCreated = profileService.createOrUpdateProfile(profile, null);
+            if (!profileCreated) {
+                setFieldError(emailField, emailError, "Profile creation error");
+                return;
+            }
+            // Create moniteur record.
+            Moniteur moniteur = new Moniteur();
+            moniteur.setUserId(userId);
+            try {
+                moniteur.setPermisType(PermisType.valueOf(permisTypeComboBox.getValue()));
+            } catch (IllegalArgumentException e) {
+                setFieldError(permisTypeComboBox, permisTypeError, "Invalid permis type");
+                return;
+            }
+            moniteur.setSalaire(salaire);
+            boolean moniteurCreated = moniteurService.createMoniteur(moniteur);
+            if (!moniteurCreated) {
+                showInlineError("Moniteur creation error");
+                return;
+            }
+            showSuccessNotification("Moniteur ajouté avec succès !");
+            clearForm();
         }
-        int userId = userService.getUserIdByUsername(username);
-        if (userId == -1) {
-            setFieldError(usernameField, usernameError, "User retrieval error");
-            return;
+    }
+
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
         }
-        // Create profile.
-        Profile profile = new Profile();
-        profile.setUserId(userId);
-        profile.setNom(firstNameField.getText().trim());
-        profile.setPrenom(lastNameField.getText().trim());
-        profile.setEmail(email);
-        profile.setBirthday(birthdayPicker.getValue());
-        try {
-            profile.setTel(Integer.parseInt(phone));
-        } catch (NumberFormatException e) {
-            profile.setTel(0);
-        }
-        profile.setAddresse(addressField.getText().trim());
-        boolean profileCreated = profileService.createOrUpdateProfile(profile, null);
-        if (!profileCreated) {
-            setFieldError(emailField, emailError, "Profile creation error");
-            return;
-        }
-        // Create moniteur record.
-        Moniteur moniteur = new Moniteur();
-        moniteur.setUserId(userId);
-        try {
-            moniteur.setPermisType(PermisType.valueOf(permisTypeComboBox.getValue()));
-        } catch (IllegalArgumentException e) {
-            setFieldError(permisTypeComboBox, permisTypeError, "Invalid permis type");
-            return;
-        }
-        moniteur.setSalaire(salaire);
-        boolean moniteurCreated = moniteurService.createMoniteur(moniteur);
-        if (!moniteurCreated) {
-            showInlineError("Moniteur creation error");
-            return;
-        }
-        // Show success notification.
-        NotificationUtil.showNotification(rootPane, "Moniteur added successfully!", NotificationType.SUCCESS);
-        clearForm();
     }
 
     private void clearForm() {
@@ -240,6 +340,11 @@ public class AddMoniteurController {
         permisTypeComboBox.getSelectionModel().clearSelection();
         salaireField.clear();
         clearAllErrors();
+        // Reset edit mode if applicable.
+        isEditMode = false;
+        editingMoniteur = null;
+        editingProfile = null;
+        btnSubmit.setText("Ajouter Moniteur");
     }
 
     private void clearAllErrors() {

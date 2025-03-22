@@ -11,7 +11,7 @@
     <children>
         <Label fx:id="lblTitle" styleClass="title" text="Search Results"/>
         <Label fx:id="lblMessage" styleClass="subtitle" text="Results will be displayed here."/>
-        <ScrollPane fx:id="resultsScrollPane" fitToWidth="true" prefHeight="300" styleClass="custom-scrollpane">
+        <ScrollPane fx:id="resultsScrollPane" fitToWidth="true" prefHeight="300" styleClass="custom-scrollpane" VBox.vgrow="ALWAYS">
             <content>
                 <VBox fx:id="resultsContainer" spacing="15" alignment="TOP_LEFT" style="-fx-padding: 20;"/>
             </content>

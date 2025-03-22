@@ -102,19 +102,44 @@ public class SecretaireMoniteursController {
         btnInspect.getStyleClass().add("inspect-button");
         btnInspect.setOnAction(event -> inspectMoniteur(moniteur));
 
+        // Create Edit button
+        Button btnEdit = new Button("Edit");
+        btnEdit.getStyleClass().add("edit-button");
+        btnEdit.setOnAction(event -> editMoniteur(moniteur));
+
         // Create Delete button
         Button btnDelete = new Button("Delete");
         btnDelete.getStyleClass().add("delete-button");
         btnDelete.setOnAction(event -> deleteMoniteur(moniteur));
 
-        // Place the two buttons side by side
+        // Place Inspect, Edit and Delete buttons side by side
         HBox buttonRow = new HBox(10);
-        buttonRow.getChildren().addAll(btnInspect, btnDelete);
+        buttonRow.getChildren().addAll(btnInspect, btnEdit, btnDelete);
 
         // Add components to the card
         card.getChildren().addAll(lblFullName, lblEmail, lblPermis, buttonRow);
 
         return card;
+    }
+
+    /**
+     * Opens the Add Moniteur page in edit mode and preloads the moniteur's data.
+     */
+    private void editMoniteur(Moniteur moniteur) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddMoniteur.fxml"));
+            Parent editMoniteurPage = loader.load();
+            // Retrieve associated profile for the moniteur
+            Profile profile = profileService.getProfileByUserId(moniteur.getUserId()).orElse(null);
+            if (profile != null) {
+                // Initialize the AddMoniteurController in edit mode with existing data.
+                controller.AddMoniteurController controller = loader.getController();
+                controller.initData(moniteur, profile);
+            }
+            rootPane.getChildren().setAll(editMoniteurPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -158,14 +183,13 @@ public class SecretaireMoniteursController {
         }
 
         try {
-            // Load the updated SearchResults page that displays cards
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/SearchResults.fxml"));
             Parent searchResultsPage = loader.load();
-            SearchResultsController controller = loader.getController();
+            controller.SearchResultsController controller = loader.getController();
             controller.setTitle("Moniteur Search Results");
             controller.setMessage("Found " + filtered.size() + " matching moniteur(s).");
 
-            // Build a list of card nodes for each filtered moniteur
+            // Build a list of card nodes for each filtered moniteur.
             ObservableList<Node> cards = FXCollections.observableArrayList();
             for (Moniteur moniteur : filtered) {
                 VBox card = createMoniteurCard(moniteur);
@@ -186,7 +210,7 @@ public class SecretaireMoniteursController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/MoniteurView.fxml"));
             Parent moniteurView = loader.load();
-            MoniteurViewController controller = loader.getController();
+            controller.MoniteurViewController controller = loader.getController();
             controller.initData(moniteur);
             rootPane.getChildren().setAll(moniteurView);
         } catch (IOException e) {

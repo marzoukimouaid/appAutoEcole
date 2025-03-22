@@ -18,12 +18,6 @@ public class DossierCandidatService {
 
     /**
      * Creates a new dossier candidat. It uploads images (if provided) to ImgBB and sets their URLs.
-     *
-     * @param dossier The dossier candidat data (including new session counts).
-     * @param cinFile The File for the CIN image.
-     * @param certificatFile The File for the medical certificate image.
-     * @param photoFile The File for the identity photo image.
-     * @return true if creation was successful; false otherwise.
      */
     public boolean createDossier(DossierCandidat dossier, File cinFile, File certificatFile, File photoFile) {
         // Upload CIN file
@@ -100,5 +94,40 @@ public class DossierCandidatService {
         boolean profileDeleted = profileDao.deleteProfileByUserId(candidateId);
         boolean userDeleted = userDao.deleteUserById(candidateId);
         return dossierDeleted && profileDeleted && userDeleted;
+    }
+
+    /**
+     * Updates an existing dossier candidat.
+     *
+     * If new image files are provided, they are uploaded and their URLs replace the existing ones.
+     * The updated_at timestamp is refreshed.
+     *
+     * @param dossier         The dossier candidat with updated fields.
+     * @param cinFile         New CIN image file (or null to keep existing).
+     * @param certificatFile  New certificat image file (or null to keep existing).
+     * @param photoFile       New photo image file (or null to keep existing).
+     * @return True if update was successful; false otherwise.
+     */
+    public boolean updateDossier(DossierCandidat dossier, File cinFile, File certificatFile, File photoFile) {
+        if (cinFile != null) {
+            String uploadedCinUrl = ImgBBUtil.uploadImageToImgBB(cinFile);
+            if (uploadedCinUrl != null) {
+                dossier.setCinUrl(uploadedCinUrl);
+            }
+        }
+        if (certificatFile != null) {
+            String uploadedCertificatUrl = ImgBBUtil.uploadImageToImgBB(certificatFile);
+            if (uploadedCertificatUrl != null) {
+                dossier.setCertificatMedicalUrl(uploadedCertificatUrl);
+            }
+        }
+        if (photoFile != null) {
+            String uploadedPhotoUrl = ImgBBUtil.uploadImageToImgBB(photoFile);
+            if (uploadedPhotoUrl != null) {
+                dossier.setPhotoIdentiteUrl(uploadedPhotoUrl);
+            }
+        }
+        dossier.setUpdatedAt(LocalDateTime.now());
+        return dossierDao.updateDossierCandidat(dossier);
     }
 }

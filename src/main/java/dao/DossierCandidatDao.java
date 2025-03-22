@@ -104,4 +104,25 @@ public class DossierCandidatDao {
         dossier.setNombreSeancesCode(rs.getInt("nombre_seances_code"));
         return dossier;
     }
+
+    /**
+     * Updates an existing dossier candidat in the database.
+     */
+    public boolean updateDossierCandidat(DossierCandidat dossier) {
+        String sql = "UPDATE dossier_candidats SET cin_url = ?, certificat_medical_url = ?, photo_identite_url = ?, updated_at = ?, permis_type = ?, nombre_seances_conduite = ?, nombre_seances_code = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, dossier.getCinUrl());
+            stmt.setString(2, dossier.getCertificatMedicalUrl());
+            stmt.setString(3, dossier.getPhotoIdentiteUrl());
+            stmt.setTimestamp(4, Timestamp.valueOf(dossier.getUpdatedAt()));
+            stmt.setString(5, dossier.getPermisType());
+            stmt.setInt(6, dossier.getNombreSeancesConduite());
+            stmt.setInt(7, dossier.getNombreSeancesCode());
+            stmt.setInt(8, dossier.getId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

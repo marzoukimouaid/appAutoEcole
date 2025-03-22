@@ -118,19 +118,44 @@ public class SecretaireCandidatsController {
         btnInspect.getStyleClass().add("inspect-button");
         btnInspect.setOnAction(event -> inspectCandidate(dossier));
 
+        // Create Edit button
+        Button btnEdit = new Button("Edit");
+        btnEdit.getStyleClass().add("edit-button");
+        btnEdit.setOnAction(event -> editCandidate(dossier));
+
         // Create Delete button
         Button btnDelete = new Button("Delete");
         btnDelete.getStyleClass().add("delete-button");
         btnDelete.setOnAction(event -> deleteCandidate(dossier));
 
-        // Place Inspect and Delete buttons side by side
+        // Place Inspect, Edit and Delete buttons side by side
         HBox buttonRow = new HBox(10);
-        buttonRow.getChildren().addAll(btnInspect, btnDelete);
+        buttonRow.getChildren().addAll(btnInspect, btnEdit, btnDelete);
 
         // Add all components to the card
         card.getChildren().addAll(lblFullName, lblEmail, lblJoinDate, buttonRow);
 
         return card;
+    }
+
+    /**
+     * Opens the Add Candidate page in edit mode and preloads the candidate's data.
+     */
+    private void editCandidate(DossierCandidat dossier) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddCandidate.fxml"));
+            Parent editCandidatePage = loader.load();
+            // Retrieve the candidate's profile using the candidate id from the dossier.
+            Profile profile = profileService.getProfileByUserId(dossier.getCandidateId()).orElse(null);
+            if (profile != null) {
+                // Initialize the AddCandidateController in edit mode with existing data.
+                AddCandidateController controller = loader.getController();
+                controller.initData(dossier, profile);
+            }
+            rootPane.getChildren().setAll(editCandidatePage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
