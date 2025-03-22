@@ -9,13 +9,18 @@
       alignment="TOP_LEFT"
       spacing="20"
       styleClass="content-area"
-      prefWidth="800" prefHeight="600">
+      maxWidth="1.7976931348623157E308"
+      maxHeight="1.7976931348623157E308"
+      VBox.vgrow="ALWAYS">
 
-    <!-- Section: Unpaid Exams (NEW) -->
+    <!-- Section: Unpaid Exams -->
     <Label text="Examens impayés" styleClass="header-title" />
-    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="custom-scrollpane">
         <content>
-            <VBox fx:id="examListContainer" spacing="15" alignment="TOP_LEFT">
+            <VBox fx:id="examListContainer"
+                  spacing="15"
+                  alignment="TOP_LEFT"
+                  maxWidth="1.7976931348623157E308">
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
@@ -23,11 +28,14 @@
         </content>
     </ScrollPane>
 
-    <!-- Section: Unpaid Payments (existing) -->
+    <!-- Section: Unpaid Payments -->
     <Label text="Paiements en attente" styleClass="header-title" />
-    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="custom-scrollpane">
         <content>
-            <VBox fx:id="paymentListContainer" spacing="15" alignment="TOP_LEFT">
+            <VBox fx:id="paymentListContainer"
+                  spacing="15"
+                  alignment="TOP_LEFT"
+                  maxWidth="1.7976931348623157E308">
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
@@ -35,15 +43,19 @@
         </content>
     </ScrollPane>
 
-    <!-- Section: Payment History (existing) -->
+    <!-- Section: Payment History -->
     <Label text="Historique des paiements" styleClass="header-title" />
-    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="custom-scrollpane">
         <content>
-            <VBox fx:id="paymentHistoryContainer" spacing="15" alignment="TOP_LEFT">
+            <VBox fx:id="paymentHistoryContainer"
+                  spacing="15"
+                  alignment="TOP_LEFT"
+                  maxWidth="1.7976931348623157E308">
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
             </VBox>
         </content>
     </ScrollPane>
+
 </VBox>

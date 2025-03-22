@@ -9,6 +9,7 @@ module org.example {
     requires org.json;
     requires java.desktop;
     requires jdk.jsobject;
+    requires org.apache.pdfbox;
 
     opens org.example to javafx.fxml;
     exports org.example;

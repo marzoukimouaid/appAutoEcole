@@ -6,16 +6,17 @@ import entite.ExamenCode;
 import entite.ExamenConduit;
 import entite.Profile;
 import entite.User;
-
 import service.SeanceCodeService;
 import service.SeanceConduitService;
 import service.ExamenCodeService;
 import service.ExamenConduitService;
 import service.ProfileService;
-
+import service.AutoEcoleService;
 import Utils.SessionManager;
 import Utils.AlertUtils;
-
+import Utils.PDFGenerator;
+import Utils.NotificationUtil;
+import Utils.NotificationUtil.NotificationType;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -26,9 +27,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Parent;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -36,14 +38,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * EmploiDesSeancesController – shared by candidate & moniteur.
- *
- * We gather either:
- *   - seances/exams by "CandidatId" if role = "candidate"
- *   - seances/exams by "MoniteurId" if role = "moniteur"
- * Then we display them in the same monthly calendar & appointments list.
- */
 public class EmploiDesSeancesController {
 
     @FXML private Label titleLabel;
@@ -62,6 +56,7 @@ public class EmploiDesSeancesController {
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
     private final ProfileService profileService = new ProfileService();
+    private final AutoEcoleService autoEcoleService = new AutoEcoleService();
 
     @FXML
     public void initialize() {
@@ -119,24 +114,23 @@ public class EmploiDesSeancesController {
         int rowIndex = 1;
 
         LocalDate start = first;
-        LocalDate end   = currentYearMonth.atEndOfMonth();
+        LocalDate end = currentYearMonth.atEndOfMonth();
 
         // We'll collect short "type" strings by day in a Map
         Map<LocalDate, List<String>> dayTypes = new HashMap<>();
-        java.util.function.BiConsumer<LocalDate,String> addType = (d, t)-> dayTypes.computeIfAbsent(d, k->new ArrayList<>()).add(t);
+        java.util.function.BiConsumer<LocalDate,String> addType = (d, t) -> dayTypes.computeIfAbsent(d, k -> new ArrayList<>()).add(t);
 
         // Gather the seances/exams for the current user role
         List<EventInfo> events = gatherEventsForCurrentUser(start, end);
-        // For each event, we add to dayTypes
+        // For each event, add its short label
         for (EventInfo ev : events) {
             LocalDate eventDay = ev.dateTime.toLocalDate();
-            addType.accept(eventDay, ev.labelForCalendar);
+            addType.accept(eventDay, ev.getShortLabel());
         }
 
         // Fill day cells
         for (int day = 1; day <= daysInMonth; day++) {
             VBox cell = new VBox(3);
-            // Make the cell pop more
             cell.setStyle(
                     "-fx-background-color: #fff;" +
                             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 5, 0.2, 0, 2);" +
@@ -169,24 +163,31 @@ public class EmploiDesSeancesController {
     }
 
     // -------------------------------------------------------------
-    // 2) Build the monthly appointments list with "Inspect" button
+    // 2) Build the monthly appointments list with "Inspect" and "Imprimer PDF" buttons
     // -------------------------------------------------------------
     private void buildAppointmentsList() {
         appointmentsContainer.getChildren().clear();
 
-        // Add a heading
+        // Create an HBox for the heading and the print button
+        HBox headingBox = new HBox();
+        headingBox.setSpacing(10);
+        headingBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label heading = new Label("Rendez-vous ce mois-ci");
         heading.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #2C3E50;");
-        appointmentsContainer.getChildren().add(heading);
+        Button printButton = new Button("Imprimer PDF");
+        printButton.getStyleClass().add("inspect-button");
+        printButton.setOnAction(e -> handlePrintCalendar());
+        headingBox.getChildren().addAll(heading, printButton);
+        appointmentsContainer.getChildren().add(headingBox);
 
         LocalDate start = currentYearMonth.atDay(1);
-        LocalDate end   = currentYearMonth.atEndOfMonth();
+        LocalDate end = currentYearMonth.atEndOfMonth();
 
-        // gather events for the current user
+        // Gather events for the current user
         List<EventInfo> events = gatherEventsForCurrentUser(start, end);
 
         // Sort by date/time
-        events.sort(Comparator.comparing(e-> e.dateTime));
+        events.sort(Comparator.comparing(e -> e.dateTime));
 
         if (events.isEmpty()) {
             Label noDataLabel = new Label("Aucun rendez-vous ce mois-ci.");
@@ -195,7 +196,7 @@ public class EmploiDesSeancesController {
             return;
         }
 
-        // Build minimal cards: date/time + type + Inspect
+        // Build minimal cards: date/time + type + Inspect button
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
         for (EventInfo ev : events) {
             VBox card = new VBox(4);
@@ -203,21 +204,20 @@ public class EmploiDesSeancesController {
             card.setPrefWidth(600);
             card.setPadding(new javafx.geometry.Insets(10));
 
-            // Date/time
-            Label dtLabel = new Label(ev.dateTime.format(dtf));
+            // Date/time label
+            Label dtLabel = new Label(dtf.format(ev.dateTime));
             dtLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
             card.getChildren().add(dtLabel);
 
-            // Type
-            Label typeLabel = new Label(ev.labelForCalendar);
+            // Type label
+            Label typeLabel = new Label(ev.getShortLabel());
             typeLabel.setStyle("-fx-text-fill: #444;");
             card.getChildren().add(typeLabel);
 
             // Inspect button
             Button inspectBtn = new Button("Inspecter");
             inspectBtn.getStyleClass().add("inspect-button");
-            inspectBtn.setOnAction(e-> handleInspect(ev));
-
+            inspectBtn.setOnAction(e -> handleInspect(ev));
             card.getChildren().add(inspectBtn);
 
             appointmentsContainer.getChildren().add(card);
@@ -225,96 +225,7 @@ public class EmploiDesSeancesController {
     }
 
     /**
-     * Gathers the seances/exams for the current user’s role between [start, end].
-     *
-     * If user is "candidate": we do .getSeancesByCandidatId() + .getExamenCodesByCandidatId(), etc.
-     * If user is "moniteur": .getSeancesByMoniteurId() + .getExamenCodesByMoniteurId(), etc.
-     */
-    private List<EventInfo> gatherEventsForCurrentUser(LocalDate start, LocalDate end) {
-        if (currentUser == null) return Collections.emptyList();
-        String role = currentUser.getRole().toLowerCase();
-
-        List<EventInfo> result = new ArrayList<>();
-
-        if (role.equals("candidate")) {
-            // Seance Code
-            seanceCodeService.getSeancesByCandidatId(currentUser.getId()).stream()
-                    .filter(s-> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
-                    .forEach(sc-> result.add(new EventInfo(
-                            sc.getSessionDatetime(),
-                            "Séance Code",
-                            sc, null, null, null
-                    )));
-
-            // Seance Conduit
-            seanceConduitService.getSeancesByCandidatId(currentUser.getId()).stream()
-                    .filter(s-> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
-                    .forEach(sc-> result.add(new EventInfo(
-                            sc.getSessionDatetime(),
-                            "Séance Conduit",
-                            null, sc, null, null
-                    )));
-
-            // Examen Code
-            examenCodeService.getExamenCodesByCandidatId(currentUser.getId()).stream()
-                    .filter(e-> isWithin(e.getExamDatetime().toLocalDate(), start, end))
-                    .forEach(ec-> result.add(new EventInfo(
-                            ec.getExamDatetime(),
-                            "Examen Code",
-                            null, null, ec, null
-                    )));
-
-            // Examen Conduit
-            examenConduitService.getExamenConduitsByCandidatId(currentUser.getId()).stream()
-                    .filter(e-> isWithin(e.getExamDatetime().toLocalDate(), start, end))
-                    .forEach(ec-> result.add(new EventInfo(
-                            ec.getExamDatetime(),
-                            "Examen Conduit",
-                            null, null, null, ec
-                    )));
-
-        } else if (role.equals("moniteur")) {
-            // For moniteur: .getSeancesByMoniteurId, .getExamenCodesByMoniteurId, etc.
-            seanceCodeService.getSeancesByMoniteurId(currentUser.getId()).stream()
-                    .filter(s-> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
-                    .forEach(sc-> result.add(new EventInfo(
-                            sc.getSessionDatetime(),
-                            "Séance Code",
-                            sc, null, null, null
-                    )));
-
-            seanceConduitService.getSeancesByMoniteurId(currentUser.getId()).stream()
-                    .filter(s-> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
-                    .forEach(sc-> result.add(new EventInfo(
-                            sc.getSessionDatetime(),
-                            "Séance Conduit",
-                            null, sc, null, null
-                    )));
-
-            examenCodeService.getExamenCodesByMoniteurId(currentUser.getId()).stream()
-                    .filter(e-> isWithin(e.getExamDatetime().toLocalDate(), start, end))
-                    .forEach(ec-> result.add(new EventInfo(
-                            ec.getExamDatetime(),
-                            "Examen Code",
-                            null, null, ec, null
-                    )));
-
-            examenConduitService.getExamenConduitsByMoniteurId(currentUser.getId()).stream()
-                    .filter(e-> isWithin(e.getExamDatetime().toLocalDate(), start, end))
-                    .forEach(ec-> result.add(new EventInfo(
-                            ec.getExamDatetime(),
-                            "Examen Conduit",
-                            null, null, null, ec
-                    )));
-        }
-        // else if (role.equals("secretaire") ... you can do something else if you want
-
-        return result;
-    }
-
-    /**
      * Called when user clicks "Inspecter" for a given event.
-     * We load a detail page depending on the event’s label/type.
      */
     private void handleInspect(EventInfo ev) {
         try {
@@ -328,34 +239,29 @@ public class EmploiDesSeancesController {
                     SeanceCodeDetailsController scController = loader.getController();
                     scController.setSeance(ev.seanceCode);
                     break;
-
                 case "Séance Conduit":
                     loader = new FXMLLoader(getClass().getResource("/org/example/SeanceConduitDetails.fxml"));
                     detailRoot = loader.load();
                     SeanceConduitDetailsController sconController = loader.getController();
                     sconController.setSeance(ev.seanceConduit);
                     break;
-
                 case "Examen Code":
                     loader = new FXMLLoader(getClass().getResource("/org/example/ExamenCodeDetails.fxml"));
                     detailRoot = loader.load();
                     ExamenCodeDetailsController ecController = loader.getController();
                     ecController.setExamenCode(ev.examenCode);
                     break;
-
                 case "Examen Conduit":
                     loader = new FXMLLoader(getClass().getResource("/org/example/ExamenConduitDetails.fxml"));
                     detailRoot = loader.load();
                     ExamenConduitDetailsController econController = loader.getController();
                     econController.setExamenConduit(ev.examenConduit);
                     break;
-
                 default:
                     AlertUtils.showAlert("Erreur", "Type inconnu : " + ev.labelForCalendar, Alert.AlertType.ERROR);
                     return;
             }
 
-            // Place detail page in #contentArea if possible
             Node sceneRoot = appointmentsContainer.getScene().getRoot();
             StackPane contentArea = (StackPane) sceneRoot.lookup("#contentArea");
             if (contentArea != null) {
@@ -369,30 +275,203 @@ public class EmploiDesSeancesController {
         }
     }
 
-    // Helper
+    /**
+     * Opens a file-save dialog and generates a PDF of the calendar and appointments
+     * for the currently selected month.
+     */
+    private void handlePrintCalendar() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Enregistrer l'emploi du temps");
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showSaveDialog(appointmentsContainer.getScene().getWindow());
+        if (file != null) {
+            try {
+                // Get auto-école info
+                List<String[]> autoEcoleData = autoEcoleService.getAutoEcoleData();
+                String header;
+                String footer;
+                if (!autoEcoleData.isEmpty()) {
+                    String[] data = autoEcoleData.get(0);
+                    header = "Auto-école: " + data[0] + "\nAdresse: " + data[1];
+                    footer = "Contact: " + data[2] + " | Email: " + data[3];
+                } else {
+                    header = "Auto-école";
+                    footer = "";
+                }
+
+                // Get candidate or moniteur details
+                String candidateDetails;
+                Optional<Profile> profileOpt = profileService.getProfileByUserId(currentUser.getId());
+                if (profileOpt.isPresent()) {
+                    candidateDetails = "Candidat: " + profileOpt.get().getFullName();
+                } else {
+                    candidateDetails = "Candidat: " + currentUser.getUsername();
+                }
+
+                // Build the events for the currently selected month
+                LocalDate start = currentYearMonth.atDay(1);
+                LocalDate end = currentYearMonth.atEndOfMonth();
+                List<EventInfo> events = gatherEventsForCurrentUser(start, end);
+
+                // Group by day so we can fill the calendar table
+                Map<LocalDate, List<EventInfo>> eventsByDay = events.stream()
+                        .collect(Collectors.groupingBy(e -> e.dateTime.toLocalDate()));
+
+                // Transform into a map of day -> list of short label strings
+                Map<LocalDate, List<String>> calendarLabelsByDay = new HashMap<>();
+                for (Map.Entry<LocalDate, List<EventInfo>> entry : eventsByDay.entrySet()) {
+                    List<String> labels = entry.getValue().stream()
+                            .map(EventInfo::getShortLabel)
+                            .collect(Collectors.toList());
+                    calendarLabelsByDay.put(entry.getKey(), labels);
+                }
+
+                // Sort events by date/time for the appointments list and transform to full details strings
+                List<EventInfo> sortedEvents = new ArrayList<>(events);
+                sortedEvents.sort(Comparator.comparing(e -> e.dateTime));
+                List<String> appointmentDetails = sortedEvents.stream()
+                        .map(EventInfo::getFullLabel)
+                        .collect(Collectors.toList());
+
+                PDFGenerator.generateMonthlyCalendarAndAppointments(
+                        header,
+                        candidateDetails,
+                        currentYearMonth,
+                        (Map<LocalDate, List<?>>)(Map) calendarLabelsByDay,
+                        (List<?>)(List) appointmentDetails,
+                        footer,
+                        file
+                );
+
+                showSuccessNotification("Emploi du temps généré avec succès !");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                AlertUtils.showAlert("Erreur", "Impossible de générer l'emploi du temps.", Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    /**
+     * Displays a success notification using NotificationUtil.
+     */
+    private void showSuccessNotification(String message) {
+        StackPane contentArea = (StackPane) appointmentsContainer.getScene().lookup("#contentArea");
+        if (contentArea != null) {
+            NotificationUtil.showNotification(contentArea, message, NotificationType.SUCCESS);
+        }
+    }
+
+    /**
+     * Gathers the seances/exams for the current user’s role between [start, end].
+     */
+    private List<EventInfo> gatherEventsForCurrentUser(LocalDate start, LocalDate end) {
+        if (currentUser == null) return Collections.emptyList();
+        String role = currentUser.getRole().toLowerCase();
+
+        List<EventInfo> result = new ArrayList<>();
+
+        // Updated candidate branch to handle both "candidate" and "candidat"
+        if (role.equals("candidate") || role.equals("candidat")) {
+            seanceCodeService.getSeancesByCandidatId(currentUser.getId()).stream()
+                    .filter(s -> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
+                    .forEach(sc -> result.add(new EventInfo(
+                            sc.getSessionDatetime(),
+                            "Séance Code",
+                            sc, null, null, null
+                    )));
+
+            seanceConduitService.getSeancesByCandidatId(currentUser.getId()).stream()
+                    .filter(s -> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
+                    .forEach(sc -> result.add(new EventInfo(
+                            sc.getSessionDatetime(),
+                            "Séance Conduit",
+                            null, sc, null, null
+                    )));
+
+            examenCodeService.getExamenCodesByCandidatId(currentUser.getId()).stream()
+                    .filter(e -> isWithin(e.getExamDatetime().toLocalDate(), start, end))
+                    .forEach(ec -> result.add(new EventInfo(
+                            ec.getExamDatetime(),
+                            "Examen Code",
+                            null, null, ec, null
+                    )));
+
+            examenConduitService.getExamenConduitsByCandidatId(currentUser.getId()).stream()
+                    .filter(e -> isWithin(e.getExamDatetime().toLocalDate(), start, end))
+                    .forEach(ec -> result.add(new EventInfo(
+                            ec.getExamDatetime(),
+                            "Examen Conduit",
+                            null, null, null, ec
+                    )));
+        } else if (role.equals("moniteur")) {
+            seanceCodeService.getSeancesByMoniteurId(currentUser.getId()).stream()
+                    .filter(s -> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
+                    .forEach(sc -> result.add(new EventInfo(
+                            sc.getSessionDatetime(),
+                            "Séance Code",
+                            sc, null, null, null
+                    )));
+
+            seanceConduitService.getSeancesByMoniteurId(currentUser.getId()).stream()
+                    .filter(s -> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
+                    .forEach(sc -> result.add(new EventInfo(
+                            sc.getSessionDatetime(),
+                            "Séance Conduit",
+                            null, sc, null, null
+                    )));
+
+            examenCodeService.getExamenCodesByMoniteurId(currentUser.getId()).stream()
+                    .filter(e -> isWithin(e.getExamDatetime().toLocalDate(), start, end))
+                    .forEach(ec -> result.add(new EventInfo(
+                            ec.getExamDatetime(),
+                            "Examen Code",
+                            null, null, ec, null
+                    )));
+
+            examenConduitService.getExamenConduitsByMoniteurId(currentUser.getId()).stream()
+                    .filter(e -> isWithin(e.getExamDatetime().toLocalDate(), start, end))
+                    .forEach(ec -> result.add(new EventInfo(
+                            ec.getExamDatetime(),
+                            "Examen Conduit",
+                            null, null, null, ec
+                    )));
+        }
+        return result;
+    }
+
     private boolean isWithin(LocalDate d, LocalDate start, LocalDate end) {
         return (!d.isBefore(start)) && (!d.isAfter(end));
     }
 
-    // Data structure to unify all seances/exams
+    // Inner class to unify all events
     private static class EventInfo {
         private final LocalDateTime dateTime;
-        private final String labelForCalendar; // e.g. "Séance Code" or "Examen Conduit"
-
-        // references to actual objects
+        private final String labelForCalendar;
         private SeanceCode seanceCode;
         private SeanceConduit seanceConduit;
         private ExamenCode examenCode;
         private ExamenConduit examenConduit;
 
         EventInfo(LocalDateTime dt, String label,
-                  SeanceCode scC, SeanceConduit scD, ExamenCode eC, ExamenConduit eD) {
+                  SeanceCode sc, SeanceConduit scD, ExamenCode eC, ExamenConduit eD) {
             this.dateTime = dt;
             this.labelForCalendar = label;
-            this.seanceCode = scC;
+            this.seanceCode = sc;
             this.seanceConduit = scD;
             this.examenCode = eC;
             this.examenConduit = eD;
+        }
+
+        // Returns a short label for use in the calendar table (only the type)
+        public String getShortLabel() {
+            return labelForCalendar;
+        }
+
+        // Returns full details for the appointments list
+        public String getFullLabel() {
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+            return dtf.format(dateTime) + " - " + labelForCalendar;
         }
     }
 }
