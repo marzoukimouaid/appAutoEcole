@@ -998,6 +998,39 @@
     -fx-font-size: 12px;
     -fx-text-fill: #666;
 }
+/* Global context menu styling */
+.context-menu {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+}
+
+.context-menu .menu-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6; /* ensures items match the menu's corner radius */
+    -fx-padding: 10 20;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+/* Hover/focus states with rounded corners */
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: #3498db;  /* your blue color */
+    -fx-background-radius: 6;
+    -fx-text-fill: #ffffff;
+}
+
+/* The MenuButton itself (unchanged) */
+.profile-menu.sleek-menu {
+    -fx-background-color: transparent;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+}
+
 
 
 

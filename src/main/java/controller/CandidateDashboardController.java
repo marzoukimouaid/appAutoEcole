@@ -302,18 +302,33 @@ public class CandidateDashboardController {
             notificationBadge.setVisible(false);
         }
 
-        List<Notification> latest = notifications.stream().limit(3).collect(Collectors.toList());
+        List<Notification> latest = notifications.stream().limit(5).collect(Collectors.toList());
         notificationMenu.getItems().clear();
         if (latest.isEmpty()) {
             MenuItem emptyItem = new MenuItem("Aucune Notification");
             emptyItem.setDisable(true);
             notificationMenu.getItems().add(emptyItem);
         } else {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+
             for (Notification notif : latest) {
-                MenuItem item = new MenuItem(
-                        notif.getMessage() + " (" + notif.getCreatedAt().format(formatter) + ")"
-                );
+                // Instead of setting text, we'll use a custom layout for better readability
+                MenuItem item = new MenuItem();
+
+                VBox container = new VBox(2.0); // vertical spacing
+                container.setStyle("-fx-padding: 5 10 5 10;"); // small padding around each item
+
+                Label messageLabel = new Label(notif.getMessage());
+                messageLabel.setWrapText(true); // allow text to wrap if it's long
+
+                // Format the date/time more clearly
+                Label dateLabel = new Label("Reçu le " + notif.getCreatedAt().format(timeFormatter));
+                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;"); // smaller, lighter text
+
+                container.getChildren().addAll(messageLabel, dateLabel);
+                item.setGraphic(container);
+
                 notificationMenu.getItems().add(item);
             }
         }

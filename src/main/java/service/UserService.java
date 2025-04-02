@@ -31,4 +31,9 @@ public class UserService {
     public List<User> getSecretaires() {
         return userDAO.getUsersByRole("secretaire");
     }
+
+    public boolean updateUserPassword(int userId, String newPassword) {
+        return userDAO.updateUserPassword(userId, newPassword);
+    }
+
 }

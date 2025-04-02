@@ -48,7 +48,7 @@
                             <Label fx:id="moniteurError" textFill="red" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
                             <!-- Véhicule Immatriculation -->
                             <Label text="Immatriculation du Véhicule:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtVehiculeImmatriculation" promptText="xxxtunisiaxxxx"
+                            <TextField fx:id="txtVehiculeImmatriculation" promptText="xxxtunisxxxx"
                                        styleClass="input-field" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                             <Label fx:id="vehiculeError" textFill="red" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
                             <!-- Date/Heure -->

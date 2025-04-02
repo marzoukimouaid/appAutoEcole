@@ -7,41 +7,35 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
-<!-- Outer StackPane with fixed padding acts as the red-highlighted area -->
-<StackPane xmlns:fx="http://javafx.com/fxml/1"
+<StackPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controller.AutoEcoleController"
            prefWidth="800" prefHeight="600"
            stylesheets="@style.css">
-   <!-- This padding creates fixed margins at the top, bottom, left, and right -->
+   <!-- Fixed padding for margins -->
    <padding>
       <Insets top="40" right="20" bottom="40" left="20"/>
    </padding>
-
-   <!-- ScrollPane used to ensure responsiveness; only width is forced to fill -->
    <ScrollPane fitToWidth="true" fitToHeight="false"
                styleClass="custom-scrollpane"
                style="-fx-background-color: transparent;">
       <content>
-         <!-- Inner StackPane centers the card in the available viewport -->
-         <StackPane alignment="CENTER">
-            <!-- The card (VBox) will size itself naturally and never fill the entire height -->
-            <VBox alignment="CENTER" spacing="15" maxWidth="400" styleClass="card">
-               <Label text="Bienvenue !" styleClass="title"/>
-               <Label text="Commençons par configurer votre Auto-École." styleClass="subtitle"/>
-
-               <TextField promptText="Nom" fx:id="nameField" styleClass="input-field"/>
-               <TextField promptText="Adresse" fx:id="addressField" styleClass="input-field"/>
-               <TextField promptText="Numéro de téléphone" fx:id="phoneField" styleClass="input-field"/>
-               <TextField promptText="Adresse e-mail" fx:id="emailField" styleClass="input-field"/>
-
-               <!-- New fields for session prices -->
-               <TextField promptText="Prix séance conduite" fx:id="prixSeanceConduitField" styleClass="input-field"/>
-               <TextField promptText="Prix séance code" fx:id="prixSeanceCodeField" styleClass="input-field"/>
-
-               <Button fx:id="continueButton" text="Continuer" styleClass="primary-button"
-                       onAction="#initializeAutoEcole"/>
-            </VBox>
-         </StackPane>
+         <!-- The container used for displaying notifications; note the fx:id and styleClass -->
+         <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20" styleClass="content-area" style="-fx-background-color: #F8FBFF;">
+            <StackPane alignment="CENTER">
+               <VBox alignment="CENTER" spacing="15" maxWidth="400" styleClass="card">
+                  <Label text="Bienvenue !" styleClass="title"/>
+                  <Label text="Commençons par configurer votre Auto-École." styleClass="subtitle"/>
+                  <TextField promptText="Nom" fx:id="nameField" styleClass="input-field"/>
+                  <TextField promptText="Adresse" fx:id="addressField" styleClass="input-field"/>
+                  <TextField promptText="Numéro de téléphone" fx:id="phoneField" styleClass="input-field"/>
+                  <TextField promptText="Adresse e-mail" fx:id="emailField" styleClass="input-field"/>
+                  <TextField promptText="Prix séance conduite" fx:id="prixSeanceConduitField" styleClass="input-field"/>
+                  <TextField promptText="Prix séance code" fx:id="prixSeanceCodeField" styleClass="input-field"/>
+                  <Button fx:id="continueButton" text="Continuer" styleClass="primary-button"
+                          onAction="#initializeAutoEcole"/>
+               </VBox>
+            </StackPane>
+         </VBox>
       </content>
    </ScrollPane>
 </StackPane>

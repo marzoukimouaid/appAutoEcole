@@ -51,4 +51,21 @@ public class AutoEcoleService {
     public static List<String[]> getAutoEcoleData() {
         return autoEcoleDao.fetchAutoEcoleData();
     }
+
+    // New method to get the auto-école name from the database
+    public static String getAutoEcoleName() {
+        List<String[]> data = getAutoEcoleData();
+        if (!data.isEmpty()) {
+            return data.get(0)[0];
+        }
+        return "";
+    }
+
+    /**
+     * New method to update the auto-école configuration.
+     */
+    public void updateAutoEcole(String name, String address, String phone, String email,
+                                double prixSeanceConduit, double prixSeanceCode) {
+        autoEcoleDao.updateAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);
+    }
 }

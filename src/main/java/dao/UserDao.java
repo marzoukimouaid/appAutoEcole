@@ -164,4 +164,18 @@ public class UserDao {
         }
         return users;
     }
+
+    public boolean updateUserPassword(int userId, String newPassword) {
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, hashedPassword);
+            stmt.setInt(2, userId);
+            int rows = stmt.executeUpdate();
+            return rows > 0;  // true if at least 1 row was updated
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

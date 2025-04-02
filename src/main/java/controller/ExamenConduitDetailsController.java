@@ -4,11 +4,11 @@ import entite.ExamenConduit;
 import entite.Profile;
 import entite.User;
 import Utils.SessionManager;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import service.ExamenConduitService;
 import service.ProfileService;
 
@@ -21,15 +21,22 @@ import java.util.Optional;
  * - candidate => read only
  * - secretaire => edit + delete
  * - moniteur => "Mark as Passed" only if exam is paid AND exam date is today
+ *
+ * Updated: Now uses a WebView/Leaflet map to show exam's lat/lon,
+ * instead of displaying lat/lon text in lblLocation.
  */
 public class ExamenConduitDetailsController {
 
     @FXML private Label lblTitle;
     @FXML private Label lblDate;
     @FXML private Label lblStatus;
-    @FXML private Label lblLocation;
+    // Removed direct usage of lblLocation for lat/lon text
     @FXML private Label lblCandidate;
     @FXML private Label lblMoniteur;
+
+    // New WebView to display the map
+    @FXML private WebView mapView;
+
     @FXML private Button btnEdit;
     @FXML private Button btnDelete;
     @FXML private Button btnMarkPassed;
@@ -61,6 +68,19 @@ public class ExamenConduitDetailsController {
                     break;
             }
         }
+
+        // Load the Leaflet map once
+        WebEngine engine = mapView.getEngine();
+        // Make sure "leafletMap.html" is actually in src/main/resources/<your package> so getResource(...) doesn't return null
+        String mapUrl = getClass().getResource("/org/example/leafletMap.html").toExternalForm();
+        engine.load(mapUrl);
+
+        // After the map is loaded, place the marker if exam data is already set
+        engine.getLoadWorker().stateProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == Worker.State.SUCCEEDED && examenConduit != null) {
+                placeMarker();
+            }
+        });
     }
 
     public void setParentController(SecretaireInscriptionExamenController parentController) {
@@ -70,14 +90,19 @@ public class ExamenConduitDetailsController {
     public void setExamenConduit(ExamenConduit examenConduit) {
         this.examenConduit = examenConduit;
         loadDetails();
+
+        // If the map is already loaded, place the marker now
+        if (mapView.getEngine().getLoadWorker().getState() == Worker.State.SUCCEEDED) {
+            placeMarker();
+        }
     }
 
     private void loadDetails() {
         lblTitle.setText("Détails de l'Examen Conduit");
         lblDate.setText("Date/Heure: " + examenConduit.getExamDatetime());
         lblStatus.setText("Statut: " + examenConduit.getStatus().name());
-        lblLocation.setText("Lieu: (" + examenConduit.getLatitude() + ", " + examenConduit.getLongitude() + ")");
 
+        // Candidate & Moniteur names
         String candidateName = profileService.getProfileByUserId(examenConduit.getCandidatId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
@@ -87,6 +112,30 @@ public class ExamenConduitDetailsController {
 
         lblCandidate.setText("Candidat: " + candidateName);
         lblMoniteur.setText("Moniteur: " + moniteurName);
+
+        // We no longer set lblLocation, since we show lat/lon on the map
+        // lblLocation.setText("Lieu: (" + examenConduit.getLatitude() + ", " + examenConduit.getLongitude() + ")");
+    }
+
+    /**
+     * Place a marker on the Leaflet map at the exam's lat/lon.
+     */
+    private void placeMarker() {
+        double lat = examenConduit.getLatitude();
+        double lng = examenConduit.getLongitude();
+
+        // JavaScript snippet that sets the marker and centers the map
+        String script = String.format(
+                "var latLng = L.latLng(%f, %f);" +
+                        "if (typeof marker !== 'undefined' && marker) {" +
+                        "   marker.setLatLng(latLng);" +
+                        "} else {" +
+                        "   marker = L.marker(latLng).addTo(map);" +
+                        "}" +
+                        "map.setView(latLng, 14);",
+                lat, lng
+        );
+        mapView.getEngine().executeScript(script);
     }
 
     @FXML

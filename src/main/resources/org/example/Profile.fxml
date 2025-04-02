@@ -6,73 +6,72 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.image.ImageView?>
-
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ScrollPane?>
+
 <StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="controller.ProfileController"
            styleClass="root" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
-<!-- Profile Page FXML -->
-<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
 
-      spacing="20" alignment="CENTER"
-      styleClass="root">
+    <!-- ScrollPane added to make content scrollable -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scrollpane">
+        <VBox spacing="20" alignment="CENTER" styleClass="root">
+            <!-- Card Container -->
+            <VBox spacing="15" alignment="CENTER" maxWidth="400" styleClass="card">
 
-    <!-- Card Container -->
-    <VBox spacing="15" alignment="CENTER" maxWidth="400" styleClass="card">
-        <!-- Title -->
-        <Label text="My Profile" styleClass="title"/>
+                <!-- Title -->
+                <Label text="My Profile" styleClass="title"/>
 
-        <!-- Profile Picture Section -->
-        <VBox spacing="10" alignment="CENTER">
-            <!-- Profile Picture (Circular) -->
-            <ImageView fx:id="profileImage" fitWidth="100" fitHeight="100" preserveRatio="true"
-                       styleClass="profile-image"/>
+                <!-- Profile Picture Section -->
+                <VBox spacing="10" alignment="CENTER">
+                    <!-- Profile Picture (Circular) -->
+                    <ImageView fx:id="profileImage" fitWidth="100" fitHeight="100" preserveRatio="true"
+                               styleClass="profile-image"/>
 
-            <!-- Upload Image Button (Directly Below Profile Picture) -->
-            <Button fx:id="uploadImageButton" text="Upload Image" onAction="#handleUploadImage"
-                    styleClass="primary-button"/>
+                    <!-- Upload Image Button (Directly Below Profile Picture) -->
+                    <Button fx:id="uploadImageButton" text="Upload Image" onAction="#handleUploadImage"
+                            styleClass="primary-button"/>
+                </VBox>
+
+                <!-- Display Name -->
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Nom:"/>
+                    <TextField fx:id="nomField" promptText="Enter your Nom" styleClass="input-field"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Prenom:"/>
+                    <TextField fx:id="prenomField" promptText="Enter your Prenom" styleClass="input-field"/>
+                </VBox>
+
+                <!-- Email -->
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Email:"/>
+                    <TextField fx:id="emailField" promptText="Enter your email" styleClass="input-field"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Telephone:"/>
+                    <TextField fx:id="telField" promptText="Enter your telephone" styleClass="input-field"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Adresse:"/>
+                    <TextField fx:id="addresseField" promptText="Enter your Addresse" styleClass="input-field"/>
+                </VBox>
+
+                <!-- Birthday -->
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Birthday:"/>
+                    <DatePicker fx:id="birthdayPicker" promptText="Select your birthday" styleClass="input-field"/>
+                </VBox>
+
+                <!-- Save Profile Button -->
+                <Button text="Save Profile" onAction="#handleSaveProfile"
+                        styleClass="primary-button"/>
+            </VBox>
         </VBox>
-
-        <!-- Display Name -->
-
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Nom:"/>
-            <TextField fx:id="nomField" promptText="Enter your Nom" styleClass="input-field"/>
-        </VBox>
-
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Prenom:"/>
-            <TextField fx:id="prenomField" promptText="Enter your Prenom" styleClass="input-field"/>
-        </VBox>
-
-        <!-- Email -->
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Email:"/>
-            <TextField fx:id="emailField" promptText="Enter your email" styleClass="input-field"/>
-        </VBox>
-
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Telephone:"/>
-            <TextField fx:id="telField" promptText="Enter your telephone" styleClass="input-field"/>
-        </VBox>
-
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Adresse:"/>
-            <TextField fx:id="addresseField" promptText="Enter your Addresse" styleClass="input-field"/>
-        </VBox>
-
-        <!-- Birthday -->
-        <VBox spacing="5" alignment="CENTER_LEFT">
-            <Label text="Birthday:"/>
-            <DatePicker fx:id="birthdayPicker" promptText="Select your birthday" styleClass="input-field"/>
-        </VBox>
-
-        <!-- Save Profile Button -->
-        <Button text="Save Profile" onAction="#handleSaveProfile"
-                styleClass="primary-button"/>
-    </VBox>
-
-</VBox>
+    </ScrollPane>
 
 </StackPane>

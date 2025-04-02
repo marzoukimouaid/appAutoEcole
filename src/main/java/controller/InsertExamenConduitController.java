@@ -7,8 +7,6 @@ import entite.SeanceCode;
 import entite.SeanceConduit;
 import entite.User;
 import entite.Vehicule;
-import entite.Payment;
-import entite.PaymentInstallment;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 import service.*;
@@ -33,6 +31,14 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 
+/**
+ * InsertExamenConduitController
+ *
+ * Requirements enforced:
+ * 1) Only add a new ExamenConduit if the candidate has no other ExamenConduit
+ *    that is PENDING or PASSED.
+ * 2) Only add a new ExamenConduit if the candidate has >= 10 SeanceConduit sessions.
+ */
 public class InsertExamenConduitController {
 
     @FXML private BorderPane rootPane;
@@ -44,7 +50,8 @@ public class InsertExamenConduitController {
     @FXML private Label vehiculeError;
     @FXML private TextField txtExamDatetime;
     @FXML private Label datetimeError;
-    // New Price field and error label:
+
+    // Price field and error label
     @FXML private TextField txtPrice;
     @FXML private Label priceError;
 
@@ -52,12 +59,12 @@ public class InsertExamenConduitController {
     @FXML private Label mapError;
     @FXML private Button btnSubmit;
 
-    // Reference to parent controller (of type SecretaireInscriptionExamenController)
+    // Reference to parent controller
     private SecretaireInscriptionExamenController parentController;
-    // When editing an exam, this is non-null; if null, we are creating a new exam.
+    // If non-null => editing an exam; null => creating a new one
     private ExamenConduit editingExam = null;
 
-    // Service layer instances.
+    // Services
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final SeanceCodeService seanceCodeService = new SeanceCodeService();
@@ -80,7 +87,8 @@ public class InsertExamenConduitController {
     public void initialize() {
         WebEngine engine = mapView.getEngine();
         engine.setJavaScriptEnabled(true);
-        // Listen for the map load completion and set up the JavaScript bridge.
+
+        // Listen for the map load completion and set up the JavaScript bridge
         engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
             if (newState == Worker.State.SUCCEEDED) {
                 try {
@@ -89,7 +97,7 @@ public class InsertExamenConduitController {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                // If editing an exam, show the marker on the map.
+                // If editing an exam, show the marker on the map
                 if (editingExam != null) {
                     double lat = editingExam.getLatitude();
                     double lng = editingExam.getLongitude();
@@ -111,12 +119,11 @@ public class InsertExamenConduitController {
         }
     }
 
-    // Setter for injecting the parent controller.
     public void setParentController(SecretaireInscriptionExamenController parent) {
         this.parentController = parent;
     }
 
-    // Populate fields when editing an existing exam.
+    // Populate fields when editing an existing exam
     public void setExamenConduit(ExamenConduit exam) {
         this.editingExam = exam;
         User candidate = userService.getUserById(exam.getCandidatId());
@@ -140,7 +147,7 @@ public class InsertExamenConduitController {
 
     @FXML
     private void handleSubmit() {
-        // Try to update map coordinates in case the marker was moved.
+        // Try to update map coordinates in case the marker was moved
         try {
             Object result = mapView.getEngine().executeScript("marker ? marker.getLatLng() : null");
             if (result != null && result instanceof JSObject) {
@@ -174,7 +181,7 @@ public class InsertExamenConduitController {
         } else {
             String immatriculationPattern = "(?i)^[0-9]{3}tunis[0-9]{4}$";
             if (!vehiculeImmatriculation.matches(immatriculationPattern)) {
-                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisiaxxxx");
+                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisxxxx");
                 valid = false;
             }
         }
@@ -221,7 +228,7 @@ public class InsertExamenConduitController {
             return;
         }
 
-        // Retrieve candidate and moniteur.
+        // Retrieve candidate and moniteur
         Optional<User> optCandidate = Optional.ofNullable(userService.getUserByUsername(candidateUsername));
         if (!optCandidate.filter(u -> "candidat".equalsIgnoreCase(u.getRole())).isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Candidat introuvable ou invalide");
@@ -236,13 +243,14 @@ public class InsertExamenConduitController {
         }
         User moniteur = optMoniteur.get();
 
-        // Verify candidate's dossier and matching permis type.
+        // Verify candidate's dossier and matching permis type
         Optional<DossierCandidat> dossierOpt = dossierService.getDossierByCandidateId(candidate.getId());
         if (!dossierOpt.isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Dossier du candidat introuvable");
             return;
         }
         DossierCandidat dossier = dossierOpt.get();
+
         Optional<Moniteur> moniteurOpt = moniteurService.getMoniteurByUserId(moniteur.getId());
         if (!moniteurOpt.isPresent()) {
             setFieldError(moniteurUsernameField, moniteurError, "Moniteur introuvable");
@@ -250,11 +258,12 @@ public class InsertExamenConduitController {
         }
         Moniteur moniteurEntity = moniteurOpt.get();
         if (!dossier.getPermisType().equalsIgnoreCase(moniteurEntity.getPermisType().name())) {
-            setFieldError(moniteurUsernameField, moniteurError, "Le permis du candidat ne correspond pas au permis du moniteur");
+            setFieldError(moniteurUsernameField, moniteurError,
+                    "Le permis du candidat ne correspond pas au permis du moniteur");
             return;
         }
 
-        // New check: Ensure that the candidate's permis type, moniteur's permis type, and véhicule type all match.
+        // Check vehicle
         Optional<Vehicule> optVehicule = vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation);
         if (!optVehicule.isPresent()) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Véhicule non trouvé");
@@ -274,20 +283,23 @@ public class InsertExamenConduitController {
                 vehiculeMatches = (vehiculeType == Vehicule.VehicleType.CAMION);
                 break;
             default:
-                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Type de permis candidat invalide");
+                setFieldError(txtVehiculeImmatriculation, vehiculeError,
+                        "Type de permis candidat invalide");
                 return;
         }
         if (!vehiculeMatches) {
-            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le type du véhicule ne correspond pas au permis du candidat");
+            setFieldError(txtVehiculeImmatriculation, vehiculeError,
+                    "Le type du véhicule ne correspond pas au permis du candidat");
             return;
         }
-        // NEW: Check if the vehicle has remaining kilometrage.
+        // Check vehicle's remaining kilometrage
         if (vehicule.getKmRestantEntretien() <= 0) {
-            setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le véhicule nécessite un entretien (kilométrage restant insuffisant).");
+            setFieldError(txtVehiculeImmatriculation, vehiculeError,
+                    "Le véhicule nécessite un entretien (km restant insuffisant).");
             return;
         }
 
-        // Conflict check: Exclude the exam conduit currently being updated (if any)
+        // Check schedule conflicts (candidate & moniteur)
         boolean candidateBusy = Stream.concat(
                 Stream.concat(
                         seanceCodeService.getSeancesByCandidatId(candidate.getId()).stream().map(SeanceCode::getSessionDatetime),
@@ -298,7 +310,8 @@ public class InsertExamenConduitController {
                         .map(e -> e.getExamDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
-            setFieldError(candidateUsernameField, candidateError, "Le candidat a une autre séance ou examen à cette heure");
+            setFieldError(candidateUsernameField, candidateError,
+                    "Le candidat a une autre séance ou examen à cette heure");
             return;
         }
 
@@ -312,12 +325,35 @@ public class InsertExamenConduitController {
                         .map(e -> e.getExamDatetime())
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
-            setFieldError(moniteurUsernameField, moniteurError, "Le moniteur a une autre séance ou examen à cette heure");
+            setFieldError(moniteurUsernameField, moniteurError,
+                    "Le moniteur a une autre séance ou examen à cette heure");
             return;
         }
 
-        // All validations passed – proceed to create or update the exam conduit registration.
+        // Check if we're creating a new exam (not updating)
         if (editingExam == null) {
+            // 1) Ensure the candidate has no exam with status PENDING or PASSED
+            List<ExamenConduit> candidateExams =
+                    examenConduitService.getExamenConduitsByCandidatId(candidate.getId());
+            boolean hasActiveExam = candidateExams.stream()
+                    .anyMatch(ec -> ec.getStatus() == ExamenConduit.ExamStatus.PENDING
+                            || ec.getStatus() == ExamenConduit.ExamStatus.PASSED);
+            if (hasActiveExam) {
+                setFieldError(candidateUsernameField, candidateError,
+                        "Ce candidat a déjà un examen en cours ou déjà réussi (PENDING/PASSED).");
+                return;
+            }
+
+            // 2) NEW: Ensure the candidate has >= 10 SeanceConduit
+            List<SeanceConduit> seancesConduit =
+                    seanceConduitService.getSeancesByCandidatId(candidate.getId());
+            if (seancesConduit.size() < 10) {
+                setFieldError(candidateUsernameField, candidateError,
+                        "Le candidat doit avoir au moins 10 séances de conduite avant de passer l'examen.");
+                return;
+            }
+
+            // If everything is okay, create the exam
             ExamenConduit newExam = new ExamenConduit(
                     candidate.getId(),
                     moniteur.getId(),
@@ -327,19 +363,22 @@ public class InsertExamenConduitController {
                     selectedLongitude
             );
             newExam.setPrice(price);
-            // By default, paiement_status remains PENDING.
+            // By default, paiement_status = PENDING
             boolean created = examenConduitService.createExamenConduit(newExam);
             if (created) {
                 notificationService.sendNotification(candidate.getId(),
-                        "Votre inscription à l'examen Conduit a été créée avec succès le " + newExam.getExamDatetime() + ".");
+                        "Votre inscription à l'examen Conduit a été créée avec succès le "
+                                + newExam.getExamDatetime() + ".");
                 notificationService.sendNotification(moniteur.getId(),
-                        "Vous Avez une nouvelle Examen Conduit pour surveiller le " + newExam.getExamDatetime() + ".");
+                        "Vous avez un nouvel Examen Conduit pour surveiller le "
+                                + newExam.getExamDatetime() + ".");
                 showSuccessNotification("Examen Conduit créé avec succès !");
                 clearForm();
             } else {
                 showError("Erreur", "Impossible de créer l'examen conduit.");
             }
         } else {
+            // update existing
             editingExam.setCandidatId(candidate.getId());
             editingExam.setMoniteurId(moniteur.getId());
             editingExam.setVehiculeId(vehicule.getId());
@@ -347,6 +386,7 @@ public class InsertExamenConduitController {
             editingExam.setPrice(price);
             editingExam.setLatitude(selectedLatitude);
             editingExam.setLongitude(selectedLongitude);
+
             boolean updated = examenConduitService.updateExamenConduit(editingExam);
             if (updated) {
                 showSuccessNotification("Examen Conduit mis à jour avec succès !");

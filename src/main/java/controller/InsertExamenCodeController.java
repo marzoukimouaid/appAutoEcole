@@ -18,6 +18,7 @@ import service.PaymentService;
 import service.SeanceCodeService;
 import service.SeanceConduitService;
 import service.UserService;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -34,6 +36,15 @@ import javafx.scene.layout.BorderPane;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 
+/**
+ * InsertExamenCodeController
+ *
+ * Existing verifications:
+ *   - Candidate must exist, match moniteur's type, have valid payment, no overlapping schedule, etc.
+ *
+ * New verification:
+ *   - Only allow new exam if candidate has at least 10 SeanceCode sessions.
+ */
 public class InsertExamenCodeController {
 
     @FXML
@@ -170,6 +181,7 @@ public class InsertExamenCodeController {
         }
         User moniteur = optMoniteur.get();
 
+        // Check if candidate's dossier exists, and moniteur's data
         Optional<DossierCandidat> dossierOpt = dossierService.getDossierByCandidateId(candidate.getId());
         if (!dossierOpt.isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Dossier du candidat introuvable");
@@ -183,7 +195,8 @@ public class InsertExamenCodeController {
         }
         Moniteur moniteurEntity = moniteurOpt.get();
         if (!dossier.getPermisType().equalsIgnoreCase(moniteurEntity.getPermisType().name())) {
-            setFieldError(moniteurUsernameField, moniteurError, "Le permis du candidat ne correspond pas au permis du moniteur");
+            setFieldError(moniteurUsernameField, moniteurError,
+                    "Le permis du candidat ne correspond pas au permis du moniteur");
             return;
         }
 
@@ -195,12 +208,12 @@ public class InsertExamenCodeController {
         }
         for (Payment p : payments) {
             if ("FULL".equalsIgnoreCase(p.getPaymentType())) {
-                if (!p.getStatus().equalsIgnoreCase("PAID")) {
+                if (!"PAID".equalsIgnoreCase(p.getStatus())) {
                     setFieldError(candidateUsernameField, candidateError, "Le paiement complet n'a pas été réglé");
                     return;
                 }
             } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
-                if (p.getStatus().equalsIgnoreCase("PENDING")) {
+                if ("PENDING".equalsIgnoreCase(p.getStatus())) {
                     List<PaymentInstallment> installments = paymentInstallmentService.getInstallmentsByPaymentId(p.getId());
                     boolean overdue = installments.stream().anyMatch(inst ->
                             inst.getDueDate().isBefore(LocalDate.now()) &&
@@ -214,21 +227,22 @@ public class InsertExamenCodeController {
             }
         }
 
-        // For a new exam, ensure the candidate does not already have an exam code with status PENDING or PASSED.
+        // If creating a new exam, ensure candidate has no exam code with status PENDING or PASSED
         List<ExamenCode> candidateExamCodes = examService.getExamenCodesByCandidatId(candidate.getId());
         if (editingExam != null) {
-            // Exclude the current exam from the check.
+            // Exclude the exam being edited
             candidateExamCodes = candidateExamCodes.stream()
                     .filter(e -> e.getId() != editingExam.getId())
                     .collect(java.util.stream.Collectors.toList());
         }
         if (editingExam == null && candidateExamCodes.stream().anyMatch(e ->
                 e.getStatus() == ExamenCode.ExamStatus.PENDING || e.getStatus() == ExamenCode.ExamStatus.PASSED)) {
-            setFieldError(candidateUsernameField, candidateError, "Le candidat a déjà un examen code en attente ou réussi");
+            setFieldError(candidateUsernameField, candidateError,
+                    "Le candidat a déjà un examen code en attente ou réussi");
             return;
         }
 
-        // Check candidate availability (across seances and exam codes) within a 60-minute window.
+        // Schedule check for candidate
         Stream<LocalDateTime> candidateExamStream = examService.getExamenCodesByCandidatId(candidate.getId()).stream()
                 .filter(e -> editingExam == null || e.getId() != editingExam.getId())
                 .map(ExamenCode::getExamDatetime);
@@ -240,11 +254,12 @@ public class InsertExamenCodeController {
                 candidateExamStream
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (candidateBusy) {
-            setFieldError(candidateUsernameField, candidateError, "Le candidat a une autre séance ou examen à cette heure");
+            setFieldError(candidateUsernameField, candidateError,
+                    "Le candidat a une autre séance ou examen à cette heure");
             return;
         }
 
-        // Check moniteur availability (across seances and exam codes) within a 60-minute window.
+        // Schedule check for moniteur
         Stream<LocalDateTime> moniteurExamStream = examService.getExamenCodesByMoniteurId(moniteur.getId()).stream()
                 .filter(e -> editingExam == null || e.getId() != editingExam.getId())
                 .map(ExamenCode::getExamDatetime);
@@ -256,15 +271,27 @@ public class InsertExamenCodeController {
                 moniteurExamStream
         ).anyMatch(dt -> Math.abs(Duration.between(examDatetime, dt).toMinutes()) < 60);
         if (moniteurBusy) {
-            setFieldError(moniteurUsernameField, moniteurError, "Le moniteur a une autre séance ou examen à cette heure");
+            setFieldError(moniteurUsernameField, moniteurError,
+                    "Le moniteur a une autre séance ou examen à cette heure");
             return;
         }
 
-        // All validations passed – proceed to create or update the exam code registration.
+        // ======================= NEW CHECK =======================
+        // Only if we are creating a new exam code (editingExam == null),
+        // ensure the candidate has at least 10 SeanceCode sessions.
+        if (editingExam == null) {
+            List<SeanceCode> candidateSeancesCode = seanceCodeService.getSeancesByCandidatId(candidate.getId());
+            if (candidateSeancesCode.size() < 10) {
+                setFieldError(candidateUsernameField, candidateError,
+                        "Le candidat doit avoir au moins 10 séances de code avant de passer l'examen code.");
+                return;
+            }
+        }
+
+        // CREATE or UPDATE exam code
         if (editingExam == null) {
             ExamenCode newExam = new ExamenCode(candidate.getId(), moniteur.getId(), examDatetime);
             newExam.setPrice(price);
-            // By default, paiement_status remains PENDING.
             boolean created = examService.createExamenCode(newExam);
             if (created) {
                 notificationService.sendNotification(candidate.getId(),
@@ -284,6 +311,7 @@ public class InsertExamenCodeController {
             editingExam.setMoniteurId(moniteur.getId());
             editingExam.setExamDatetime(examDatetime);
             editingExam.setPrice(price);
+
             boolean updated = examService.updateExamenCode(editingExam);
             if (updated) {
                 notificationService.sendNotification(candidate.getId(),
@@ -327,6 +355,7 @@ public class InsertExamenCodeController {
         alert.setContentText(content);
         alert.showAndWait();
     }
+
     private void showSuccessNotification(String message) {
         StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
         if (contentArea != null) {

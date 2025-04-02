@@ -190,6 +190,7 @@ public class AddCandidateController {
         User existingUser = userService.getUserById(profile.getUserId());
         if (existingUser != null) {
             usernameField.setText(existingUser.getUsername());
+            usernameField.setDisable(true);
         }
         // Leave password empty (if provided, you could update it)
         passwordField.clear();
@@ -321,22 +322,30 @@ public class AddCandidateController {
             if (seancesConduite < 0) {
                 setFieldError(seancesConduiteField, seancesConduiteError, "Must be non-negative");
                 valid = false;
+            } else if (seancesConduite < 10) {
+                setFieldError(seancesConduiteField, seancesConduiteError, "Minimum 10 séances requises");
+                valid = false;
             }
         } catch (NumberFormatException e) {
             setFieldError(seancesConduiteField, seancesConduiteError, "Invalid number");
             valid = false;
         }
+
         int seancesCode = 0;
         try {
             seancesCode = Integer.parseInt(seancesCodeField.getText().trim());
             if (seancesCode < 0) {
                 setFieldError(seancesCodeField, seancesCodeError, "Must be non-negative");
                 valid = false;
+            } else if (seancesCode < 5) {
+                setFieldError(seancesCodeField, seancesCodeError, "Minimum 5 séances requises");
+                valid = false;
             }
         } catch (NumberFormatException e) {
             setFieldError(seancesCodeField, seancesCodeError, "Invalid number");
             valid = false;
         }
+
         if (!isEditMode && modePaiementComboBox.getValue() == null) {
             setFieldError(modePaiementComboBox, modePaiementError, "Select payment mode");
             valid = false;
@@ -365,9 +374,11 @@ public class AddCandidateController {
             }
             // Optionally update the user password if provided (implementation depends on userService)
             if (!password.isEmpty()) {
-                // Example (if updateUserPassword is implemented):
-                // boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
-                // if (!passwordUpdated) { setFieldError(passwordField, passwordError, "Password update error"); return; }
+                boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
+                if (!passwordUpdated) {
+                    setFieldError(passwordField, passwordError, "Password update error");
+                    return;
+                }
             }
             // Update dossier fields
             editingCandidate.setPermisType(permisTypeComboBox.getValue());
@@ -574,9 +585,12 @@ public class AddCandidateController {
     }
 
     private boolean isValidPassword(String password) {
-        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$";
+        // Symbol check is done using [^\\w\\s], which matches any non-alphanumeric, non-whitespace character.
+        // This pattern enforces min length 8, plus at least 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$";
         return Pattern.matches(pattern, password);
     }
+
 
     private boolean isValidEmail(String email) {
         String pattern = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";

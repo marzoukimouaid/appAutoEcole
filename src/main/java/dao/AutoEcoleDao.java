@@ -54,4 +54,24 @@ public class AutoEcoleDao {
         }
         return dataList;
     }
+
+    /**
+     * New method to update the auto-école configuration.
+     */
+    public void updateAutoEcole(String name, String address, String phone, String email,
+                                double prixSeanceConduit, double prixSeanceCode) {
+        String sql = "UPDATE auto_ecole SET name = ?, address = ?, telephone = ?, email = ?, prix_seance_conduit = ?, prix_seance_code = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            stmt.setString(2, address);
+            stmt.setString(3, phone);
+            stmt.setString(4, email);
+            stmt.setDouble(5, prixSeanceConduit);
+            stmt.setDouble(6, prixSeanceCode);
+            stmt.executeUpdate();
+            System.out.println("Auto-école mise à jour avec succès !");
+        } catch (SQLException e) {
+            System.out.println("Erreur lors de la mise à jour : " + e.getMessage());
+        }
+    }
 }

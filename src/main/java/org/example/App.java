@@ -4,54 +4,61 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import service.AutoEcoleService;
-import Utils.DocumentExpiryNotificationScheduler;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 public class App extends Application {
 
     private static Scene scene;
-    // Scheduler instance to send expiry notifications for documents
-    private DocumentExpiryNotificationScheduler expiryScheduler;
 
     @Override
     public void start(Stage stage) throws IOException {
+        // Debugging: print the current classpath
+        System.out.println("java.class.path: " + System.getProperty("java.class.path"));
+
+        // Debugging: print the location from which App.class is loaded
+        URL appClassUrl = App.class.getResource("App.class");
+        System.out.println("App.class is loaded from: " + appClassUrl);
+
+        // Debugging: check if the icon resource URL can be found
+        URL iconURL = App.class.getResource("/assets/logo_principale.png");
+        System.out.println("Icon resource URL: " + iconURL);
+
         // Check if the Auto-école has been configured
         boolean isInitialized = !AutoEcoleService.getAutoEcoleData().isEmpty();
 
-        // If the system is configured, start the document expiry notification scheduler.
-        if (isInitialized) {
-            expiryScheduler = new DocumentExpiryNotificationScheduler();
-            expiryScheduler.start();
-        }
-
-        // Load either the Login page or the AutoÉcole configuration page.
         String fxmlToLoad = isInitialized ? "Login" : "AutoEcole";
-        scene = new Scene(loadFXML(fxmlToLoad), 640, 480);
-
-        // Set up the stage
+        Parent root = loadFXML(fxmlToLoad);
+        scene = new Scene(root);
         stage.setScene(scene);
-        stage.setTitle(isInitialized ? "Connexion" : "Configuration Auto-école");
 
-        // 1) Make the window resizable so the maximize icon is enabled
-        stage.setResizable(true);
-
-        // 2) Show it
-        stage.show();
-
-        // 3) Center the window on screen (both horizontally & vertically)
-        //    We do this AFTER stage.show() so JavaFX knows final dimensions
-        stage.centerOnScreen();
-    }
-
-    @Override
-    public void stop() throws Exception {
-        // Gracefully stop the scheduler if it was started
-        if (expiryScheduler != null) {
-            expiryScheduler.stop();
+        // Set the stage title based on auto-école configuration
+        if (isInitialized) {
+            String autoEcoleName = AutoEcoleService.getAutoEcoleName();
+            stage.setTitle(autoEcoleName);
+        } else {
+            stage.setTitle("Configuration Auto-école");
         }
+
+        // Try to load the icon resource with a null-check
+        InputStream iconStream = App.class.getResourceAsStream("/assets/logo_principale.png");
+
+        if (iconStream != null) {
+            stage.getIcons().add(new Image(iconStream));
+        } else {
+            System.err.println("Icon resource not found at /assets/logo_principale.png");
+        }
+
+        stage.setWidth(1366);
+        stage.setHeight(900);
+        stage.setResizable(true);
+        stage.show();
+        stage.centerOnScreen();
     }
 
     static void setRoot(String fxml) throws IOException {

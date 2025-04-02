@@ -3,14 +3,10 @@ package controller;
 import entite.Notification;
 import entite.Profile;
 import entite.User;
+import entite.VehiculeDocument;
+import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
-import service.NotificationService;
-import service.ProfileService;
-import service.AutoEcoleService;
-import Utils.AlertUtils;
-import Utils.SessionManager;
-import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,11 +22,19 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
-import javafx.scene.shape.Rectangle;
+import service.NotificationService;
+import service.ProfileService;
+import service.AutoEcoleService;
+import service.VehiculeDocumentService;
+import service.UserService;
+import Utils.AlertUtils;
+import Utils.SessionManager;
+
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -89,6 +93,9 @@ public class SecretaireDashboardController {
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
         handleCandidats();
+
+        // NEW: Check for document expiry notifications upon dashboard load.
+        checkDocumentExpiryNotifications();
     }
 
     /**
@@ -154,7 +161,7 @@ public class SecretaireDashboardController {
             ParallelTransition closingTransition = new ParallelTransition(slideOut, fadeOut);
             closingTransition.setOnFinished(event -> {
                 root.setLeft(null);
-                sidebar.getChildren().forEach(child -> child.setOpacity(1));
+                sidebar.getChildren().forEach(c -> c.setOpacity(1));
                 sidebar.setTranslateX(0);
                 sidebarVisible = false;
             });
@@ -197,17 +204,26 @@ public class SecretaireDashboardController {
         } else {
             notificationBadge.setVisible(false);
         }
-        // Populate dropdown with the latest three notifications.
-        List<Notification> latestNotifications = notifications.stream().limit(3).collect(Collectors.toList());
+        // Populate dropdown with the latest five notifications.
+        List<Notification> latestNotifications = notifications.stream().limit(5).collect(Collectors.toList());
         notificationMenu.getItems().clear();
         if (latestNotifications.isEmpty()) {
             MenuItem emptyItem = new MenuItem("Aucune Notification");
             emptyItem.setDisable(true);
             notificationMenu.getItems().add(emptyItem);
         } else {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            // Create a custom layout for each notification for better readability.
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             for (Notification notif : latestNotifications) {
-                MenuItem item = new MenuItem(notif.getMessage() + " (" + notif.getCreatedAt().format(formatter) + ")");
+                MenuItem item = new MenuItem();
+                VBox container = new VBox(2.0);
+                container.setStyle("-fx-padding: 5 10 5 10;");
+                Label messageLabel = new Label(notif.getMessage());
+                messageLabel.setWrapText(true);
+                Label dateLabel = new Label("Reçu le " + notif.getCreatedAt().format(timeFormatter));
+                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;");
+                container.getChildren().addAll(messageLabel, dateLabel);
+                item.setGraphic(container);
                 notificationMenu.getItems().add(item);
             }
         }
@@ -224,43 +240,16 @@ public class SecretaireDashboardController {
     /**
      * Navigates to a new view inside the content area.
      */
-    private void loadPage(String fxmlPath, String title) {
+    private void loadPage(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent newPage = loader.load();
             contentArea.getChildren().setAll(newPage);
-            pageTitle.setText(title);
         } catch (IOException e) {
             e.printStackTrace();
             AlertUtils.showAlert("Erreur", "Impossible de charger la page: " + fxmlPath,
                     javafx.scene.control.Alert.AlertType.ERROR);
         }
-    }
-
-    /**
-     * Assigns icons for sidebar buttons and the hamburger button.
-     */
-    private void setIconsForSidebar() {
-        btnCandidats.setGraphic(createIcon(FontAwesomeSolid.USER_GRADUATE));
-        btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
-        btnAnalytics.setGraphic(createIcon(FontAwesomeSolid.CHART_LINE));
-        btnVehicules.setGraphic(createIcon(FontAwesomeSolid.CAR));
-        btnSeances.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
-        btnInscription.setGraphic(createIcon(FontAwesomeSolid.EDIT));
-
-        FontIcon hamburgerIcon = new FontIcon(FontAwesomeSolid.BARS);
-        hamburgerIcon.setIconSize(20);
-        btnToggleSidebar.setGraphic(hamburgerIcon);
-    }
-
-    /**
-     * Helper to create FontAwesome icons.
-     */
-    private FontIcon createIcon(FontAwesomeSolid iconType) {
-        FontIcon icon = new FontIcon(iconType);
-        icon.setIconSize(16);
-        icon.getStyleClass().add("ikonli-font-icon");
-        return icon;
     }
 
     /**
@@ -296,44 +285,52 @@ public class SecretaireDashboardController {
     @FXML
     private void handleProfile() {
         clearSidebarSelection();
-        loadPage("/org/example/Profile.fxml", "Profile");
+        loadPage("/org/example/Profile.fxml");
+    }
+
+    /**
+     * Handles the "Modifier autoecole" action.
+     * Loads the auto-école configuration page with preloaded data.
+     */
+    @FXML
+    private void handleModifierAutoEcole() {
+        clearSidebarSelection();
+        loadPage("/org/example/AutoEcole.fxml");
     }
 
     @FXML
     private void handleCandidats() {
-        loadPage("/org/example/SecretaireCandidats.fxml", "Candidats");
+        loadPage("/org/example/SecretaireCandidats.fxml");
         highlightSidebarButton(btnCandidats);
     }
 
     @FXML
     private void handleMoniteurs() {
-        loadPage("/org/example/SecretaireMoniteurs.fxml", "Moniteurs");
+        loadPage("/org/example/SecretaireMoniteurs.fxml");
         highlightSidebarButton(btnMoniteurs);
     }
 
     @FXML
     private void handleAnalytics() {
-        loadPage("/org/example/Analytics.fxml", "Analytics");
+        loadPage("/org/example/Analytics.fxml");
         highlightSidebarButton(btnAnalytics);
     }
 
     @FXML
     private void handleVehicules() {
-        loadPage("/org/example/SecretaireVehicules.fxml", "Véhicules");
+        loadPage("/org/example/SecretaireVehicules.fxml");
         highlightSidebarButton(btnVehicules);
     }
 
-
-
     @FXML
     private void handleSeances() {
-        loadPage("/org/example/SecretaireSeances.fxml", "Séances");
+        loadPage("/org/example/SecretaireSeances.fxml");
         highlightSidebarButton(btnSeances);
     }
 
     @FXML
     private void handleInscription() {
-        loadPage("/org/example/SecretaireInscriptionExamen.fxml", "Inscription");
+        loadPage("/org/example/SecretaireInscriptionExamen.fxml");
         highlightSidebarButton(btnInscription);
     }
 
@@ -359,5 +356,65 @@ public class SecretaireDashboardController {
         btnAnalytics.getStyleClass().remove("selected");
         btnSeances.getStyleClass().remove("selected");
         btnInscription.getStyleClass().remove("selected");
+    }
+
+    /**
+     * Assigns icons for sidebar buttons and the hamburger button.
+     */
+    private void setIconsForSidebar() {
+        btnCandidats.setGraphic(createIcon(FontAwesomeSolid.USER_GRADUATE));
+        btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
+        btnAnalytics.setGraphic(createIcon(FontAwesomeSolid.CHART_LINE));
+        btnVehicules.setGraphic(createIcon(FontAwesomeSolid.CAR));
+        btnSeances.setGraphic(createIcon(FontAwesomeSolid.CALENDAR_ALT));
+        btnInscription.setGraphic(createIcon(FontAwesomeSolid.EDIT));
+
+        FontIcon hamburgerIcon = new FontIcon(FontAwesomeSolid.BARS);
+        hamburgerIcon.setIconSize(20);
+        btnToggleSidebar.setGraphic(hamburgerIcon);
+    }
+
+    /**
+     * Helper to create FontAwesome icons.
+     */
+    private FontIcon createIcon(FontAwesomeSolid iconType) {
+        FontIcon icon = new FontIcon(iconType);
+        icon.setIconSize(16);
+        icon.getStyleClass().add("ikonli-font-icon");
+        return icon;
+    }
+
+    /**
+     * NEW: Checks for documents expiring within the next day (that have not been notified)
+     * and sends a notification to the current secretaire. After sending, the document is marked as notified.
+     */
+    private void checkDocumentExpiryNotifications() {
+        VehiculeDocumentService documentService = new VehiculeDocumentService();
+        // Retrieve documents expiring soon (within 1 day)
+        List<VehiculeDocument> expiringDocs = documentService.findDocumentsExpiringSoon(1);
+        if (!expiringDocs.isEmpty()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            expiringDocs.forEach(doc -> {
+                String message = "Attention: Le document " + doc.getDocType().name() +
+                        " pour le véhicule ID " + doc.getVehiculeId() +
+                        " expire le " + doc.getDateExpiration().format(formatter) + ".";
+                boolean sent = notificationService.sendNotification(currentUser.getId(), message);
+                if (sent) {
+                    System.out.println("[Dashboard] Sent document expiry notification to user id: "
+                            + currentUser.getId() + " with message: " + message);
+                } else {
+                    System.err.println("[Dashboard] FAILED to send document expiry notification to user id: "
+                            + currentUser.getId());
+                }
+                // Mark the document as notified to prevent duplicate notifications.
+                doc.setNotified(true);
+                boolean updated = documentService.updateDocument(doc);
+                if (updated) {
+                    System.out.println("[Dashboard] Marked document id " + doc.getDocId() + " as notified.");
+                } else {
+                    System.err.println("[Dashboard] FAILED to mark document id " + doc.getDocId() + " as notified.");
+                }
+            });
+        }
     }
 }

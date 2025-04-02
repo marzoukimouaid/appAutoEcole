@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -13,9 +14,11 @@
     <Label fx:id="lblTitle" styleClass="title"/>
     <Label fx:id="lblDate" styleClass="subtitle"/>
     <Label fx:id="lblStatus" styleClass="subtitle"/>
-    <Label fx:id="lblLocation" styleClass="subtitle"/>
     <Label fx:id="lblCandidate" styleClass="subtitle"/>
     <Label fx:id="lblMoniteur" styleClass="subtitle"/>
+
+    <!-- Replacing the old lblLocation label with a WebView to show the Leaflet map -->
+    <WebView fx:id="mapView" prefHeight="400" prefWidth="600"/>
 
     <HBox spacing="10" alignment="CENTER">
         <Button fx:id="btnEdit"

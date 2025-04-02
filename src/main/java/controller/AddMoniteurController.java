@@ -108,6 +108,7 @@ public class AddMoniteurController {
         User existingUser = userService.getUserById(profile.getUserId());
         if (existingUser != null) {
             usernameField.setText(existingUser.getUsername());
+            usernameField.setDisable(true);
         }
         // Leave password empty (if provided, it will update the password via your service if implemented)
         passwordField.clear();
@@ -251,9 +252,11 @@ public class AddMoniteurController {
             }
             // Optionally update the user password if provided (implementation depends on your UserService)
             if (!password.isEmpty()) {
-                // For example, if you have a method updateUserPassword:
-                // boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
-                // if (!passwordUpdated) { setFieldError(passwordField, passwordError, "Password update error"); return; }
+                boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
+                if (!passwordUpdated) {
+                    setFieldError(passwordField, passwordError, "Password update error");
+                    return;
+                }
             }
             // Update moniteur fields
             try {
@@ -394,9 +397,12 @@ public class AddMoniteurController {
     }
 
     private boolean isValidPassword(String password) {
-        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        // Symbol check is done using [^\\w\\s], which matches any non-alphanumeric, non-whitespace character.
+        // This pattern enforces min length 8, plus at least 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$";
         return Pattern.matches(pattern, password);
     }
+
 
     private boolean isValidEmail(String email) {
         String pattern = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
