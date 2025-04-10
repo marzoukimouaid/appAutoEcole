@@ -36,15 +36,7 @@ import javafx.scene.layout.BorderPane;
 import Utils.NotificationUtil;
 import Utils.NotificationUtil.NotificationType;
 
-/**
- * InsertExamenCodeController
- *
- * Existing verifications:
- *   - Candidate must exist, match moniteur's type, have valid payment, no overlapping schedule, etc.
- *
- * New verification:
- *   - Only allow new exam if candidate has at least 10 SeanceCode sessions.
- */
+
 public class InsertExamenCodeController {
 
     @FXML
@@ -68,12 +60,12 @@ public class InsertExamenCodeController {
     @FXML
     private Button btnSubmit;
 
-    // Reference to the parent controller for exam inscriptions.
+
     private SecretaireInscriptionExamenController parentController;
-    // When editing an exam, this is non-null; if null, we're creating a new exam.
+
     private ExamenCode editingExam = null;
 
-    // Service layer instances.
+
     private final ExamenCodeService examService = new ExamenCodeService();
     private final UserService userService = new UserService();
     private final SeanceCodeService seanceCodeService = new SeanceCodeService();
@@ -181,7 +173,7 @@ public class InsertExamenCodeController {
         }
         User moniteur = optMoniteur.get();
 
-        // Check if candidate's dossier exists, and moniteur's data
+
         Optional<DossierCandidat> dossierOpt = dossierService.getDossierByCandidateId(candidate.getId());
         if (!dossierOpt.isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Dossier du candidat introuvable");
@@ -200,7 +192,7 @@ public class InsertExamenCodeController {
             return;
         }
 
-        // Payment check: ensure candidate's payment is in order.
+
         List<Payment> payments = paymentService.getPaymentsForUser(candidate.getId());
         if (payments.isEmpty()) {
             setFieldError(candidateUsernameField, candidateError, "Aucun paiement trouvé pour ce candidat");
@@ -227,10 +219,10 @@ public class InsertExamenCodeController {
             }
         }
 
-        // If creating a new exam, ensure candidate has no exam code with status PENDING or PASSED
+
         List<ExamenCode> candidateExamCodes = examService.getExamenCodesByCandidatId(candidate.getId());
         if (editingExam != null) {
-            // Exclude the exam being edited
+
             candidateExamCodes = candidateExamCodes.stream()
                     .filter(e -> e.getId() != editingExam.getId())
                     .collect(java.util.stream.Collectors.toList());
@@ -242,7 +234,7 @@ public class InsertExamenCodeController {
             return;
         }
 
-        // Schedule check for candidate
+
         Stream<LocalDateTime> candidateExamStream = examService.getExamenCodesByCandidatId(candidate.getId()).stream()
                 .filter(e -> editingExam == null || e.getId() != editingExam.getId())
                 .map(ExamenCode::getExamDatetime);
@@ -259,7 +251,7 @@ public class InsertExamenCodeController {
             return;
         }
 
-        // Schedule check for moniteur
+
         Stream<LocalDateTime> moniteurExamStream = examService.getExamenCodesByMoniteurId(moniteur.getId()).stream()
                 .filter(e -> editingExam == null || e.getId() != editingExam.getId())
                 .map(ExamenCode::getExamDatetime);
@@ -276,9 +268,9 @@ public class InsertExamenCodeController {
             return;
         }
 
-        // ======================= NEW CHECK =======================
-        // Only if we are creating a new exam code (editingExam == null),
-        // ensure the candidate has at least 10 SeanceCode sessions.
+
+
+
         if (editingExam == null) {
             List<SeanceCode> candidateSeancesCode = seanceCodeService.getSeancesByCandidatId(candidate.getId());
             if (candidateSeancesCode.size() < 10) {
@@ -288,7 +280,7 @@ public class InsertExamenCodeController {
             }
         }
 
-        // CREATE or UPDATE exam code
+
         if (editingExam == null) {
             ExamenCode newExam = new ExamenCode(candidate.getId(), moniteur.getId(), examDatetime);
             newExam.setPrice(price);

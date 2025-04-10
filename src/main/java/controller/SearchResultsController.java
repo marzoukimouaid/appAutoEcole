@@ -19,10 +19,7 @@ public class SearchResultsController {
         lblMessage.setText(message);
     }
 
-    /**
-     * Replaces any existing content with the provided list of card nodes.
-     * @param cards an ObservableList of Node objects (each a card) to display
-     */
+    
     public void setResults(ObservableList<Node> cards) {
         resultsContainer.getChildren().setAll(cards);
     }

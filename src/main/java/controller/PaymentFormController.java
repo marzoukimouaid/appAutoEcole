@@ -3,8 +3,8 @@ package controller;
 import entite.Payment;
 import entite.PaymentInstallment;
 import entite.PaymentInstallment.Status;
-import entite.ExamenCode;         // CHANGES
-import entite.ExamenConduit;     // CHANGES
+import entite.ExamenCode;
+import entite.ExamenConduit;
 
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -19,8 +19,8 @@ import Utils.NotificationUtil;
 
 import service.PaymentService;
 import service.PaymentInstallmentService;
-import service.ExamenCodeService;       // CHANGES
-import service.ExamenConduitService;    // CHANGES
+import service.ExamenCodeService;
+import service.ExamenConduitService;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -58,28 +58,28 @@ public class PaymentFormController {
     @FXML
     private Button confirmButton;
 
-    // We might have a Payment, PaymentInstallment, ExamenCode, or ExamenConduit
+
     private Payment payment;
     private PaymentInstallment installment;
-    // CHANGES: exam references
+
     private ExamenCode examCode;
     private ExamenConduit examConduit;
 
-    // Existing services
+
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
-    // CHANGES: exam services
+
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
 
     @FXML
     public void initialize() {
-        // Populate month combos (01..12)
+
         expiryMonthCombo.getItems().clear();
         for (int m = 1; m <= 12; m++) {
             expiryMonthCombo.getItems().add(String.format("%02d", m));
         }
-        // Year combos (current year.. +10)
+
         expiryYearCombo.getItems().clear();
         int currentYear = LocalDate.now().getYear();
         for (int y = currentYear; y <= currentYear + 10; y++) {
@@ -92,7 +92,7 @@ public class PaymentFormController {
         clearErrors();
         boolean valid = true;
 
-        // Validate card info
+
         String cardholderName = cardholderNameField.getText().trim();
         if (cardholderName.isEmpty()) {
             cardholderNameError.setText("Nom requis");
@@ -131,24 +131,24 @@ public class PaymentFormController {
         }
 
         if (!valid) {
-            return; // Stop if any field invalid
+            return;
         }
 
         boolean updateSuccess = false;
 
-        // 1) If we're paying a Payment in full
+
         if (payment != null) {
             payment.setStatus("PAID");
             updateSuccess = paymentService.updatePayment(payment);
         }
-        // 2) If we're paying an Installment
+
         else if (installment != null) {
             boolean installmentUpdated = installmentService.markInstallmentAsPaid(installment.getInstallmentId(), LocalDate.now());
             if (!installmentUpdated) {
                 AlertUtils.showAlert("Erreur", "Erreur lors de la mise à jour de l'installment.", Alert.AlertType.ERROR);
                 return;
             }
-            // Possibly check if all installments are now paid => set Payment to PAID
+
             int paymentId = installment.getPaymentId();
             var installments = installmentService.getInstallmentsByPaymentId(paymentId);
             boolean allPaid = installments.stream().allMatch(inst -> inst.getStatus() == Status.PAID);
@@ -162,16 +162,16 @@ public class PaymentFormController {
                     updateSuccess = false;
                 }
             } else {
-                updateSuccess = true; // we updated at least the single installment
+                updateSuccess = true;
             }
         }
-        // 3) CHANGES: If we're paying an ExamenCode
+
         else if (examCode != null) {
             examCode.setPaiementStatus(ExamenCode.PaymentStatus.PAID);
             examCode.setPaymentDate(LocalDate.now());
             updateSuccess = examenCodeService.updateExamenCode(examCode);
         }
-        // 4) CHANGES: If we're paying an ExamenConduit
+
         else if (examConduit != null) {
             examConduit.setPaiementStatus(ExamenConduit.PaymentStatus.PAID);
             examConduit.setPaymentDate(LocalDate.now());
@@ -184,7 +184,7 @@ public class PaymentFormController {
                     "Paiement effectué avec succès.",
                     NotificationUtil.NotificationType.SUCCESS
             );
-            // Delay 2 seconds so user sees success, then go back
+
             PauseTransition delay = new PauseTransition(Duration.seconds(2));
             delay.setOnFinished(e -> navigateBack());
             delay.play();
@@ -205,7 +205,7 @@ public class PaymentFormController {
         billingAddressError.setText("");
     }
 
-    // Existing: For Payment or PaymentInstallment
+
     public void setPayment(Payment payment) {
         this.payment = payment;
     }
@@ -213,7 +213,7 @@ public class PaymentFormController {
         this.installment = installment;
     }
 
-    // CHANGES: For exam code or conduit
+
     public void setExamenCode(ExamenCode examCode) {
         this.examCode = examCode;
     }
@@ -221,9 +221,7 @@ public class PaymentFormController {
         this.examConduit = examConduit;
     }
 
-    /**
-     * Navigates back to the CandidatePaiements view (CandidatePaiements.fxml).
-     */
+    
     private void navigateBack() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/CandidatePaiements.fxml"));

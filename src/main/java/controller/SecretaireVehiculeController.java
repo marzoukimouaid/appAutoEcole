@@ -231,9 +231,7 @@ public class SecretaireVehiculeController {
         }
     }
 
-    /**
-     * Opens the Add Vehicule page.
-     */
+    
     private void openAddVehiculePage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddVehicule.fxml"));

@@ -13,7 +13,7 @@ public class PaymentInstallmentDao {
 
     private static final Connection conn = ConnexionDB.getInstance();
 
-    // Inserts a new installment record.
+
     public boolean create(PaymentInstallment installment) {
         String sql = "INSERT INTO paiements_installments " +
                 "(paiement_id, installment_number, due_date, amount_due, status, date_paid, notified) " +
@@ -45,7 +45,7 @@ public class PaymentInstallmentDao {
         return false;
     }
 
-    // Retrieves an installment by its id.
+
     public Optional<PaymentInstallment> findById(int installmentId) {
         String sql = "SELECT * FROM paiements_installments WHERE installment_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -61,7 +61,7 @@ public class PaymentInstallmentDao {
         return Optional.empty();
     }
 
-    // Retrieves all installments for a given payment.
+
     public List<PaymentInstallment> findByPaymentId(int paymentId) {
         List<PaymentInstallment> installments = new ArrayList<>();
         String sql = "SELECT * FROM paiements_installments WHERE paiement_id = ? ORDER BY installment_number ASC";
@@ -78,7 +78,7 @@ public class PaymentInstallmentDao {
         return installments;
     }
 
-    // Updates an installment record.
+
     public boolean update(PaymentInstallment installment) {
         String sql = "UPDATE paiements_installments SET status = ?, date_paid = ?, notified = ? WHERE installment_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

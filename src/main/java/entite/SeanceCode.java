@@ -22,14 +22,14 @@ public class SeanceCode {
         this.updatedAt = updatedAt;
     }
 
-    // Constructor for creation (DB handles id, createdAt, updatedAt)
+
     public SeanceCode(int candidatId, int moniteurId, LocalDateTime sessionDatetime) {
         this.candidatId = candidatId;
         this.moniteurId = moniteurId;
         this.sessionDatetime = sessionDatetime;
     }
 
-    // Getters and setters
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getCandidatId() { return candidatId; }

@@ -58,7 +58,7 @@ public class UserDao {
      */
     public boolean createUser(String username, String password, String role) {
         if (userExists(username)) {
-            return false; // Prevent duplicate usernames
+            return false;
         }
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
@@ -77,6 +77,7 @@ public class UserDao {
     /**
      * Check if a user already exists in the database.
      */
+
     private boolean userExists(String username) {
         String sql = "SELECT username FROM users WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -88,6 +89,7 @@ public class UserDao {
         }
         return false;
     }
+
 
     /**
      * Returns the user ID for a given username.

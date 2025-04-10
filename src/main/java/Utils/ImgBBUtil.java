@@ -21,20 +21,13 @@ public class ImgBBUtil {
     private static final String API_KEY = ConfigReader.getKey("imgbb_api_key");
     private static final String UPLOAD_URL = "https://api.imgbb.com/1/upload?key=" + API_KEY;
 
-    // Threshold in bytes; if the image is larger than this, compress it.
-    private static final long SIZE_THRESHOLD = 500_000; // 500 KB
-    // Target dimensions for scaling down if needed.
+
+    private static final long SIZE_THRESHOLD = 500_000;
     private static final int TARGET_WIDTH = 800;
     private static final int TARGET_HEIGHT = 800;
-    // JPEG quality (0.0 to 1.0, where 1.0 is best quality but larger file)
     private static final float JPEG_QUALITY = 0.7f;
 
-    /**
-     * Uploads an image file to ImgBB.
-     *
-     * @param imageFile the image file to upload.
-     * @return the URL of the uploaded image if successful; otherwise, null.
-     */
+
     public static String uploadImageToImgBB(File imageFile) {
         HttpURLConnection connection = null;
         try {
@@ -71,7 +64,6 @@ public class ImgBBUtil {
                         int end = responseString.indexOf("\"", start);
                         if (end != -1) {
                             String urlFromResponse = responseString.substring(start, end);
-                            // Unescape the URL by replacing "\/" with "/"
                             return urlFromResponse.replace("\\/", "/");
                         }
                     }
@@ -97,13 +89,7 @@ public class ImgBBUtil {
         return null;
     }
 
-    /**
-     * Returns the image bytes either as is or after compression if the file size is above a threshold.
-     *
-     * @param imageFile the image file.
-     * @return byte array of image data.
-     * @throws IOException if an I/O error occurs.
-     */
+
     private static byte[] getImageBytes(File imageFile) throws IOException {
         if (imageFile.length() > SIZE_THRESHOLD) {
             return compressImage(imageFile, JPEG_QUALITY, TARGET_WIDTH, TARGET_HEIGHT);
@@ -112,16 +98,7 @@ public class ImgBBUtil {
         }
     }
 
-    /**
-     * Compresses the image by scaling it down (if necessary) and re-encoding it as a JPEG with the given quality.
-     *
-     * @param inputFile the original image file.
-     * @param quality   JPEG compression quality (0.0 to 1.0).
-     * @param maxWidth  maximum width for the compressed image.
-     * @param maxHeight maximum height for the compressed image.
-     * @return a byte array of the compressed image.
-     * @throws IOException if an I/O error occurs.
-     */
+
     private static byte[] compressImage(File inputFile, float quality, int maxWidth, int maxHeight) throws IOException {
         BufferedImage originalImage = ImageIO.read(inputFile);
         if (originalImage == null) {
@@ -131,22 +108,18 @@ public class ImgBBUtil {
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
 
-        // Calculate new dimensions while maintaining aspect ratio.
         double scale = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
         int newWidth = (int) (originalWidth * scale);
         int newHeight = (int) (originalHeight * scale);
 
-        // Create a new buffered image with the new dimensions and draw the scaled image.
         BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = scaledImage.createGraphics();
-        // Use high-quality scaling hints
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
         g2d.dispose();
 
-        // Prepare to write the image as JPEG with compression.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
             Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");

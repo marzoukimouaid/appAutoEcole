@@ -11,7 +11,7 @@ import java.util.Optional;
 public class MoniteurDao {
     private static final Connection conn = ConnexionDB.getInstance();
 
-    // Create a new moniteur (inserting the salary field)
+
     public boolean createMoniteur(Moniteur moniteur) {
         String sql = "INSERT INTO moniteurs (user_id, permis_type, salaire) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -25,7 +25,7 @@ public class MoniteurDao {
         }
     }
 
-    // Retrieve a moniteur by user id (now also retrieving the salary)
+
     public Optional<Moniteur> getMoniteurByUserId(int userId) {
         String sql = "SELECT user_id, permis_type, salaire FROM moniteurs WHERE user_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -45,7 +45,7 @@ public class MoniteurDao {
         return Optional.empty();
     }
 
-    // Update a moniteur (including the salary)
+
     public boolean updateMoniteur(Moniteur moniteur) {
         String sql = "UPDATE moniteurs SET permis_type = ?, salaire = ? WHERE user_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -59,7 +59,7 @@ public class MoniteurDao {
         }
     }
 
-    // Retrieve all moniteurs (including salary)
+
     public List<Moniteur> getAllMoniteurs() {
         List<Moniteur> list = new ArrayList<>();
         String sql = "SELECT * FROM moniteurs ORDER BY user_id";
@@ -78,7 +78,7 @@ public class MoniteurDao {
         return list;
     }
 
-    // Delete a moniteur by user id
+
     public boolean deleteMoniteurByUserId(int userId) {
         String sql = "DELETE FROM moniteurs WHERE user_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

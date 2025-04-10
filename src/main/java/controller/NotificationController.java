@@ -13,7 +13,7 @@ public class NotificationController {
     private Label messageLabel;
 
     @FXML
-    private Label closeButton; // "X" button
+    private Label closeButton;
 
     public HBox getRoot() {
         return root;

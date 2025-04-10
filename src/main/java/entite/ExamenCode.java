@@ -15,7 +15,7 @@ public class ExamenCode {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // NEW FIELD for notifications:
+
     private boolean notified;
 
     public enum ExamStatus {
@@ -26,11 +26,11 @@ public class ExamenCode {
         PAID, PENDING
     }
 
-    // Constructors
+
     public ExamenCode() {
     }
 
-    // Constructor often used for creation (sets defaults, etc.)
+
     public ExamenCode(int candidatId, int moniteurId, LocalDateTime examDatetime) {
         this.candidatId = candidatId;
         this.moniteurId = moniteurId;
@@ -39,10 +39,10 @@ public class ExamenCode {
         this.price = 0.00;
         this.paiementStatus = PaymentStatus.PENDING;
         this.paymentDate = null;
-        this.notified = false; // by default not notified
+        this.notified = false;
     }
 
-    // You can have a full constructor if you wish
+
     public ExamenCode(int id, int candidatId, int moniteurId, LocalDateTime examDatetime,
                       ExamStatus status, double price, PaymentStatus paiementStatus,
                       LocalDate paymentDate, LocalDateTime createdAt, LocalDateTime updatedAt,
@@ -60,7 +60,7 @@ public class ExamenCode {
         this.notified = notified;
     }
 
-    // GETTERS AND SETTERS
+
 
     public int getId() {
         return id;

@@ -12,16 +12,16 @@ public class AutoEcoleService {
     private static final UserDao userDao = new UserDao();
     private static final ProfileDao profileDao = new ProfileDao();
 
-    // Updated method with two new parameters: prixSeanceConduit and prixSeanceCode.
+
     public void initializeAutoEcole(String name, String address, String phone, String email,
                                     double prixSeanceConduit, double prixSeanceCode) {
         autoEcoleDao.initializeAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);
 
-        // Check if the secretaire user already exists
+
         int secretaireId = userDao.getUserIdByUsername("secretaire");
 
         if (secretaireId == -1) {
-            // Create a new secretaire user
+
             boolean userCreated = userDao.createUser("secretaire", "secretaire", "secretaire");
             if (userCreated) {
                 secretaireId = userDao.getUserIdByUsername("secretaire");
@@ -29,10 +29,10 @@ public class AutoEcoleService {
         }
 
         if (secretaireId > 0) {
-            // Check if the profile already exists
+
             Profile existingProfile = profileDao.getProfileByUserId(secretaireId);
             if (existingProfile == null) {
-                // Create a default profile for the secretaire
+
                 Profile defaultProfile = new Profile();
                 defaultProfile.setUserId(secretaireId);
                 defaultProfile.setNom("secretaire");
@@ -52,7 +52,7 @@ public class AutoEcoleService {
         return autoEcoleDao.fetchAutoEcoleData();
     }
 
-    // New method to get the auto-école name from the database
+
     public static String getAutoEcoleName() {
         List<String[]> data = getAutoEcoleData();
         if (!data.isEmpty()) {
@@ -61,9 +61,7 @@ public class AutoEcoleService {
         return "";
     }
 
-    /**
-     * New method to update the auto-école configuration.
-     */
+    
     public void updateAutoEcole(String name, String address, String phone, String email,
                                 double prixSeanceConduit, double prixSeanceCode) {
         autoEcoleDao.updateAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);

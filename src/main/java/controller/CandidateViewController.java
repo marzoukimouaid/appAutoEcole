@@ -21,7 +21,7 @@ public class CandidateViewController {
     @FXML private Label lblAddress;
     @FXML private Label lblPermisType;
     @FXML private Label lblJoinDate;
-    @FXML private AnchorPane rootPane; // The root container defined in the FXML
+    @FXML private AnchorPane rootPane;
 
     @FXML private ImageView imgCin;
     @FXML private ImageView imgCertificat;
@@ -29,14 +29,9 @@ public class CandidateViewController {
 
     private final ProfileService profileService = new ProfileService();
 
-    /**
-     * Called by the previous controller after loading this view.
-     * Initializes and displays candidate details.
-     *
-     * @param dossier The candidate dossier data.
-     */
+    
     public void initData(DossierCandidat dossier) {
-        // Retrieve candidate profile by candidate ID
+
         Profile profile = profileService.getProfileByUserId(dossier.getCandidateId()).orElse(null);
 
         if (profile != null) {
@@ -53,10 +48,10 @@ public class CandidateViewController {
             lblAddress.setText("N/A");
         }
 
-        // Permis Type
+
         lblPermisType.setText(dossier.getPermisType());
 
-        // Format join date (using createdAt from dossier)
+
         if (dossier.getCreatedAt() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
             lblJoinDate.setText(dossier.getCreatedAt().format(formatter));
@@ -64,7 +59,7 @@ public class CandidateViewController {
             lblJoinDate.setText("N/A");
         }
 
-        // Load images from URLs
+
         if (dossier.getCinUrl() != null && !dossier.getCinUrl().isEmpty()) {
             imgCin.setImage(new Image(dossier.getCinUrl(), true));
         }
@@ -78,6 +73,6 @@ public class CandidateViewController {
 
     @FXML
     public void initialize() {
-        // No back button logic since it's removed from the FXML.
+
     }
 }

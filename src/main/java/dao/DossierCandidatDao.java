@@ -11,9 +11,7 @@ public class DossierCandidatDao {
 
     private static final Connection conn = ConnexionDB.getInstance();
 
-    /**
-     * Inserts a new dossier candidat into the database.
-     */
+    
     public boolean createDossierCandidat(DossierCandidat dossier) {
         String sql = "INSERT INTO dossier_candidats (cin_url, certificat_medical_url, photo_identite_url, created_at, updated_at, candidate_id, permis_type, nombre_seances_conduite, nombre_seances_code) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -34,9 +32,7 @@ public class DossierCandidatDao {
         }
     }
 
-    /**
-     * Retrieves a dossier candidat by candidate id.
-     */
+    
     public Optional<DossierCandidat> getDossierCandidatByCandidateId(int candidateId) {
         String sql = "SELECT * FROM dossier_candidats WHERE candidate_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -53,9 +49,7 @@ public class DossierCandidatDao {
         return Optional.empty();
     }
 
-    /**
-     * Retrieves all dossier candidats from the database, ordered by creation date (newest first).
-     */
+    
     public List<DossierCandidat> getAllDossierCandidats() {
         List<DossierCandidat> dossiers = new ArrayList<>();
         String sql = "SELECT * FROM dossier_candidats ORDER BY created_at DESC";
@@ -70,9 +64,7 @@ public class DossierCandidatDao {
         return dossiers;
     }
 
-    /**
-     * Deletes the dossier candidat for the given candidate id.
-     */
+    
     public boolean deleteDossierCandidate(int candidateId) {
         String sql = "DELETE FROM dossier_candidats WHERE candidate_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -105,9 +97,7 @@ public class DossierCandidatDao {
         return dossier;
     }
 
-    /**
-     * Updates an existing dossier candidat in the database.
-     */
+    
     public boolean updateDossierCandidat(DossierCandidat dossier) {
         String sql = "UPDATE dossier_candidats SET cin_url = ?, certificat_medical_url = ?, photo_identite_url = ?, updated_at = ?, permis_type = ?, nombre_seances_conduite = ?, nombre_seances_code = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

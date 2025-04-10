@@ -16,6 +16,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
+
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,78 +26,98 @@ import java.util.regex.Pattern;
 
 public class AddCandidateController {
 
-    // Root container – must be a StackPane for notifications to overlay properly
-    @FXML private StackPane rootPane;
 
-    // User fields
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
+    @FXML
+    private StackPane rootPane;
 
-    // Profile fields
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField emailField;
-    @FXML private DatePicker birthdayPicker;
-    @FXML private TextField phoneField;
-    @FXML private TextField addressField;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private PasswordField passwordField;
 
-    // Dossier candidat fields
-    @FXML private ComboBox<String> permisTypeComboBox;
-    @FXML private Button btnChooseCIN;
-    @FXML private Button btnChooseCertificat;
-    @FXML private Button btnChoosePhoto;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private DatePicker birthdayPicker;
+    @FXML
+    private TextField phoneField;
+    @FXML
+    private TextField addressField;
 
-    // New fields for session counts and payment mode
-    @FXML private TextField seancesConduiteField;
-    @FXML private Label seancesConduiteError;
-    @FXML private TextField seancesCodeField;
-    @FXML private Label seancesCodeError;
-    @FXML private ComboBox<String> modePaiementComboBox;
-    @FXML private Label modePaiementError;
+    @FXML
+    private ComboBox<String> permisTypeComboBox;
+    @FXML
+    private Button btnChooseCIN;
+    @FXML
+    private Button btnChooseCertificat;
+    @FXML
+    private Button btnChoosePhoto;
 
-    @FXML private Button btnSubmit;
+    @FXML
+    private TextField seancesConduiteField;
+    @FXML
+    private Label seancesConduiteError;
+    @FXML
+    private TextField seancesCodeField;
+    @FXML
+    private Label seancesCodeError;
+    @FXML
+    private ComboBox<String> modePaiementComboBox;
+    @FXML
+    private Label modePaiementError;
 
-    // Error labels for existing fields
-    @FXML private Label usernameError;
-    @FXML private Label passwordError;
-    @FXML private Label firstNameError;
-    @FXML private Label lastNameError;
-    @FXML private Label emailError;
-    @FXML private Label birthdayError;
-    @FXML private Label phoneError;
-    @FXML private Label addressError;
-    @FXML private Label permisTypeError;
-    @FXML private Label cinError;
-    @FXML private Label certificatError;
-    @FXML private Label photoError;
+    @FXML
+    private Button btnSubmit;
 
-    // Selected files for dossier candidate
+    @FXML
+    private Label usernameError;
+    @FXML
+    private Label passwordError;
+    @FXML
+    private Label firstNameError;
+    @FXML
+    private Label lastNameError;
+    @FXML
+    private Label emailError;
+    @FXML
+    private Label birthdayError;
+    @FXML
+    private Label phoneError;
+    @FXML
+    private Label addressError;
+    @FXML
+    private Label permisTypeError;
+    @FXML
+    private Label cinError;
+    @FXML
+    private Label certificatError;
+    @FXML
+    private Label photoError;
+
     private File cinFile;
     private File certificatFile;
     private File photoFile;
 
-    // Flag and objects for edit mode
     private boolean isEditMode = false;
     private DossierCandidat editingCandidate;
     private Profile editingProfile;
 
-    // Services – following layered architecture
     private final UserService userService = new UserService();
     private final ProfileService profileService = new ProfileService();
     private final DossierCandidatService dossierService = new DossierCandidatService();
     private final PaymentService paymentService = new PaymentService();
     private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
-    // Add the missing autoEcoleService
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
 
     @FXML
     public void initialize() {
-        // Initialize permis type drop-down
         permisTypeComboBox.getItems().addAll("A", "B", "C");
-        // Initialize payment mode options
         modePaiementComboBox.getItems().addAll("comptant", "par facilités");
 
-        // Clear error listeners
         addClearErrorListener(usernameField, usernameError);
         addClearErrorListener(passwordField, passwordError);
         addClearErrorListener(firstNameField, firstNameError);
@@ -119,7 +140,6 @@ public class AddCandidateController {
             permisTypeError.setText("");
         });
 
-        // File chooser handlers
         btnChooseCIN.setOnAction(event -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select CIN Image");
@@ -174,28 +194,19 @@ public class AddCandidateController {
         btnSubmit.setOnAction(this::handleSubmit);
     }
 
-    /**
-     * Initializes the form for editing a candidate.
-     * Preloads the candidate's old data into the inputs.
-     *
-     * @param dossier the candidate's dossier
-     * @param profile the candidate's profile
-     */
+
     public void initData(DossierCandidat dossier, Profile profile) {
         isEditMode = true;
         editingCandidate = dossier;
         editingProfile = profile;
 
-        // Preload user data (username)
         User existingUser = userService.getUserById(profile.getUserId());
         if (existingUser != null) {
             usernameField.setText(existingUser.getUsername());
             usernameField.setDisable(true);
         }
-        // Leave password empty (if provided, you could update it)
         passwordField.clear();
 
-        // Preload profile fields
         firstNameField.setText(profile.getNom());
         lastNameField.setText(profile.getPrenom());
         emailField.setText(profile.getEmail());
@@ -203,21 +214,13 @@ public class AddCandidateController {
         phoneField.setText(String.valueOf(profile.getTel()));
         addressField.setText(profile.getAddresse());
 
-        // Preload dossier fields
+
         permisTypeComboBox.setValue(dossier.getPermisType());
-        // If your DossierCandidat stores file names, preload button texts accordingly.
-        // For example:
-        // btnChooseCIN.setText(dossier.getCinFileName() != null ? dossier.getCinFileName() : "Choisir le fichier");
-        // btnChooseCertificat.setText(dossier.getCertificatFileName() != null ? dossier.getCertificatFileName() : "Choisir le fichier");
-        // btnChoosePhoto.setText(dossier.getPhotoFileName() != null ? dossier.getPhotoFileName() : "Choisir le fichier");
-        // Otherwise, you may leave them as is.
 
         seancesConduiteField.setText(String.valueOf(dossier.getNombreSeancesConduite()));
         seancesCodeField.setText(String.valueOf(dossier.getNombreSeancesCode()));
-        // In edit mode, you might not want to change the payment mode.
         modePaiementComboBox.setDisable(true);
 
-        // Update the submit button text
         btnSubmit.setText("Mettre à jour Candidat");
     }
 
@@ -225,12 +228,10 @@ public class AddCandidateController {
         clearAllErrors();
         boolean valid = true;
 
-        // Validate username
         if (usernameField.getText().trim().isEmpty()) {
             setFieldError(usernameField, usernameError, "Username required");
             valid = false;
         }
-        // Validate password – in edit mode, password is optional.
         String password = passwordField.getText().trim();
         if (!isEditMode) {
             if (password.isEmpty()) {
@@ -241,23 +242,19 @@ public class AddCandidateController {
                 valid = false;
             }
         } else {
-            // In edit mode, if a new password is provided, validate it.
             if (!password.isEmpty() && !isValidPassword(password)) {
                 setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
                 valid = false;
             }
         }
-        // Validate first name
         if (firstNameField.getText().trim().isEmpty()) {
             setFieldError(firstNameField, firstNameError, "First name required");
             valid = false;
         }
-        // Validate last name
         if (lastNameField.getText().trim().isEmpty()) {
             setFieldError(lastNameField, lastNameError, "Last name required");
             valid = false;
         }
-        // Validate email
         String email = emailField.getText().trim();
         if (email.isEmpty()) {
             setFieldError(emailField, emailError, "Email required");
@@ -266,7 +263,6 @@ public class AddCandidateController {
             setFieldError(emailField, emailError, "Invalid email");
             valid = false;
         }
-        // Validate birthday
         if (birthdayPicker.getValue() == null) {
             setFieldError(birthdayPicker, birthdayError, "Birthday required");
             valid = false;
@@ -284,23 +280,19 @@ public class AddCandidateController {
                 }
             }
         }
-        // Validate phone number
         String phone = phoneField.getText().trim();
         if (!phone.matches("\\d{8}")) {
             setFieldError(phoneField, phoneError, "8-digit number required");
             valid = false;
         }
-        // Validate address
         if (addressField.getText().trim().isEmpty()) {
             setFieldError(addressField, addressError, "Address required");
             valid = false;
         }
-        // Validate permis type
         if (permisTypeComboBox.getValue() == null) {
             setFieldError(permisTypeComboBox, permisTypeError, "Select permis type");
             valid = false;
         }
-        // Validate file selections only in create mode.
         if (!isEditMode) {
             if (cinFile == null) {
                 cinError.setText("CIN image required");
@@ -315,7 +307,6 @@ public class AddCandidateController {
                 valid = false;
             }
         }
-        // Validate new fields: session counts and payment mode
         int seancesConduite = 0;
         try {
             seancesConduite = Integer.parseInt(seancesConduiteField.getText().trim());
@@ -355,8 +346,6 @@ public class AddCandidateController {
         }
 
         if (isEditMode) {
-            // ---------- Update existing candidate ----------
-            // Update profile fields
             editingProfile.setNom(firstNameField.getText().trim());
             editingProfile.setPrenom(lastNameField.getText().trim());
             editingProfile.setEmail(emailField.getText().trim());
@@ -372,7 +361,6 @@ public class AddCandidateController {
                 setFieldError(emailField, emailError, "Profile update error");
                 return;
             }
-            // Optionally update the user password if provided (implementation depends on userService)
             if (!password.isEmpty()) {
                 boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
                 if (!passwordUpdated) {
@@ -380,11 +368,11 @@ public class AddCandidateController {
                     return;
                 }
             }
-            // Update dossier fields
+
             editingCandidate.setPermisType(permisTypeComboBox.getValue());
             editingCandidate.setNombreSeancesConduite(seancesConduite);
             editingCandidate.setNombreSeancesCode(seancesCode);
-            // In update, if new files are not selected, keep the existing ones.
+
             boolean dossierUpdated = dossierService.updateDossier(editingCandidate,
                     (cinFile != null ? cinFile : null),
                     (certificatFile != null ? certificatFile : null),
@@ -396,8 +384,6 @@ public class AddCandidateController {
             showSuccessNotification("Candidat mis à jour avec succès !");
             clearForm();
         } else {
-            // ---------- Create new candidate (existing logic) ----------
-            // Create candidate user
             String username = usernameField.getText().trim();
             boolean userCreated = userService.createUser(username, password, "candidat");
             if (!userCreated) {
@@ -409,7 +395,7 @@ public class AddCandidateController {
                 setFieldError(usernameField, usernameError, "User retrieval error");
                 return;
             }
-            // Create candidate profile
+
             Profile profile = new Profile();
             profile.setUserId(userId);
             profile.setNom(firstNameField.getText().trim());
@@ -427,7 +413,7 @@ public class AddCandidateController {
                 setFieldError(emailField, emailError, "Profile creation error");
                 return;
             }
-            // Create candidate dossier
+
             DossierCandidat dossier = new DossierCandidat();
             dossier.setCandidateId(userId);
             dossier.setPermisType(permisTypeComboBox.getValue());
@@ -442,11 +428,10 @@ public class AddCandidateController {
                 return;
             }
 
-            // Payment processing:
-            // Calculate total amount based on auto-école configuration pricing.
+
             double totalAmount = 0;
             try {
-                // Retrieve auto-école data. Assume first record contains pricing info at indices 4 and 5.
+
                 String[][] autoEcoleData = autoEcoleService.getAutoEcoleData().toArray(new String[0][]);
                 double prixSeanceConduit = Double.parseDouble(autoEcoleData[0][4]);
                 double prixSeanceCode = Double.parseDouble(autoEcoleData[0][5]);
@@ -524,7 +509,7 @@ public class AddCandidateController {
             modePaiementComboBox.getSelectionModel().clearSelection();
         }
         clearAllErrors();
-        // Reset edit mode if applicable
+
         isEditMode = false;
         editingCandidate = null;
         editingProfile = null;
@@ -585,8 +570,7 @@ public class AddCandidateController {
     }
 
     private boolean isValidPassword(String password) {
-        // Symbol check is done using [^\\w\\s], which matches any non-alphanumeric, non-whitespace character.
-        // This pattern enforces min length 8, plus at least 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+
         String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$";
         return Pattern.matches(pattern, password);
     }

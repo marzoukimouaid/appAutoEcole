@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Service layer for VehiculeDocument.
- */
+
 public class VehiculeDocumentService {
 
     private final VehiculeDocumentDao documentDao = new VehiculeDocumentDao();
@@ -38,10 +36,7 @@ public class VehiculeDocumentService {
         return documentDao.delete(docId);
     }
 
-    /**
-     * Finds documents that will expire within the next 'daysAhead' days
-     * and that have not been notified yet.
-     */
+    
     public List<VehiculeDocument> findDocumentsExpiringSoon(int daysAhead) {
         LocalDate threshold = LocalDate.now().plusDays(daysAhead);
         return documentDao.findAll()

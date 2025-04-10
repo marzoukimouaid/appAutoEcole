@@ -39,12 +39,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * MoniteurDashboardController
- *
- * Similar design to CandidateDashboard, but with a different sidebar
- * (only "Gestion des Séances").
- */
+
 public class MoniteurDashboardController {
 
     @FXML private BorderPane root;
@@ -56,9 +51,9 @@ public class MoniteurDashboardController {
     @FXML private Label notificationBadge;
     @FXML private MenuButton profileMenu;
 
-    @FXML private StackPane bannerContainer; // Optional banner for moniteur warnings
+    @FXML private StackPane bannerContainer;
 
-    // Sidebar button
+
     @FXML private Button btnEmploi;
     @FXML private Label autoEcoleNameLabel;
 
@@ -73,7 +68,7 @@ public class MoniteurDashboardController {
 
     @FXML
     public void initialize() {
-        // Load the current user from session
+
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             System.out.println("No user in session. Redirecting to login...");
@@ -86,10 +81,10 @@ public class MoniteurDashboardController {
         loadAutoEcoleName();
         loadUserProfilePicture();
 
-        // Possibly check upcoming seances or upcoming assigned exams, etc.
-        // checkUpcomingSeancesOrExams();
 
-        // Set up notification logic
+
+
+
         notificationMenu.setOnShowing(e -> {
             markAllNotificationsAsRead();
             updateNotifications();
@@ -99,7 +94,7 @@ public class MoniteurDashboardController {
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
 
-        // Load default page (seances)
+
         handleEmploi();
     }
 
@@ -205,18 +200,18 @@ public class MoniteurDashboardController {
 
 
             for (Notification notif : latest) {
-                // Instead of setting text, we'll use a custom layout for better readability
+
                 MenuItem item = new MenuItem();
 
-                VBox container = new VBox(2.0); // vertical spacing
-                container.setStyle("-fx-padding: 5 10 5 10;"); // small padding around each item
+                VBox container = new VBox(2.0);
+                container.setStyle("-fx-padding: 5 10 5 10;");
 
                 Label messageLabel = new Label(notif.getMessage());
-                messageLabel.setWrapText(true); // allow text to wrap if it's long
+                messageLabel.setWrapText(true);
 
-                // Format the date/time more clearly
+
                 Label dateLabel = new Label("Reçu le " + notif.getCreatedAt().format(timeFormatter));
-                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;"); // smaller, lighter text
+                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;");
 
                 container.getChildren().addAll(messageLabel, dateLabel);
                 item.setGraphic(container);
@@ -288,7 +283,7 @@ public class MoniteurDashboardController {
 
     @FXML
     private void handleEmploi() {
-        // Possibly load a "MoniteurEmploiDesSeances.fxml", or reuse the same "EmploiDesSeances.fxml"
+
         loadPage("/org/example/EmploiDesSeances.fxml", "Gestion des Séances");
         highlightSidebarButton(btnEmploi);
     }

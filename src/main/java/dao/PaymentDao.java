@@ -52,9 +52,7 @@ public class PaymentDao {
         return Optional.empty();
     }
 
-    /**
-     * Retrieves all payments belonging to a specific user, ordered by date descending.
-     */
+    
     public List<Payment> findByUserId(int userId) {
         List<Payment> payments = new ArrayList<>();
         String sql = "SELECT * FROM paiements WHERE user_id = ? ORDER BY payment_date DESC";
@@ -71,10 +69,7 @@ public class PaymentDao {
         return payments;
     }
 
-    /**
-     * NEW: Retrieves **all** payment records from the DB,
-     * for use in analytics or general listing.
-     */
+    
     public List<Payment> findAll() {
         List<Payment> payments = new ArrayList<>();
         String sql = "SELECT * FROM paiements ORDER BY payment_date ASC";
@@ -117,7 +112,7 @@ public class PaymentDao {
         return false;
     }
 
-    // Helper function to map the result set to a Payment object
+
     private Payment mapResultSetToPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setId(rs.getInt("id"));

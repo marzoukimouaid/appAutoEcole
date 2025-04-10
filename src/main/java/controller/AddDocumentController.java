@@ -16,42 +16,53 @@ import java.util.Arrays;
 
 public class AddDocumentController {
 
-    @FXML private StackPane rootPane;
+    @FXML
+    private StackPane rootPane;
 
-    @FXML private ComboBox<DocType> comboDocType;
-    @FXML private DatePicker dateObtention;
-    @FXML private Label dateObtError;
-    @FXML private DatePicker dateExpiration;
-    @FXML private Label dateExpError;
+    @FXML
+    private ComboBox<DocType> comboDocType;
+    @FXML
+    private DatePicker dateObtention;
+    @FXML
+    private Label dateObtError;
+    @FXML
+    private DatePicker dateExpiration;
+    @FXML
+    private Label dateExpError;
 
-    // File pick button + docError label
-    @FXML private Button btnChooseDoc;
-    @FXML private Label docError;
 
-    // Cost field + error label
-    @FXML private TextField txtCost;
-    @FXML private Label costError;
+    @FXML
+    private Button btnChooseDoc;
+    @FXML
+    private Label docError;
 
-    @FXML private Button btnSubmit;
+
+    @FXML
+    private TextField txtCost;
+    @FXML
+    private Label costError;
+
+    @FXML
+    private Button btnSubmit;
 
     private final VehiculeDocumentService documentService = new VehiculeDocumentService();
     private Vehicule currentVehicule;
-    private File docFile; // the chosen image file
+    private File docFile;
 
     @FXML
     private void initialize() {
-        // Populate doc types
+
         comboDocType.getItems().setAll(Arrays.asList(DocType.values()));
         comboDocType.getSelectionModel().selectFirst();
 
-        // Default date constraints
+
         dateObtention.setValue(LocalDate.now());
         dateExpiration.setValue(LocalDate.now().plusMonths(3));
 
-        // Choose doc file
+
         btnChooseDoc.setOnAction(e -> chooseDocFile());
 
-        // "Valider"
+
         btnSubmit.setOnAction(e -> handleSubmit());
     }
 
@@ -87,7 +98,7 @@ public class AddDocumentController {
         clearAllErrors();
         boolean valid = true;
 
-        // ============ Validate Date Obtention =============
+
         LocalDate obt = dateObtention.getValue();
         if (obt == null) {
             setFieldError(dateObtention, dateObtError, "Date requise");
@@ -100,7 +111,7 @@ public class AddDocumentController {
             }
         }
 
-        // ============ Validate Date Expiration =============
+
         LocalDate exp = dateExpiration.getValue();
         if (exp == null) {
             setFieldError(dateExpiration, dateExpError, "Date requise");
@@ -113,13 +124,13 @@ public class AddDocumentController {
             }
         }
 
-        // ============ Validate docFile =============
+
         if (docFile == null) {
             setFieldError(btnChooseDoc, docError, "Fichier image requis");
             valid = false;
         }
 
-        // ============ Validate cost =============
+
         String costText = txtCost.getText().trim();
         if (costText.isEmpty()) {
             setFieldError(txtCost, costError, "Le coût est requis");
@@ -137,38 +148,35 @@ public class AddDocumentController {
             }
         }
 
-        if (!valid) return; // stop if any invalid input
+        if (!valid) return;
 
-        // If everything is valid => upload docFile to ImgBB:
+
         String uploadedUrl = ImgBBUtil.uploadImageToImgBB(docFile);
         if (uploadedUrl == null) {
-            // The upload failed
+
             setFieldError(btnChooseDoc, docError, "Échec de l'upload de l'image. Réessayez.");
             return;
         }
 
-        // Now build the doc entity
+
         VehiculeDocument doc = new VehiculeDocument();
         doc.setVehiculeId(currentVehicule.getId());
         doc.setDocType(comboDocType.getValue());
         doc.setDateObtention(obt);
         doc.setDateExpiration(exp);
-        doc.setScannedDocUrl(uploadedUrl); // store the online link
+        doc.setScannedDocUrl(uploadedUrl);
         double finalCost = Double.parseDouble(costText);
         doc.setCost(finalCost);
 
-        // Insert in DB
+
         boolean success = documentService.createDocument(doc);
         if (!success) {
-            // Possibly show an alert or inline error
+
             System.err.println("Insertion en DB échouée");
             return;
         }
 
-        // If you want a success notification, you can do so with a method like:
-        // NotificationUtil.showNotification(rootPane, "Document ajouté avec succès!", NotificationUtil.NotificationType.SUCCESS);
 
-        // Then go back to VehiculeView or refresh
         goBackToVehiculeView();
     }
 

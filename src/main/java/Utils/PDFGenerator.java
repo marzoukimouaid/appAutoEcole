@@ -11,13 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.YearMonth;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-/**
- * This utility class generates sleek, modern, and simplistic PDFs.
- */
+
 public class PDFGenerator {
 
     private static java.util.List<String> wrapText(String text, PDType1Font font, float fontSize, float maxWidth) throws IOException {
@@ -43,9 +40,7 @@ public class PDFGenerator {
         return lines;
     }
 
-    /**
-     * Generates a modern, sleek, and simplistic PDF document with flexible layout.
-     */
+    
     public static void generatePDF(String header, String title, String candidateDetails, String content, String footer, File file) throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
@@ -57,7 +52,7 @@ public class PDFGenerator {
             float width = mediaBox.getWidth() - 2 * margin;
 
             try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
-                // --- Header ---
+
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA, 12);
                 cs.newLineAtOffset(margin, yStart);
@@ -67,7 +62,7 @@ public class PDFGenerator {
                 }
                 cs.endText();
 
-                // Draw a subtle line below header
+
                 float headerHeight = 14 * header.split("\n").length;
                 float yAfterHeader = yStart - headerHeight - 10;
                 cs.setStrokingColor(Color.LIGHT_GRAY);
@@ -76,7 +71,7 @@ public class PDFGenerator {
                 cs.lineTo(margin + width, yAfterHeader);
                 cs.stroke();
 
-                // --- Title (centered) ---
+
                 float yPosition = yAfterHeader - 30;
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA_BOLD, 20);
@@ -86,7 +81,7 @@ public class PDFGenerator {
                 cs.showText(title);
                 cs.endText();
 
-                // --- Invoice Details side by side (candidate + date) ---
+
                 yPosition -= 30;
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA, 12);
@@ -95,7 +90,7 @@ public class PDFGenerator {
                 cs.showText(invoiceDetails);
                 cs.endText();
 
-                // Separator line below invoice details.
+
                 yPosition -= 20;
                 cs.setStrokingColor(Color.LIGHT_GRAY);
                 cs.setLineWidth(1);
@@ -103,7 +98,7 @@ public class PDFGenerator {
                 cs.lineTo(margin + width, yPosition);
                 cs.stroke();
 
-                // --- Main Content ---
+
                 yPosition -= 30;
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA, 12);
@@ -116,7 +111,7 @@ public class PDFGenerator {
                 }
                 cs.endText();
 
-                // --- Footer ---
+
                 float footerY = margin + 40;
                 cs.setStrokingColor(Color.LIGHT_GRAY);
                 cs.setLineWidth(1);
@@ -144,9 +139,9 @@ public class PDFGenerator {
         generatePDF(header, "Emploi du Temps", candidateDetails, scheduleContent, footer, file);
     }
 
-    // ------------------------------------------------------------------------
-    // Generate a monthly calendar (table) plus appointments list
-    // ------------------------------------------------------------------------
+
+
+
     public static void generateMonthlyCalendarAndAppointments(
             String header,
             String candidateName,
@@ -167,10 +162,10 @@ public class PDFGenerator {
             float startY = mediaBox.getHeight() - margin;
 
             try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
-                // 1) Header
+
                 drawHeader(cs, header, margin, startY, width);
 
-                // 2) Title: Month label
+
                 float yPos = startY - 70;
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA_BOLD, 16);
@@ -181,7 +176,7 @@ public class PDFGenerator {
                 cs.showText(capitalize(monthTitle));
                 cs.endText();
 
-                // 3) Candidate name
+
                 yPos -= 20;
                 cs.beginText();
                 cs.setFont(PDType1Font.HELVETICA, 12);
@@ -189,16 +184,16 @@ public class PDFGenerator {
                 cs.showText(candidateName);
                 cs.endText();
 
-                // 4) Draw the monthly calendar table
+
                 yPos -= 40;
-                float tableHeight = 220;  // Enough to fit 6 rows
+                float tableHeight = 220;
                 drawCalendarTable(cs, month, eventsByDay, margin, yPos, width, tableHeight);
 
-                // 5) List of appointments
+
                 float afterTableY = yPos - tableHeight - 20;
                 drawAppointmentsList(cs, sortedEvents, margin, afterTableY, width);
 
-                // 6) Footer
+
                 drawFooter(cs, footer, margin, 60, width, mediaBox);
             }
             document.save(file);
@@ -236,27 +231,27 @@ public class PDFGenerator {
         float rowHeight = tableHeight / 7;
         float currentY = startY;
 
-        // 1) Day-of-week headers
+
         String[] dayNames = {"Lun","Mar","Mer","Jeu","Ven","Sam","Dim"};
         cs.setStrokingColor(Color.BLACK);
         cs.setLineWidth(0.75f);
 
-        // Horizontal line for header row
+
         cs.moveTo(startX, currentY);
         cs.lineTo(startX + tableWidth, currentY);
         cs.stroke();
 
         float nextY = currentY - rowHeight;
 
-        // Draw the header row (day-of-week text)
+
         for (int col = 0; col < 7; col++) {
             float cellX = startX + col * cellWidth;
-            // Vertical line
+
             cs.moveTo(cellX, currentY);
             cs.lineTo(cellX, nextY);
             cs.stroke();
 
-            // Text
+
             float textX = cellX + 5;
             float textY = currentY - 15;
             cs.beginText();
@@ -265,22 +260,22 @@ public class PDFGenerator {
             cs.showText(dayNames[col]);
             cs.endText();
         }
-        // Right boundary
+
         cs.moveTo(startX + 7 * cellWidth, currentY);
         cs.lineTo(startX + 7 * cellWidth, nextY);
         cs.stroke();
 
-        // Bottom line of header row
+
         cs.moveTo(startX, nextY);
         cs.lineTo(startX + tableWidth, nextY);
         cs.stroke();
 
         currentY = nextY;
 
-        // 2) Fill in the days
+
         LocalDate firstOfMonth = LocalDate.of(month.getYear(), month.getMonth(), 1);
         int lengthOfMonth = month.lengthOfMonth();
-        int startDayOfWeek = firstOfMonth.getDayOfWeek().getValue(); // Monday=1..Sunday=7
+        int startDayOfWeek = firstOfMonth.getDayOfWeek().getValue();
         int colIndex = startDayOfWeek - 1;
         int rowIndex = 0;
 
@@ -288,7 +283,7 @@ public class PDFGenerator {
             float cellTopY = startY - rowHeight * (rowIndex + 1);
             float cellLeftX = startX + colIndex * cellWidth;
 
-            // Day number
+
             float dayTextX = cellLeftX + 3;
             float dayTextY = cellTopY - 12;
             cs.beginText();
@@ -297,7 +292,7 @@ public class PDFGenerator {
             cs.showText(String.valueOf(day));
             cs.endText();
 
-            // If events exist, show them
+
             LocalDate theDay = firstOfMonth.withDayOfMonth(day);
             if (eventsByDay.containsKey(theDay)) {
                 List<?> evList = eventsByDay.get(theDay);
@@ -311,24 +306,24 @@ public class PDFGenerator {
                     cs.endText();
                     eventTextY -= 9;
                     if (eventTextY < cellTopY - rowHeight + 10) {
-                        break; // no more space
+                        break;
                     }
                 }
             }
 
             colIndex++;
             if (colIndex == 7) {
-                // New row
+
                 colIndex = 0;
                 rowIndex++;
 
-                // Draw horizontal line for this new row
+
                 float rowY = startY - rowHeight * (rowIndex + 1);
                 cs.moveTo(startX, rowY);
                 cs.lineTo(startX + tableWidth, rowY);
                 cs.stroke();
 
-                // ADDED FOR FULL BORDER: Draw vertical lines for that row
+
                 for (int c = 0; c <= 7; c++) {
                     float lineX = startX + c * cellWidth;
                     cs.moveTo(lineX, rowY);
@@ -338,15 +333,15 @@ public class PDFGenerator {
             }
         }
 
-        // For leftover rows
+
         for (int r = rowIndex; r < 7; r++) {
             float rowY = startY - rowHeight * (r + 1);
-            // horizontal line
+
             cs.moveTo(startX, rowY);
             cs.lineTo(startX + tableWidth, rowY);
             cs.stroke();
 
-            // vertical lines
+
             for (int c = 0; c <= 7; c++) {
                 float lineX = startX + c * cellWidth;
                 cs.moveTo(lineX, rowY);

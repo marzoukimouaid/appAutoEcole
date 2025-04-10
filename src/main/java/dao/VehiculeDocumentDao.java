@@ -13,9 +13,7 @@ public class VehiculeDocumentDao {
 
     private final Connection conn = ConnexionDB.getInstance();
 
-    /**
-     * Inserts a new VehiculeDocument record into DB.
-     */
+    
     public boolean create(VehiculeDocument doc) {
         String sql = "INSERT INTO vehicule_documents "
                 + "(vehicule_id, doc_type, date_obtention, date_expiration, scanned_doc_url, cost, notified) "
@@ -35,7 +33,7 @@ public class VehiculeDocumentDao {
             }
             stmt.setString(5, doc.getScannedDocUrl());
             stmt.setDouble(6, doc.getCost());
-            stmt.setBoolean(7, false); // New documents are not notified
+            stmt.setBoolean(7, false);
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
@@ -51,9 +49,7 @@ public class VehiculeDocumentDao {
         return false;
     }
 
-    /**
-     * Retrieves a VehiculeDocument by ID.
-     */
+    
     public Optional<VehiculeDocument> findById(int docId) {
         String sql = "SELECT * FROM vehicule_documents WHERE doc_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -68,9 +64,7 @@ public class VehiculeDocumentDao {
         return Optional.empty();
     }
 
-    /**
-     * Retrieves all documents for a given vehicle.
-     */
+    
     public List<VehiculeDocument> findByVehiculeId(int vehiculeId) {
         List<VehiculeDocument> list = new ArrayList<>();
         String sql = "SELECT * FROM vehicule_documents WHERE vehicule_id = ?";
@@ -86,9 +80,7 @@ public class VehiculeDocumentDao {
         return list;
     }
 
-    /**
-     * Retrieves all vehicule_documents.
-     */
+    
     public List<VehiculeDocument> findAll() {
         List<VehiculeDocument> list = new ArrayList<>();
         String sql = "SELECT * FROM vehicule_documents";
@@ -103,9 +95,7 @@ public class VehiculeDocumentDao {
         return list;
     }
 
-    /**
-     * Updates an existing VehiculeDocument record.
-     */
+    
     public boolean update(VehiculeDocument doc) {
         String sql = "UPDATE vehicule_documents "
                 + "SET vehicule_id = ?, doc_type = ?, date_obtention = ?, "
@@ -135,9 +125,7 @@ public class VehiculeDocumentDao {
         }
     }
 
-    /**
-     * Deletes a VehiculeDocument record by ID.
-     */
+    
     public boolean delete(int docId) {
         String sql = "DELETE FROM vehicule_documents WHERE doc_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -149,9 +137,7 @@ public class VehiculeDocumentDao {
         }
     }
 
-    /**
-     * Maps a ResultSet row to a VehiculeDocument object (including cost and notified flag).
-     */
+    
     private VehiculeDocument mapResultSetToVehiculeDocument(ResultSet rs) throws SQLException {
         VehiculeDocument doc = new VehiculeDocument();
         doc.setDocId(rs.getInt("doc_id"));

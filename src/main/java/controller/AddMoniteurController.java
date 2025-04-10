@@ -21,11 +21,11 @@ import java.util.regex.Pattern;
 
 public class AddMoniteurController {
 
-    // User fields
+
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
 
-    // Profile fields
+
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
     @FXML private TextField emailField;
@@ -33,13 +33,13 @@ public class AddMoniteurController {
     @FXML private TextField phoneField;
     @FXML private TextField addressField;
 
-    // Moniteur specific fields
+
     @FXML private ComboBox<String> permisTypeComboBox;
-    @FXML private TextField salaireField; // New field for salary
+    @FXML private TextField salaireField;
 
     @FXML private Button btnSubmit;
 
-    // Error labels
+
     @FXML private Label usernameError;
     @FXML private Label passwordError;
     @FXML private Label firstNameError;
@@ -49,34 +49,34 @@ public class AddMoniteurController {
     @FXML private Label phoneError;
     @FXML private Label addressError;
     @FXML private Label permisTypeError;
-    @FXML private Label salaireError; // New error label for salary
+    @FXML private Label salaireError;
 
-    // Root container for notifications – ensure your FXML has this defined.
+
     @FXML private StackPane rootPane;
 
-    // Services – following layered architecture
+
     private final UserService userService = new UserService();
     private final ProfileService profileService = new ProfileService();
     private final MoniteurService moniteurService = new MoniteurService();
 
-    // Fields for edit mode
+
     private boolean isEditMode = false;
     private Moniteur editingMoniteur;
     private Profile editingProfile;
 
     @FXML
     public void initialize() {
-        // Initialize permis type drop-down with values A, B, and C.
+
         permisTypeComboBox.getItems().addAll("A", "B", "C");
 
-        // Add listeners to remove error styling when the user changes text values.
+
         addClearErrorListener(usernameField, usernameError);
         addClearErrorListener(passwordField, passwordError);
         addClearErrorListener(firstNameField, firstNameError);
         addClearErrorListener(lastNameField, lastNameError);
         addClearErrorListener(emailField, emailError);
 
-        // For DatePicker and ComboBox, clear error style and error label on change.
+
         birthdayPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
             birthdayPicker.getStyleClass().remove("error");
             birthdayError.setText("");
@@ -87,33 +87,27 @@ public class AddMoniteurController {
             permisTypeComboBox.getStyleClass().remove("error");
             permisTypeError.setText("");
         });
-        addClearErrorListener(salaireField, salaireError); // Add listener for salary field
+        addClearErrorListener(salaireField, salaireError);
 
         btnSubmit.setOnAction(this::handleSubmit);
     }
 
-    /**
-     * Initializes the form for editing a moniteur.
-     * Preloads the moniteur's existing data into the inputs.
-     *
-     * @param moniteur The moniteur record to edit.
-     * @param profile  The associated profile record.
-     */
+    
     public void initData(Moniteur moniteur, Profile profile) {
         isEditMode = true;
         editingMoniteur = moniteur;
         editingProfile = profile;
 
-        // Preload user data: retrieve existing user and set username.
+
         User existingUser = userService.getUserById(profile.getUserId());
         if (existingUser != null) {
             usernameField.setText(existingUser.getUsername());
             usernameField.setDisable(true);
         }
-        // Leave password empty (if provided, it will update the password via your service if implemented)
+
         passwordField.clear();
 
-        // Preload profile fields
+
         firstNameField.setText(profile.getNom());
         lastNameField.setText(profile.getPrenom());
         emailField.setText(profile.getEmail());
@@ -121,11 +115,11 @@ public class AddMoniteurController {
         phoneField.setText(String.valueOf(profile.getTel()));
         addressField.setText(profile.getAddresse());
 
-        // Preload moniteur fields
+
         permisTypeComboBox.setValue(moniteur.getPermisType().name());
         salaireField.setText(String.valueOf(moniteur.getSalaire()));
 
-        // Update the submit button text to reflect edit mode.
+
         btnSubmit.setText("Mettre à jour Moniteur");
     }
 
@@ -133,15 +127,15 @@ public class AddMoniteurController {
         clearAllErrors();
         boolean valid = true;
 
-        // Validate username.
+
         if (usernameField.getText().trim().isEmpty()) {
             setFieldError(usernameField, usernameError, "Username required");
             valid = false;
         }
-        // Validate password.
+
         String password = passwordField.getText().trim();
         if (!isEditMode) {
-            // In create mode, password is required.
+
             if (password.isEmpty()) {
                 setFieldError(passwordField, passwordError, "Password required");
                 valid = false;
@@ -150,23 +144,23 @@ public class AddMoniteurController {
                 valid = false;
             }
         } else {
-            // In edit mode, password is optional. If provided, validate it.
+
             if (!password.isEmpty() && !isValidPassword(password)) {
                 setFieldError(passwordField, passwordError, "Min 8 chars with upper, lower, digit & special");
                 valid = false;
             }
         }
-        // Validate first name.
+
         if (firstNameField.getText().trim().isEmpty()) {
             setFieldError(firstNameField, firstNameError, "First name required");
             valid = false;
         }
-        // Validate last name.
+
         if (lastNameField.getText().trim().isEmpty()) {
             setFieldError(lastNameField, lastNameError, "Last name required");
             valid = false;
         }
-        // Validate email.
+
         String email = emailField.getText().trim();
         if (email.isEmpty()) {
             setFieldError(emailField, emailError, "Email required");
@@ -175,7 +169,7 @@ public class AddMoniteurController {
             setFieldError(emailField, emailError, "Invalid email");
             valid = false;
         }
-        // Validate birthday.
+
         if (birthdayPicker.getValue() == null) {
             setFieldError(birthdayPicker, birthdayError, "Birthday required");
             valid = false;
@@ -193,23 +187,23 @@ public class AddMoniteurController {
                 }
             }
         }
-        // Validate phone number.
+
         String phone = phoneField.getText().trim();
         if (!phone.matches("\\d{8}")) {
             setFieldError(phoneField, phoneError, "8-digit number required");
             valid = false;
         }
-        // Validate address.
+
         if (addressField.getText().trim().isEmpty()) {
             setFieldError(addressField, addressError, "Address required");
             valid = false;
         }
-        // Validate permis type.
+
         if (permisTypeComboBox.getValue() == null) {
             setFieldError(permisTypeComboBox, permisTypeError, "Select permis type");
             valid = false;
         }
-        // Validate salaire.
+
         String salaireStr = salaireField.getText().trim();
         double salaire = 0.0;
         if (salaireStr.isEmpty()) {
@@ -233,8 +227,8 @@ public class AddMoniteurController {
         }
 
         if (isEditMode) {
-            // ---------- Update existing moniteur ----------
-            // Update profile fields
+
+
             editingProfile.setNom(firstNameField.getText().trim());
             editingProfile.setPrenom(lastNameField.getText().trim());
             editingProfile.setEmail(email);
@@ -250,7 +244,7 @@ public class AddMoniteurController {
                 setFieldError(emailField, emailError, "Profile update error");
                 return;
             }
-            // Optionally update the user password if provided (implementation depends on your UserService)
+
             if (!password.isEmpty()) {
                 boolean passwordUpdated = userService.updateUserPassword(editingProfile.getUserId(), password);
                 if (!passwordUpdated) {
@@ -258,7 +252,7 @@ public class AddMoniteurController {
                     return;
                 }
             }
-            // Update moniteur fields
+
             try {
                 editingMoniteur.setPermisType(PermisType.valueOf(permisTypeComboBox.getValue()));
             } catch (IllegalArgumentException e) {
@@ -274,7 +268,7 @@ public class AddMoniteurController {
             showSuccessNotification("Moniteur mis à jour avec succès !");
             clearForm();
         } else {
-            // ---------- Create new moniteur ----------
+
             String username = usernameField.getText().trim();
             boolean userCreated = userService.createUser(username, password, "moniteur");
             if (!userCreated) {
@@ -286,7 +280,7 @@ public class AddMoniteurController {
                 setFieldError(usernameField, usernameError, "User retrieval error");
                 return;
             }
-            // Create profile.
+
             Profile profile = new Profile();
             profile.setUserId(userId);
             profile.setNom(firstNameField.getText().trim());
@@ -304,7 +298,7 @@ public class AddMoniteurController {
                 setFieldError(emailField, emailError, "Profile creation error");
                 return;
             }
-            // Create moniteur record.
+
             Moniteur moniteur = new Moniteur();
             moniteur.setUserId(userId);
             try {
@@ -343,7 +337,7 @@ public class AddMoniteurController {
         permisTypeComboBox.getSelectionModel().clearSelection();
         salaireField.clear();
         clearAllErrors();
-        // Reset edit mode if applicable.
+
         isEditMode = false;
         editingMoniteur = null;
         editingProfile = null;
@@ -397,8 +391,8 @@ public class AddMoniteurController {
     }
 
     private boolean isValidPassword(String password) {
-        // Symbol check is done using [^\\w\\s], which matches any non-alphanumeric, non-whitespace character.
-        // This pattern enforces min length 8, plus at least 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+
+
         String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$";
         return Pattern.matches(pattern, password);
     }

@@ -26,7 +26,7 @@ public class Profile {
         this.addresse = addresse;
     }
 
-    // Add this helper method:
+
     public String getFullName() {
         String last = (nom == null) ? "" : nom;
         String first = (prenom == null) ? "" : prenom;

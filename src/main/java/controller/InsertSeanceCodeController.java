@@ -148,7 +148,7 @@ public class InsertSeanceCodeController {
             return;
         }
 
-        // Conflict check for candidate availability.
+
         List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
         List<SeanceConduit> candidateConduitSeances = conduitService.getSeancesByCandidatId(candidate.getId());
         boolean candidateBusy = Stream.concat(
@@ -166,7 +166,7 @@ public class InsertSeanceCodeController {
             return;
         }
 
-        // Conflict check for moniteur availability.
+
         List<SeanceCode> moniteurCodeSeances = seanceCodeService.getSeancesByMoniteurId(moniteur.getId());
         List<SeanceConduit> moniteurConduitSeances = conduitService.getSeancesByMoniteurId(moniteur.getId());
         boolean moniteurBusy = Stream.concat(
@@ -181,7 +181,14 @@ public class InsertSeanceCodeController {
         }
 
         if (editingSeance == null) {
-            // Creating a new seance code.
+
+
+
+
+
+
+
+
             SeanceCode newSeance = new SeanceCode(candidate.getId(), moniteur.getId(), sessionDatetime);
             boolean created = seanceCodeService.createSeanceCode(newSeance);
             if (created) {
@@ -198,7 +205,7 @@ public class InsertSeanceCodeController {
                 showError("Erreur", "Impossible de créer la séance code.");
             }
         } else {
-            // Editing existing seance code.
+
             editingSeance.setCandidatId(candidate.getId());
             editingSeance.setMoniteurId(moniteur.getId());
             editingSeance.setSessionDatetime(sessionDatetime);

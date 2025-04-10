@@ -6,7 +6,7 @@ import entite.PaymentInstallment;
 import entite.Profile;
 import entite.User;
 import entite.ExamenCode;
-import entite.ExamenConduit;  // <-- CHANGES: import for ExamenConduit
+import entite.ExamenConduit;
 import javafx.geometry.Insets;
 import service.AutoEcoleService;
 import service.NotificationService;
@@ -14,8 +14,8 @@ import service.PaymentInstallmentService;
 import service.PaymentService;
 import service.ProfileService;
 import service.UserService;
-import service.ExamenCodeService;     // <-- CHANGES: import for ExamenCodeService
-import service.ExamenConduitService; // <-- CHANGES: import for ExamenConduitService
+import service.ExamenCodeService;
+import service.ExamenConduitService;
 
 import Utils.AlertUtils;
 import Utils.SessionManager;
@@ -44,7 +44,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;   // <-- CHANGES: for LocalDateTime
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -61,15 +61,15 @@ public class CandidateDashboardController {
     @FXML private Label notificationBadge;
     @FXML private MenuButton profileMenu;
 
-    // Container for a dismissable banner for unpaid payments
+
     @FXML private StackPane unpaidBannerContainer;
 
-    // Sidebar buttons
+
     @FXML private Button btnEmploi, btnPaiements;
     @FXML private Label autoEcoleNameLabel;
     @FXML private ImageView profileImage;
 
-    // Existing services
+
     private final ProfileService profileService = new ProfileService();
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
     private final NotificationService notificationService = new NotificationService();
@@ -77,7 +77,7 @@ public class CandidateDashboardController {
     private final PaymentInstallmentService installmentService = new PaymentInstallmentService();
     private final UserService userService = new UserService();
 
-    // CHANGES: Services for ExamenCode & ExamenConduit
+
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
 
@@ -87,7 +87,7 @@ public class CandidateDashboardController {
 
     @FXML
     public void initialize() {
-        // Load the current user from session.
+
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             System.out.println("No user in session. Redirecting to login...");
@@ -100,38 +100,32 @@ public class CandidateDashboardController {
         loadAutoEcoleName();
         loadUserProfilePicture();
 
-        // 1) Check for upcoming installments due in the next 2 days
+
         checkUpcomingInstallments();
 
-        // 2) CHANGES: Check for upcoming exams in the next 2 days
+
         checkUpcomingExams();
 
-        // Update notifications whenever the dropdown is shown.
+
         notificationMenu.setOnShowing(e -> {
             markAllNotificationsAsRead();
             updateNotifications();
         });
 
-        // Update notifications on a 5s timer
+
         updateNotifications();
         notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> updateNotifications()));
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
 
-        // Load default page (Emploi)
+
         handleEmploi();
 
-        // Check for any unpaid payments.
+
         checkUnpaidPayments();
     }
 
-    /**
-     * Checks if the candidate has any unpaid payments.
-     * For a full payment, if its status is "PENDING" it is unpaid.
-     * For installment payments, if any installment due before today is still PENDING
-     * (or if its status from the DB is "NOTIFIED", it is treated as pending),
-     * then it's considered unpaid.
-     */
+    
     private void checkUnpaidPayments() {
         boolean hasUnpaid = false;
         List<Payment> payments = paymentService.getPaymentsForUser(currentUser.getId());
@@ -142,17 +136,17 @@ public class CandidateDashboardController {
             } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
                 List<PaymentInstallment> installments = installmentService.getInstallmentsByPaymentId(p.getId());
                 for (PaymentInstallment inst : installments) {
-                    // Use a try-catch in case a status from the database is not recognized.
+
                     try {
-                        // If installment is overdue and status is PENDING, then mark as unpaid.
+
                         if (inst.getDueDate().isBefore(LocalDate.now())
                                 && inst.getStatus() == PaymentInstallment.Status.PENDING) {
                             hasUnpaid = true;
                             break;
                         }
                     } catch (IllegalArgumentException e) {
-                        // If the DB returned a status "NOTIFIED" (which is not in our enum),
-                        // treat it as if it were still pending
+
+
                         if (e.getMessage().contains("NOTIFIED")) {
                             hasUnpaid = true;
                             break;
@@ -169,9 +163,7 @@ public class CandidateDashboardController {
         }
     }
 
-    /**
-     * Creates a dismissable banner at the top of the content area to warn about unpaid payments.
-     */
+    
     private void createUnpaidWarningBanner(String message) {
         unpaidBannerContainer.setVisible(true);
         unpaidBannerContainer.setManaged(true);
@@ -183,7 +175,7 @@ public class CandidateDashboardController {
         VBox.setMargin(bannerBox, new Insets(10, 20, 0, 20));
 
         bannerBox.setStyle(
-                "-fx-background-color: #ffeeba;" +  // Light yellow
+                "-fx-background-color: #ffeeba;" +
                         "-fx-background-radius: 6;" +
                         "-fx-padding: 10;"
         );
@@ -313,18 +305,18 @@ public class CandidateDashboardController {
 
 
             for (Notification notif : latest) {
-                // Instead of setting text, we'll use a custom layout for better readability
+
                 MenuItem item = new MenuItem();
 
-                VBox container = new VBox(2.0); // vertical spacing
-                container.setStyle("-fx-padding: 5 10 5 10;"); // small padding around each item
+                VBox container = new VBox(2.0);
+                container.setStyle("-fx-padding: 5 10 5 10;");
 
                 Label messageLabel = new Label(notif.getMessage());
-                messageLabel.setWrapText(true); // allow text to wrap if it's long
+                messageLabel.setWrapText(true);
 
-                // Format the date/time more clearly
+
                 Label dateLabel = new Label("Reçu le " + notif.getCreatedAt().format(timeFormatter));
-                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;"); // smaller, lighter text
+                dateLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;");
 
                 container.getChildren().addAll(messageLabel, dateLabel);
                 item.setGraphic(container);
@@ -413,14 +405,9 @@ public class CandidateDashboardController {
         selectedButton.getStyleClass().add("selected");
     }
 
-    /**
-     * Checks for upcoming installment payments that are due in the next 2 days.
-     * For each installment of type INSTALLMENT that is still pending and has not been notified,
-     * if its due date is either tomorrow or the day after tomorrow, a notification is sent to the candidate.
-     * After sending the notification, the installment is marked as notified.
-     */
+    
     private void checkUpcomingInstallments() {
-        // Retrieve all payments for the current candidate.
+
         List<Payment> payments = paymentService.getPaymentsForUser(currentUser.getId());
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
@@ -447,42 +434,42 @@ public class CandidateDashboardController {
                 });
     }
 
-    // CHANGES: New method to check upcoming exams due in the next 2 days, unpaid, and not yet notified.
+
     private void checkUpcomingExams() {
-        // We only care about the next 2 days, from now until now+2days
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime twoDaysFromNow = now.plusDays(2);
 
-        // 1) Check upcoming code exams
+
         List<ExamenCode> codeExams = examenCodeService.getExamenCodesByCandidatId(currentUser.getId());
         codeExams.stream()
                 .filter(ex -> {
-                    // Exam is in the window: from now until twoDaysFromNow
+
                     boolean upcoming = !ex.getExamDatetime().isBefore(now)
                             && ex.getExamDatetime().isBefore(twoDaysFromNow);
 
-                    // Payment is PENDING
+
                     boolean unpaid = (ex.getPaiementStatus() == ExamenCode.PaymentStatus.PENDING);
 
-                    // Not yet notified
+
                     boolean notNotified = !ex.isNotified();
 
                     return upcoming && unpaid && notNotified;
                 })
                 .forEach(ex -> {
-                    // Create a notification
+
                     String msg = String.format(
                             "Rappel: Votre Examen de Code est prévu le %s et n'est pas encore payé.",
                             ex.getExamDatetime().toLocalDate()
                     );
                     notificationService.sendNotification(currentUser.getId(), msg);
 
-                    // Mark the exam as notified in the DB
+
                     ex.setNotified(true);
                     examenCodeService.updateExamenCode(ex);
                 });
 
-        // 2) Check upcoming conduit exams
+
         List<ExamenConduit> conduitExams = examenConduitService.getExamenConduitsByCandidatId(currentUser.getId());
         conduitExams.stream()
                 .filter(ex -> {

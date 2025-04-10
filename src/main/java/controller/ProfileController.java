@@ -47,7 +47,7 @@ public class ProfileController {
             return newProfile;
         });
 
-        // Populate the fields
+
         nomField.setText(userProfile.getNom());
         prenomField.setText(userProfile.getPrenom());
         emailField.setText(userProfile.getEmail());
@@ -89,7 +89,7 @@ public class ProfileController {
             userProfile.setBirthday(null);
         }
 
-        // Parse and set the telephone number
+
         try {
             int tel = Integer.parseInt(telField.getText().trim());
             userProfile.setTel(tel);

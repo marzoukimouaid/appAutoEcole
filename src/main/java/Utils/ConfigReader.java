@@ -9,13 +9,11 @@ import java.util.Scanner;
 public class ConfigReader {
     private static JSONObject configData;
 
-    /**
-     * Loads the JSON configuration file only when needed.
-     */
+    
     private static void loadConfig() {
         if (configData == null) {
             try {
-                // Adjusted path to look inside "utils/config.json"
+
                 File file = new File("src/main/java/Utils/config.json");
 
                 if (!file.exists()) {
@@ -35,14 +33,9 @@ public class ConfigReader {
         }
     }
 
-    /**
-     * Get a key from the config.json file.
-     *
-     * @param keyName The name of the key in the JSON file.
-     * @return The value as a String.
-     */
+    
     public static String getKey(String keyName) {
-        loadConfig(); // Ensure config is loaded before accessing
+        loadConfig();
         return configData.optString(keyName, "KEY_NOT_FOUND");
     }
 }

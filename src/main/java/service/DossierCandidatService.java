@@ -13,14 +13,12 @@ import java.util.Optional;
 public class DossierCandidatService {
 
     private final DossierCandidatDao dossierDao = new DossierCandidatDao();
-    private final ProfileDao profileDao = new ProfileDao(); // For profile deletion
-    private final UserDao userDao = new UserDao();           // For user deletion
+    private final ProfileDao profileDao = new ProfileDao();
+    private final UserDao userDao = new UserDao();
 
-    /**
-     * Creates a new dossier candidat. It uploads images (if provided) to ImgBB and sets their URLs.
-     */
+    
     public boolean createDossier(DossierCandidat dossier, File cinFile, File certificatFile, File photoFile) {
-        // Upload CIN file
+
         if (cinFile != null) {
             String uploadedCinUrl = ImgBBUtil.uploadImageToImgBB(cinFile);
             if (uploadedCinUrl != null) {
@@ -34,7 +32,7 @@ public class DossierCandidatService {
             return false;
         }
 
-        // Upload certificat file
+
         if (certificatFile != null) {
             String uploadedCertificatUrl = ImgBBUtil.uploadImageToImgBB(certificatFile);
             if (uploadedCertificatUrl != null) {
@@ -48,7 +46,7 @@ public class DossierCandidatService {
             return false;
         }
 
-        // Upload photo file
+
         if (photoFile != null) {
             String uploadedPhotoUrl = ImgBBUtil.uploadImageToImgBB(photoFile);
             if (uploadedPhotoUrl != null) {
@@ -62,7 +60,7 @@ public class DossierCandidatService {
             return false;
         }
 
-        // Set creation and update timestamps
+
         LocalDateTime now = LocalDateTime.now();
         if (dossier.getCreatedAt() == null) {
             dossier.setCreatedAt(now);
@@ -72,23 +70,17 @@ public class DossierCandidatService {
         return dossierDao.createDossierCandidat(dossier);
     }
 
-    /**
-     * Retrieves the dossier candidat for a given candidate.
-     */
+    
     public Optional<DossierCandidat> getDossierByCandidateId(int candidateId) {
         return dossierDao.getDossierCandidatByCandidateId(candidateId);
     }
 
-    /**
-     * Retrieves all dossier candidats.
-     */
+    
     public List<DossierCandidat> getAllDossiers() {
         return dossierDao.getAllDossierCandidats();
     }
 
-    /**
-     * Deletes the dossier and associated records for a candidate.
-     */
+    
     public boolean deleteCandidateCascade(int candidateId) {
         boolean dossierDeleted = dossierDao.deleteDossierCandidate(candidateId);
         boolean profileDeleted = profileDao.deleteProfileByUserId(candidateId);
@@ -96,18 +88,7 @@ public class DossierCandidatService {
         return dossierDeleted && profileDeleted && userDeleted;
     }
 
-    /**
-     * Updates an existing dossier candidat.
-     *
-     * If new image files are provided, they are uploaded and their URLs replace the existing ones.
-     * The updated_at timestamp is refreshed.
-     *
-     * @param dossier         The dossier candidat with updated fields.
-     * @param cinFile         New CIN image file (or null to keep existing).
-     * @param certificatFile  New certificat image file (or null to keep existing).
-     * @param photoFile       New photo image file (or null to keep existing).
-     * @return True if update was successful; false otherwise.
-     */
+    
     public boolean updateDossier(DossierCandidat dossier, File cinFile, File certificatFile, File photoFile) {
         if (cinFile != null) {
             String uploadedCinUrl = ImgBBUtil.uploadImageToImgBB(cinFile);

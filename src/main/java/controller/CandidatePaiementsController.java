@@ -54,7 +54,7 @@ public class CandidatePaiementsController {
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
     private final ProfileService profileService = new ProfileService();
 
-    // For exam code & conduit
+
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
 
@@ -76,15 +76,15 @@ public class CandidatePaiementsController {
         loadPaidPayments();
     }
 
-    // ------------------------------------------------------------
-    //  Unpaid EXAMS
-    // ------------------------------------------------------------
+
+
+
     private void loadUnpaidExams() {
         examListContainer.getChildren().clear();
         boolean foundUnpaidExam = false;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        // ExamenCode with paiementStatus = PENDING
+
         List<ExamenCode> codeExams = examenCodeService.getExamenCodesByCandidatId(currentUser.getId());
         List<ExamenCode> unpaidCodeExams = codeExams.stream()
                 .filter(ex -> ex.getPaiementStatus() == ExamenCode.PaymentStatus.PENDING)
@@ -103,7 +103,7 @@ public class CandidatePaiementsController {
             examListContainer.getChildren().add(card);
         }
 
-        // ExamenConduit with paiementStatus = PENDING
+
         List<ExamenConduit> conduitExams = examenConduitService.getExamenConduitsByCandidatId(currentUser.getId());
         List<ExamenConduit> unpaidConduitExams = conduitExams.stream()
                 .filter(ex -> ex.getPaiementStatus() == ExamenConduit.PaymentStatus.PENDING)
@@ -153,9 +153,9 @@ public class CandidatePaiementsController {
         }
     }
 
-    // ------------------------------------------------------------
-    //  Unpaid PAYMENTS
-    // ------------------------------------------------------------
+
+
+
     private void loadUnpaidPayments() {
         paymentListContainer.getChildren().clear();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -163,19 +163,19 @@ public class CandidatePaiementsController {
 
         List<Payment> payments = paymentService.getPaymentsForUser(currentUser.getId());
         for (Payment p : payments) {
-            // 1) Full Payment
+
             if ("FULL".equalsIgnoreCase(p.getPaymentType())) {
                 if ("PENDING".equalsIgnoreCase(p.getStatus())) {
                     foundUnpaid = true;
                     VBox card = createPaymentCard();
-                    // Show only type and amount
+
                     String labelText = "Paiement Comptant - " + p.getTotalAmount() + "TND";
                     HBox row = createRow(labelText, e -> loadPaymentForm(p, null));
                     card.getChildren().add(row);
                     paymentListContainer.getChildren().add(card);
                 }
             }
-            // 2) Installment Payment
+
             else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
                 List<PaymentInstallment> installments = installmentService.getInstallmentsByPaymentId(p.getId());
                 List<PaymentInstallment> pending = installments.stream()
@@ -195,7 +195,7 @@ public class CandidatePaiementsController {
                             foundUnpaid = true;
                             VBox card = createPaymentCard();
                             for (PaymentInstallment inst : nearest) {
-                                // Show only type and amount
+
                                 String detailText = "Échéance n°" + inst.getInstallmentNumber()
                                         + " - " + inst.getAmountDue() + "TND";
                                 HBox row = createRow(detailText, e -> loadPaymentForm(null, inst));
@@ -235,34 +235,34 @@ public class CandidatePaiementsController {
         }
     }
 
-    // ------------------------------------------------------------
-    //  PAID HISTORY (with "Imprimer Facture" button)
-    // ------------------------------------------------------------
+
+
+
     private void loadPaidPayments() {
         paymentHistoryContainer.getChildren().clear();
 
-        // Unify paid records from different payment sources.
+
         List<PaidRecord> paidRecords = new ArrayList<>();
 
-        // 1) Paid Full Payments and Installment Payments (global)
+
         List<Payment> allPayments = paymentService.getPaymentsForUser(currentUser.getId());
         for (Payment p : allPayments) {
             if ("FULL".equalsIgnoreCase(p.getPaymentType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
                 PaidRecord rec = new PaidRecord();
                 rec.datePaid = p.getPaymentDate().atStartOfDay();
-                // Show only type and amount
+
                 rec.description = "Paiement Comptant - " + p.getTotalAmount() + "TND";
                 paidRecords.add(rec);
             } else if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType()) && "PAID".equalsIgnoreCase(p.getStatus())) {
                 PaidRecord rec = new PaidRecord();
                 rec.datePaid = p.getPaymentDate().atStartOfDay();
-                // Show only type and amount
+
                 rec.description = "Paiement par Échéances - " + p.getTotalAmount() + "TND";
                 paidRecords.add(rec);
             }
         }
 
-        // 2) Paid Installments details
+
         for (Payment p : allPayments) {
             if ("INSTALLMENT".equalsIgnoreCase(p.getPaymentType())) {
                 List<PaymentInstallment> allInstallments = installmentService.getInstallmentsByPaymentId(p.getId());
@@ -271,7 +271,7 @@ public class CandidatePaiementsController {
                         .forEach(inst -> {
                             PaidRecord rec = new PaidRecord();
                             rec.datePaid = inst.getDatePaid().atStartOfDay();
-                            // Show only type and amount
+
                             rec.description = "Échéance n°" + inst.getInstallmentNumber()
                                     + " - " + inst.getAmountDue() + "TND";
                             paidRecords.add(rec);
@@ -279,14 +279,14 @@ public class CandidatePaiementsController {
             }
         }
 
-        // 3) Paid ExamenCode (keep as-is)
+
         List<ExamenCode> codeExams = examenCodeService.getExamenCodesByCandidatId(currentUser.getId());
         codeExams.stream()
                 .filter(ex -> ex.getPaiementStatus() == ExamenCode.PaymentStatus.PAID && ex.getPaymentDate() != null)
                 .forEach(ex -> {
                     PaidRecord rec = new PaidRecord();
                     rec.datePaid = ex.getPaymentDate().atStartOfDay();
-                    // Keep exam details as they are
+
                     rec.description = String.format(
                             "Examen Code (Id:%d) – Montant: %.2fTND - Payé le %s",
                             ex.getId(),
@@ -296,14 +296,14 @@ public class CandidatePaiementsController {
                     paidRecords.add(rec);
                 });
 
-        // 4) Paid ExamenConduit (keep as-is)
+
         List<ExamenConduit> conduitExams = examenConduitService.getExamenConduitsByCandidatId(currentUser.getId());
         conduitExams.stream()
                 .filter(ex -> ex.getPaiementStatus() == ExamenConduit.PaymentStatus.PAID && ex.getPaymentDate() != null)
                 .forEach(ex -> {
                     PaidRecord rec = new PaidRecord();
                     rec.datePaid = ex.getPaymentDate().atStartOfDay();
-                    // Keep exam details as they are
+
                     rec.description = String.format(
                             "Examen Conduit (Id:%d) – Montant: %.2fTND - Payé le %s",
                             ex.getId(),
@@ -320,10 +320,10 @@ public class CandidatePaiementsController {
             return;
         }
 
-        // Sort the records in descending order by datePaid.
+
         paidRecords.sort(Comparator.comparing(PaidRecord::getDatePaid).reversed());
 
-        // Display each record with an "Imprimer Facture" button.
+
         paidRecords.forEach(rec -> {
             VBox card = createPaymentCard();
             HBox row = createHistoryRow(rec.description, rec.description);
@@ -332,9 +332,9 @@ public class CandidatePaiementsController {
         });
     }
 
-    // ------------------------------------------------------------
-    //  Utility methods
-    // ------------------------------------------------------------
+
+
+
     private VBox createPaymentCard() {
         VBox card = new VBox(10);
         card.getStyleClass().add("card");
@@ -404,7 +404,7 @@ public class CandidatePaiementsController {
         }
     }
 
-    // Inner class to unify “paid” items.
+
     private static class PaidRecord {
         private LocalDateTime datePaid;
         private String description;

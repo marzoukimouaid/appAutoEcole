@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 public class AddVehiculeController {
 
-    @FXML private StackPane rootPane; // Injected from FXML root
+    @FXML private StackPane rootPane;
 
     @FXML private TextField immatriculationField;
     @FXML private TextField marqueField;
@@ -26,7 +26,7 @@ public class AddVehiculeController {
     @FXML private ComboBox<String> vehiculeTypeComboBox;
     @FXML private Button btnSubmit;
 
-    // Error labels
+
     @FXML private Label immatriculationError;
     @FXML private Label marqueError;
     @FXML private Label dateMiseEnServiceError;
@@ -36,7 +36,7 @@ public class AddVehiculeController {
 
     private final VehiculeService vehiculeService = new VehiculeService();
 
-    // Fields for edit mode support
+
     private boolean isEditMode = false;
     private Vehicule editingVehicule;
 
@@ -46,12 +46,7 @@ public class AddVehiculeController {
         btnSubmit.setOnAction(this::handleSubmit);
     }
 
-    /**
-     * Initializes the form for editing an existing vehicle.
-     * Preloads the vehicle's existing data into the inputs.
-     *
-     * @param vehicule The vehicle record to edit.
-     */
+    
     public void initData(Vehicule vehicule) {
         isEditMode = true;
         editingVehicule = vehicule;
@@ -70,7 +65,7 @@ public class AddVehiculeController {
         clearAllErrors();
         boolean valid = true;
 
-        // Validate immatriculation: must match pattern xxxTunisxxxx (Tunis case insensitive)
+
         String immatriculation = immatriculationField.getText().trim();
         String immatriculationPattern = "^[0-9]{3}[Tt][Uu][Nn][Ii][Ss][0-9]{4}$";
         if (immatriculation.isEmpty()) {
@@ -80,25 +75,25 @@ public class AddVehiculeController {
             setFieldError(immatriculationField, immatriculationError, "Invalid format. Expected: xxxTunisxxxx");
             valid = false;
         }
-        // In create mode, check if immatriculation exists
+
         if (!isEditMode && vehiculeService.immatriculationExists(immatriculation)) {
             setFieldError(immatriculationField, immatriculationError, "Ce numéro d'immatriculation existe déjà");
             valid = false;
         }
 
-        // Validate marque
+
         String marque = marqueField.getText().trim();
         if (marque.isEmpty()) {
             setFieldError(marqueField, marqueError, "Marque required");
             valid = false;
         }
-        // Validate date de mise en service
+
         LocalDate dateMiseEnService = dateMiseEnServicePicker.getValue();
         if (dateMiseEnService == null) {
             setFieldError(dateMiseEnServicePicker, dateMiseEnServiceError, "Date de mise en service required");
             valid = false;
         }
-        // Validate kilometrage total
+
         String kmTotalStr = kilometrageTotalField.getText().trim();
         int kmTotal = 0;
         if (kmTotalStr.isEmpty() || !kmTotalStr.matches("\\d+")) {
@@ -107,7 +102,7 @@ public class AddVehiculeController {
         } else {
             kmTotal = Integer.parseInt(kmTotalStr);
         }
-        // Validate km restant
+
         String kmRestantStr = kmRestantField.getText().trim();
         int kmRestant = 0;
         if (kmRestantStr.isEmpty() || !kmRestantStr.matches("\\d+")) {
@@ -116,7 +111,7 @@ public class AddVehiculeController {
         } else {
             kmRestant = Integer.parseInt(kmRestantStr);
         }
-        // Validate vehicule type
+
         if (vehiculeTypeComboBox.getValue() == null) {
             setFieldError(vehiculeTypeComboBox, vehiculeTypeError, "Select vehicule type");
             valid = false;
@@ -126,7 +121,7 @@ public class AddVehiculeController {
             return;
         }
 
-        // If in edit mode, update the existing record; otherwise, create a new one.
+
         if (isEditMode) {
             editingVehicule.setImmatriculation(immatriculation);
             editingVehicule.setMarque(marque);
@@ -177,7 +172,7 @@ public class AddVehiculeController {
         kmRestantField.clear();
         vehiculeTypeComboBox.getSelectionModel().clearSelection();
         clearAllErrors();
-        // Reset edit mode if applicable.
+
         isEditMode = false;
         editingVehicule = null;
         btnSubmit.setText("Ajouter Véhicule");

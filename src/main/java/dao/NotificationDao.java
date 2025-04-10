@@ -13,7 +13,7 @@ public class NotificationDao {
 
     private static final Connection conn = ConnexionDB.getInstance();
 
-    // Create a new notification record
+
     public boolean create(Notification notification) {
         String sql = "INSERT INTO notifications (user_id, message, created_at, is_read) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -36,7 +36,7 @@ public class NotificationDao {
         return false;
     }
 
-    // Retrieve a notification by its id
+
     public Optional<Notification> findById(int id) {
         String sql = "SELECT * FROM notifications WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -53,7 +53,7 @@ public class NotificationDao {
         return Optional.empty();
     }
 
-    // Retrieve all notifications for a given user (ordered by most recent)
+
     public List<Notification> findByUserId(int userId) {
         List<Notification> notifications = new ArrayList<>();
         String sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
@@ -70,7 +70,7 @@ public class NotificationDao {
         return notifications;
     }
 
-    // Update a notification (e.g. marking as read or editing the message)
+
     public boolean update(Notification notification) {
         String sql = "UPDATE notifications SET message = ?, created_at = ?, is_read = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -85,7 +85,7 @@ public class NotificationDao {
         return false;
     }
 
-    // Delete a notification by id
+
     public boolean delete(int id) {
         String sql = "DELETE FROM notifications WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -97,7 +97,7 @@ public class NotificationDao {
         return false;
     }
 
-    // Helper method to map a ResultSet row to a Notification object
+
     private Notification extractNotificationFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         int userId = rs.getInt("user_id");

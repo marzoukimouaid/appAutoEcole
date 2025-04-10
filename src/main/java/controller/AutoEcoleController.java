@@ -19,23 +19,21 @@ import java.util.List;
 public class AutoEcoleController {
 
     @FXML
-    private StackPane rootPane; // The outermost container from AutoEcole.fxml
+    private StackPane rootPane;
 
     @FXML
-    private VBox contentArea;   // The element with styleClass "content-area" used for notifications
+    private VBox contentArea;
 
     @FXML
     private TextField nameField, addressField, phoneField, emailField;
     @FXML
-    private TextField prixSeanceConduitField, prixSeanceCodeField; // Fields for session prices
+    private TextField prixSeanceConduitField, prixSeanceCodeField;
     @FXML
     private javafx.scene.control.Button continueButton;
 
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
 
-    /**
-     * Preloads auto-école data if available.
-     */
+    
     @FXML
     public void initialize() {
         List<String[]> autoData = AutoEcoleService.getAutoEcoleData();
@@ -60,27 +58,27 @@ public class AutoEcoleController {
         String prixConduitStr = prixSeanceConduitField.getText().trim();
         String prixCodeStr = prixSeanceCodeField.getText().trim();
 
-        // Validate all fields
+
         if (!validateInputs(name, address, phone, email, prixConduitStr, prixCodeStr)) {
             return;
         }
 
-        // Parse the prices
+
         double prixSeanceConduit = Double.parseDouble(prixConduitStr);
         double prixSeanceCode = Double.parseDouble(prixCodeStr);
 
-        // Check if auto-école is already configured
+
         if (AutoEcoleService.getAutoEcoleData().isEmpty()) {
-            // No data exists: initialize new auto-école
+
             autoEcoleService.initializeAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);
             AlertUtils.showAlert("Succès", "L'auto-école a été initialisée avec succès.", javafx.scene.control.Alert.AlertType.INFORMATION);
         } else {
-            // Data exists: update the auto-école configuration
+
             autoEcoleService.updateAutoEcole(name, address, phone, email, prixSeanceConduit, prixSeanceCode);
-            // Display success notification on the content-area element.
+
             showSuccessNotification("L'auto-école a été mise à jour avec succès!");
         }
-        // Remain on the same page.
+
     }
 
     private boolean validateInputs(String name, String address, String phone, String email,

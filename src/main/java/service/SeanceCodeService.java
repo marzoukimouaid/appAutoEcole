@@ -21,12 +21,12 @@ public class SeanceCodeService {
         return seanceCodeDao.findByCandidatId(candidatId);
     }
 
-    // NEW: Get seances by moniteur id.
+
     public List<SeanceCode> getSeancesByMoniteurId(int moniteurId) {
         return seanceCodeDao.findByMoniteurId(moniteurId);
     }
 
-    // NEW: Get all seances
+
     public List<SeanceCode> getAllSeances() {
         return seanceCodeDao.getAllSeances();
     }

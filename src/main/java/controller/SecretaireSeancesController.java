@@ -53,7 +53,7 @@ public class SecretaireSeancesController {
         allSeances.addAll(codeList);
         allSeances.addAll(conduitList);
 
-        // Sort descending by date/time
+
         allSeances.sort((o1, o2) -> {
             LocalDateTime dt1 = (o1 instanceof SeanceCode)
                     ? ((SeanceCode) o1).getSessionDatetime()
@@ -64,13 +64,13 @@ public class SecretaireSeancesController {
             return dt2.compareTo(dt1);
         });
 
-        // If no seances are found, add an indicative label
+
         if (allSeances.isEmpty()) {
             Label noSeanceLabel = new Label("Aucune séance trouvée");
-            noSeanceLabel.getStyleClass().add("no-data-label"); // Define this class in your CSS.
+            noSeanceLabel.getStyleClass().add("no-data-label");
             seanceListContainer.getChildren().add(noSeanceLabel);
         } else {
-            // Otherwise, create and add cards for each seance.
+
             for (Object seance : allSeances) {
                 VBox card = createSeanceCard(seance);
                 seanceListContainer.getChildren().add(card);
@@ -170,7 +170,7 @@ public class SecretaireSeancesController {
             } else {
                 return;
             }
-            // Display the details page in the center of the main layout.
+
             rootPane.setCenter(detailsPage);
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -205,9 +205,7 @@ public class SecretaireSeancesController {
         }
     }
 
-    /**
-     * Called by child controllers after creation or edition of a seance so we jump back to the main listing.
-     */
+    
     public void returnToSeancesPage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/SecretaireSeances.fxml"));
@@ -218,7 +216,7 @@ public class SecretaireSeancesController {
         }
     }
 
-    // Method to open the edit page for a SeanceCode.
+
     public void openEditCodePage(SeanceCode seance) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceCode.fxml"));
@@ -232,7 +230,7 @@ public class SecretaireSeancesController {
         }
     }
 
-    // Method to open the edit page for a SeanceConduit.
+
     public void openEditConduitPage(SeanceConduit seance) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertSeanceConduit.fxml"));

@@ -18,7 +18,7 @@ public class ExamenConduit {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // NEW FIELD for notifications:
+
     private boolean notified;
 
     public enum ExamStatus {
@@ -29,7 +29,7 @@ public class ExamenConduit {
         PAID, PENDING
     }
 
-    // Constructors
+
     public ExamenConduit() {
     }
 
@@ -45,10 +45,10 @@ public class ExamenConduit {
         this.price = 0.00;
         this.paiementStatus = PaymentStatus.PENDING;
         this.paymentDate = null;
-        this.notified = false; // by default not notified
+        this.notified = false;
     }
 
-    // Potential full constructor
+
     public ExamenConduit(int id, int candidatId, int moniteurId, int vehiculeId,
                          LocalDateTime examDatetime, double latitude, double longitude,
                          ExamStatus status, double price, PaymentStatus paiementStatus,
@@ -70,7 +70,7 @@ public class ExamenConduit {
         this.notified = notified;
     }
 
-    // GETTERS AND SETTERS
+
 
     public int getId() {
         return id;

@@ -31,14 +31,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 
-/**
- * InsertExamenConduitController
- *
- * Requirements enforced:
- * 1) Only add a new ExamenConduit if the candidate has no other ExamenConduit
- *    that is PENDING or PASSED.
- * 2) Only add a new ExamenConduit if the candidate has >= 10 SeanceConduit sessions.
- */
+
 public class InsertExamenConduitController {
 
     @FXML private BorderPane rootPane;
@@ -51,7 +44,7 @@ public class InsertExamenConduitController {
     @FXML private TextField txtExamDatetime;
     @FXML private Label datetimeError;
 
-    // Price field and error label
+
     @FXML private TextField txtPrice;
     @FXML private Label priceError;
 
@@ -59,12 +52,12 @@ public class InsertExamenConduitController {
     @FXML private Label mapError;
     @FXML private Button btnSubmit;
 
-    // Reference to parent controller
+
     private SecretaireInscriptionExamenController parentController;
-    // If non-null => editing an exam; null => creating a new one
+
     private ExamenConduit editingExam = null;
 
-    // Services
+
     private final ExamenConduitService examenConduitService = new ExamenConduitService();
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
     private final SeanceCodeService seanceCodeService = new SeanceCodeService();
@@ -79,7 +72,7 @@ public class InsertExamenConduitController {
     private final NotificationService notificationService = new NotificationService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // Map coordinates (set via JS bridge)
+
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
 
@@ -88,7 +81,7 @@ public class InsertExamenConduitController {
         WebEngine engine = mapView.getEngine();
         engine.setJavaScriptEnabled(true);
 
-        // Listen for the map load completion and set up the JavaScript bridge
+
         engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
             if (newState == Worker.State.SUCCEEDED) {
                 try {
@@ -97,7 +90,7 @@ public class InsertExamenConduitController {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                // If editing an exam, show the marker on the map
+
                 if (editingExam != null) {
                     double lat = editingExam.getLatitude();
                     double lng = editingExam.getLongitude();
@@ -123,7 +116,7 @@ public class InsertExamenConduitController {
         this.parentController = parent;
     }
 
-    // Populate fields when editing an existing exam
+
     public void setExamenConduit(ExamenConduit exam) {
         this.editingExam = exam;
         User candidate = userService.getUserById(exam.getCandidatId());
@@ -147,7 +140,7 @@ public class InsertExamenConduitController {
 
     @FXML
     private void handleSubmit() {
-        // Try to update map coordinates in case the marker was moved
+
         try {
             Object result = mapView.getEngine().executeScript("marker ? marker.getLatLng() : null");
             if (result != null && result instanceof JSObject) {
@@ -228,7 +221,7 @@ public class InsertExamenConduitController {
             return;
         }
 
-        // Retrieve candidate and moniteur
+
         Optional<User> optCandidate = Optional.ofNullable(userService.getUserByUsername(candidateUsername));
         if (!optCandidate.filter(u -> "candidat".equalsIgnoreCase(u.getRole())).isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Candidat introuvable ou invalide");
@@ -243,7 +236,7 @@ public class InsertExamenConduitController {
         }
         User moniteur = optMoniteur.get();
 
-        // Verify candidate's dossier and matching permis type
+
         Optional<DossierCandidat> dossierOpt = dossierService.getDossierByCandidateId(candidate.getId());
         if (!dossierOpt.isPresent()) {
             setFieldError(candidateUsernameField, candidateError, "Dossier du candidat introuvable");
@@ -263,7 +256,7 @@ public class InsertExamenConduitController {
             return;
         }
 
-        // Check vehicle
+
         Optional<Vehicule> optVehicule = vehiculeService.getVehiculeByImmatriculation(vehiculeImmatriculation);
         if (!optVehicule.isPresent()) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Véhicule non trouvé");
@@ -292,14 +285,14 @@ public class InsertExamenConduitController {
                     "Le type du véhicule ne correspond pas au permis du candidat");
             return;
         }
-        // Check vehicle's remaining kilometrage
+
         if (vehicule.getKmRestantEntretien() <= 0) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError,
                     "Le véhicule nécessite un entretien (km restant insuffisant).");
             return;
         }
 
-        // Check schedule conflicts (candidate & moniteur)
+
         boolean candidateBusy = Stream.concat(
                 Stream.concat(
                         seanceCodeService.getSeancesByCandidatId(candidate.getId()).stream().map(SeanceCode::getSessionDatetime),
@@ -330,9 +323,9 @@ public class InsertExamenConduitController {
             return;
         }
 
-        // Check if we're creating a new exam (not updating)
+
         if (editingExam == null) {
-            // 1) Ensure the candidate has no exam with status PENDING or PASSED
+
             List<ExamenConduit> candidateExams =
                     examenConduitService.getExamenConduitsByCandidatId(candidate.getId());
             boolean hasActiveExam = candidateExams.stream()
@@ -344,7 +337,7 @@ public class InsertExamenConduitController {
                 return;
             }
 
-            // 2) NEW: Ensure the candidate has >= 10 SeanceConduit
+
             List<SeanceConduit> seancesConduit =
                     seanceConduitService.getSeancesByCandidatId(candidate.getId());
             if (seancesConduit.size() < 10) {
@@ -353,7 +346,7 @@ public class InsertExamenConduitController {
                 return;
             }
 
-            // If everything is okay, create the exam
+
             ExamenConduit newExam = new ExamenConduit(
                     candidate.getId(),
                     moniteur.getId(),
@@ -363,7 +356,7 @@ public class InsertExamenConduitController {
                     selectedLongitude
             );
             newExam.setPrice(price);
-            // By default, paiement_status = PENDING
+
             boolean created = examenConduitService.createExamenConduit(newExam);
             if (created) {
                 notificationService.sendNotification(candidate.getId(),
@@ -378,7 +371,7 @@ public class InsertExamenConduitController {
                 showError("Erreur", "Impossible de créer l'examen conduit.");
             }
         } else {
-            // update existing
+
             editingExam.setCandidatId(candidate.getId());
             editingExam.setMoniteurId(moniteur.getId());
             editingExam.setVehiculeId(vehicule.getId());
@@ -487,7 +480,7 @@ public class InsertExamenConduitController {
         btnSubmit.setText("Créer Examen Conduit");
     }
 
-    // JavaScript bridge class for updating map coordinates.
+
     public class JavaConnector {
         public void setCoordinates(double lat, double lng) {
             Platform.runLater(() -> {

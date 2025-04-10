@@ -30,11 +30,11 @@ public class SeanceCodeDetailsController {
 
     @FXML
     public void initialize() {
-        // Hide edit and delete buttons by default.
+
         btnEdit.setVisible(false);
         btnDelete.setVisible(false);
 
-        // Display buttons based on the current user's role.
+
         User currentUser = SessionManager.getCurrentUser();
         if (currentUser != null) {
             switch (currentUser.getRole().toLowerCase()) {
@@ -48,24 +48,18 @@ public class SeanceCodeDetailsController {
         }
     }
 
-    /**
-     * Injects the parent controller so that navigation methods can be invoked.
-     */
+    
     public void setParentController(SecretaireSeancesController parentController) {
         this.parentController = parentController;
     }
 
-    /**
-     * Sets the SeanceCode record whose details are displayed.
-     */
+    
     public void setSeance(SeanceCode seance) {
         this.seance = seance;
         loadDetails();
     }
 
-    /**
-     * Loads the details of the seance into the UI.
-     */
+    
     private void loadDetails() {
         lblTitle.setText("Détails de la Séance Code");
         lblDate.setText("Date/Heure: " + seance.getSessionDatetime());
@@ -81,9 +75,7 @@ public class SeanceCodeDetailsController {
         lblMoniteur.setText("Moniteur: " + moniteurName);
     }
 
-    /**
-     * Handles the Edit action. Opens the InsertSeanceCode page with the seance data prefilled.
-     */
+    
     @FXML
     private void handleEdit() {
         if (parentController != null) {
@@ -94,9 +86,7 @@ public class SeanceCodeDetailsController {
         }
     }
 
-    /**
-     * Handles the Delete action.
-     */
+    
     @FXML
     private void handleDelete() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);

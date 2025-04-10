@@ -10,13 +10,13 @@ public class PaymentService {
 
     private final PaymentDao paymentDao = new PaymentDao();
 
-    // Creates a new full payment.
+
     public boolean createFullPayment(int userId, double totalAmount, LocalDate paymentDate) {
         Payment payment = new Payment(userId, totalAmount, "FULL", paymentDate, "PAID");
         return paymentDao.create(payment);
     }
 
-    // Creates a new installment payment.
+
     public Optional<Payment> createInstallmentPayment(int userId, double totalAmount, LocalDate paymentDate) {
         Payment payment = new Payment(userId, totalAmount, "INSTALLMENT", paymentDate, "PENDING");
         boolean created = paymentDao.create(payment);
@@ -42,10 +42,7 @@ public class PaymentService {
         return paymentDao.delete(id);
     }
 
-    /**
-     * NEW: Retrieve all payments from the DB,
-     * so that analytics can calculate total revenue easily.
-     */
+    
     public List<Payment> getAllPayments() {
         return paymentDao.findAll();
     }

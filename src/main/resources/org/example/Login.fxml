@@ -7,26 +7,43 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
-<!-- Outer container ensures fixed margins at top/bottom and centers the card -->
 <StackPane xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controller.LoginController"
            prefWidth="800" prefHeight="600"
            stylesheets="@style.css">
-    <!-- Fixed margins: adjust as needed -->
+
     <padding>
         <Insets top="40" right="20" bottom="40" left="20"/>
     </padding>
 
-    <!-- Inner container centers the card -->
     <StackPane alignment="CENTER">
-        <VBox alignment="CENTER" spacing="20" maxWidth="350" maxHeight="450" styleClass="card">
-            <Label text="Connexion" styleClass="title"/>
-            <Label text="Accédez à votre espace auto-école" styleClass="subtitle"/>
+        <!-- Use smaller spacing to condense the layout -->
+        <VBox alignment="CENTER" spacing="8" maxWidth="350" maxHeight="450" styleClass="card">
+            <Label text="Connexion" styleClass="title" />
+            <Label text="Accédez à votre espace auto-école" styleClass="subtitle" />
 
-            <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="input-field"/>
-            <PasswordField fx:id="passwordField" promptText="Mot de passe" styleClass="input-field"/>
+            <!-- USERNAME FIELD -->
+            <TextField fx:id="usernameField"
+                       promptText="Nom d'utilisateur"
+                       styleClass="input-field" />
+            <Label fx:id="usernameError"
+                   textFill="red"
+                   visible="false"
+            managed="true"   />
 
-            <Button text="Se connecter" fx:id="loginButton" styleClass="primary-button" onAction="#handleLogin"/>
+            <!-- PASSWORD FIELD -->
+            <PasswordField fx:id="passwordField"
+                           promptText="Mot de passe"
+                           styleClass="input-field" />
+            <Label fx:id="passwordError"
+                   textFill="red"
+                   visible="false"
+                   managed="true" />
+
+            <Button fx:id="loginButton"
+                    text="Se connecter"
+                    styleClass="primary-button"
+                    onAction="#handleLogin"/>
         </VBox>
     </StackPane>
 </StackPane>

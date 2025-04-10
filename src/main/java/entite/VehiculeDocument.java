@@ -2,9 +2,7 @@ package entite;
 
 import java.time.LocalDate;
 
-/**
- * Entity mapping for 'vehicule_documents' table.
- */
+
 public class VehiculeDocument {
 
     public enum DocType {
@@ -21,10 +19,10 @@ public class VehiculeDocument {
     private LocalDate dateExpiration;
     private String scannedDocUrl;
     private double cost;
-    private boolean notified;  // New field to indicate if notification has been sent
+    private boolean notified;
 
     public VehiculeDocument() {
-        // default constructor
+
     }
 
     public VehiculeDocument(int docId, int vehiculeId, DocType docType,
@@ -40,7 +38,7 @@ public class VehiculeDocument {
         this.notified = notified;
     }
 
-    // Getters & setters
+
     public int getDocId() {
         return docId;
     }

@@ -64,7 +64,7 @@ public class InsertSeanceConduitController {
     private final MoniteurService moniteurService = new MoniteurService();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // We'll store the chosen lat/lng in these fields:
+
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
 
@@ -74,18 +74,18 @@ public class InsertSeanceConduitController {
         WebEngine engine = mapView.getEngine();
         engine.setJavaScriptEnabled(true);
 
-        // Listen for map load completion:
+
         engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
             if (newState == Worker.State.SUCCEEDED) {
                 try {
-                    // Provide a Java->JS bridge for setCoordinates(...)
+
                     JSObject window = (JSObject) engine.executeScript("window");
                     window.setMember("javaConnector", new JavaConnector());
                     System.out.println("JavaConnector set successfully.");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                // If editing an existing seance with valid lat/lng, show the marker:
+
                 if (editingSeance != null) {
                     double lat = editingSeance.getLatitude();
                     double lng = editingSeance.getLongitude();
@@ -100,7 +100,7 @@ public class InsertSeanceConduitController {
             }
         });
 
-        // Load your leafletMap.html resource:
+
         try {
             String url = getClass().getResource("/org/example/leafletMap.html").toExternalForm();
             engine.load(url);
@@ -109,12 +109,12 @@ public class InsertSeanceConduitController {
         }
     }
 
-    // Called by the parent "SecretaireSeancesController"
+
     public void setParentController(SecretaireSeancesController parent) {
         this.parentController = parent;
     }
 
-    // Used to populate the form for editing an existing seance.
+
     public void setSeance(SeanceConduit seance) {
         this.editingSeance = seance;
         User candidate = userService.getUserById(seance.getCandidatId());
@@ -174,7 +174,7 @@ public class InsertSeanceConduitController {
         } else {
             String immatriculationPattern = "(?i)^[0-9]{3}tunis[0-9]{4}$";
             if (!vehiculeImmatriculation.matches(immatriculationPattern)) {
-                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisiaxxxx");
+                setFieldError(txtVehiculeImmatriculation, vehiculeError, "Format invalide. Attendu: xxxtunisxxxx");
                 valid = false;
             }
         }
@@ -250,7 +250,7 @@ public class InsertSeanceConduitController {
             return;
         }
         List<SeanceCode> candidateCodeSeances = seanceCodeService.getSeancesByCandidatId(candidate.getId());
-        // Exclude the current seance (if updating) from conflict check.
+
         boolean candidateBusy = Stream.concat(
                 candidateConduitSeances.stream()
                         .filter(sc -> editingSeance == null || sc.getId() != editingSeance.getId())
@@ -272,15 +272,15 @@ public class InsertSeanceConduitController {
             return;
         }
 
-        // New check: Ensure that the candidate's permis type, moniteur's permis type, and véhicule type all match.
+
         Optional<Moniteur> moniteurOpt = moniteurService.getMoniteurByUserId(moniteur.getId());
         if (!moniteurOpt.isPresent()) {
             setFieldError(moniteurUsernameField, moniteurError, "Détails du moniteur introuvables");
             return;
         }
         Moniteur moniteurEntity = moniteurOpt.get();
-        String candidatePermis = dossierOpt.get().getPermisType(); // e.g., "A", "B", or "C"
-        String moniteurPermis = moniteurEntity.getPermisType().name(); // e.g., "A", "B", or "C"
+        String candidatePermis = dossierOpt.get().getPermisType();
+        String moniteurPermis = moniteurEntity.getPermisType().name();
         if (!candidatePermis.equalsIgnoreCase(moniteurPermis)) {
             setFieldError(moniteurUsernameField, moniteurError, "Le permis du candidat et du moniteur ne correspondent pas");
             return;
@@ -305,7 +305,7 @@ public class InsertSeanceConduitController {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le type du véhicule ne correspond pas au permis du candidat");
             return;
         }
-        // NEW: Check if the vehicle has remaining kilometrage.
+
         if (vehicule.getKmRestantEntretien() <= 0) {
             setFieldError(txtVehiculeImmatriculation, vehiculeError, "Le véhicule nécessite un entretien (kilométrage restant insuffisant).");
             return;
@@ -419,10 +419,7 @@ public class InsertSeanceConduitController {
         btnSubmit.setText("Créer Séance Conduit");
     }
 
-    /**
-     * Exposed to JavaScript so that the map can call setCoordinates(...)
-     * whenever the user places or drags a marker.
-     */
+    
     public class JavaConnector {
         public void setCoordinates(double lat, double lng) {
             Platform.runLater(() -> {

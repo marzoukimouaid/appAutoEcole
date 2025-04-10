@@ -9,25 +9,19 @@ import java.util.Optional;
 public class VehiculeMaintenanceService {
 
     private final VehiculeMaintenanceDao maintenanceDao = new VehiculeMaintenanceDao();
-    // New dependency to update the vehicle after maintenance insertion
+
     private final VehiculeService vehiculeService = new VehiculeService();
 
-    /**
-     * Creates a new maintenance record for a vehicle.
-     * Upon successful creation, the vehicle's km_restant_entretien is reset to a default value.
-     *
-     * @param m the maintenance record to create.
-     * @return true if creation (and vehicle update) succeeded; false otherwise.
-     */
+    
     public boolean createMaintenance(VehiculeMaintenance m) {
         boolean created = maintenanceDao.create(m);
         if (created) {
-            // After a maintenance record is inserted, reinitialize the vehicle's km_restant_entretien.
+
             Optional<Vehicule> optVehicule = vehiculeService.getVehiculeById(m.getVehiculeId());
             if (optVehicule.isPresent()) {
                 Vehicule vehicule = optVehicule.get();
-                // Set default km_restant_entretien based on vehicle type:
-                // For VOITURE: 10,000 km, MOTO: 5,000 km, CAMION: 15,000 km.
+
+
                 switch (vehicule.getType()) {
                     case VOITURE:
                         vehicule.setKmRestantEntretien(10000);

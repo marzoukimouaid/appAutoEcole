@@ -6,7 +6,7 @@ public class SeanceConduit {
     private int id;
     private int candidatId;
     private int moniteurId;
-    private int vehiculeId;          // New field for vehicle ID
+    private int vehiculeId;
     private LocalDateTime sessionDatetime;
     private double latitude;
     private double longitude;
@@ -28,7 +28,7 @@ public class SeanceConduit {
         this.updatedAt = updatedAt;
     }
 
-    // Constructor for creation (DB handles id, createdAt, updatedAt)
+
     public SeanceConduit(int candidatId, int moniteurId, int vehiculeId, LocalDateTime sessionDatetime,
                          double latitude, double longitude) {
         this.candidatId = candidatId;
@@ -39,7 +39,7 @@ public class SeanceConduit {
         this.longitude = longitude;
     }
 
-    // Getters and setters
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getCandidatId() { return candidatId; }

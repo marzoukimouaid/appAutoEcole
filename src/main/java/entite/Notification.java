@@ -11,7 +11,7 @@ public class Notification {
 
     public Notification() {}
 
-    // Constructor with all fields (including id)
+
     public Notification(int id, int userId, String message, LocalDateTime createdAt, boolean isRead) {
         this.id = id;
         this.userId = userId;
@@ -20,7 +20,7 @@ public class Notification {
         this.isRead = isRead;
     }
 
-    // Constructor without id (for creation)
+
     public Notification(int userId, String message, LocalDateTime createdAt, boolean isRead) {
         this.userId = userId;
         this.message = message;
@@ -28,7 +28,7 @@ public class Notification {
         this.isRead = isRead;
     }
 
-    // Getters and setters
+
     public int getId() {
         return id;
     }

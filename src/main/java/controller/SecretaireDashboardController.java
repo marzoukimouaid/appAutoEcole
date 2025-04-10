@@ -49,28 +49,28 @@ public class SecretaireDashboardController {
     @FXML private Label pageTitle;
     @FXML private Button btnToggleSidebar;
     @FXML private MenuButton profileMenu;
-    @FXML private MenuButton notificationMenu; // Notification MenuButton
-    @FXML private Label notificationBadge;     // Badge label (red circle with unread count)
+    @FXML private MenuButton notificationMenu;
+    @FXML private Label notificationBadge;
 
-    // Sidebar buttons
+
     @FXML private Button btnCandidats, btnMoniteurs, btnAnalytics, btnVehicules, btnSeances, btnInscription;
-    @FXML private Label autoEcoleNameLabel;  // Displays the Auto-Ecole name
-    @FXML private ImageView profileImage;    // Navbar profile image
+    @FXML private Label autoEcoleNameLabel;
+    @FXML private ImageView profileImage;
 
     private final ProfileService profileService = new ProfileService();
     private final AutoEcoleService autoEcoleService = new AutoEcoleService();
     private final NotificationService notificationService = new NotificationService();
     private User currentUser;
     private boolean sidebarVisible = true;
-    private Timeline notificationTimeline; // For periodic updates
+    private Timeline notificationTimeline;
 
     @FXML
     public void initialize() {
-        // Set up sidebar and icons.
+
         setIconsForSidebar();
         setupSidebarClip();
 
-        // Load current user from session.
+
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             System.out.println("No user in session. Redirecting to login...");
@@ -80,36 +80,32 @@ public class SecretaireDashboardController {
         loadAutoEcoleName();
         loadUserProfilePicture();
 
-        // When the notifications dropdown is about to be shown, mark all notifications as read.
+
         notificationMenu.setOnShowing(e -> {
             markAllNotificationsAsRead();
             updateNotifications();
         });
-        // Also update notifications on initialization.
+
         updateNotifications();
 
-        // Create a Timeline to update notifications (badge and dropdown) every 5 seconds.
+
         notificationTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> updateNotifications()));
         notificationTimeline.setCycleCount(Timeline.INDEFINITE);
         notificationTimeline.play();
         handleCandidats();
 
-        // NEW: Check for document expiry notifications upon dashboard load.
+
         checkDocumentExpiryNotifications();
     }
 
-    /**
-     * Loads and displays the Auto-Ecole name from the DB.
-     */
+    
     private void loadAutoEcoleName() {
         List<String[]> autoEcoleData = autoEcoleService.getAutoEcoleData();
         String autoEcoleName = !autoEcoleData.isEmpty() ? autoEcoleData.get(0)[0] : "Auto-Ecole Not Found";
         autoEcoleNameLabel.setText(autoEcoleName);
     }
 
-    /**
-     * Retrieves the user's profile and applies the picture to the navbar.
-     */
+    
     private void loadUserProfilePicture() {
         Optional<Profile> profileOptional = profileService.getProfileByUserId(currentUser.getId());
         if (!profileOptional.isPresent()) {
@@ -137,9 +133,7 @@ public class SecretaireDashboardController {
         sidebar.heightProperty().addListener((obs, oldVal, newVal) -> clipRect.setHeight(newVal.doubleValue()));
     }
 
-    /**
-     * Toggles the sidebar visibility.
-     */
+    
     @FXML
     private void toggleSidebar() {
         double sidebarWidth = 220;
@@ -190,13 +184,11 @@ public class SecretaireDashboardController {
         }
     }
 
-    /**
-     * Updates the notification dropdown and badge.
-     */
+    
     private void updateNotifications() {
         if (currentUser == null) return;
         List<Notification> notifications = notificationService.getNotificationsForUser(currentUser.getId());
-        // Update badge with count of unread notifications.
+
         long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
         if (unreadCount > 0) {
             notificationBadge.setText(String.valueOf(unreadCount));
@@ -204,7 +196,7 @@ public class SecretaireDashboardController {
         } else {
             notificationBadge.setVisible(false);
         }
-        // Populate dropdown with the latest five notifications.
+
         List<Notification> latestNotifications = notifications.stream().limit(5).collect(Collectors.toList());
         notificationMenu.getItems().clear();
         if (latestNotifications.isEmpty()) {
@@ -212,7 +204,7 @@ public class SecretaireDashboardController {
             emptyItem.setDisable(true);
             notificationMenu.getItems().add(emptyItem);
         } else {
-            // Create a custom layout for each notification for better readability.
+
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             for (Notification notif : latestNotifications) {
                 MenuItem item = new MenuItem();
@@ -229,17 +221,13 @@ public class SecretaireDashboardController {
         }
     }
 
-    /**
-     * Marks all notifications for the current user as read.
-     */
+    
     private void markAllNotificationsAsRead() {
         List<Notification> notifications = notificationService.getNotificationsForUser(currentUser.getId());
         notifications.stream().filter(n -> !n.isRead()).forEach(n -> notificationService.markNotificationAsRead(n.getId()));
     }
 
-    /**
-     * Navigates to a new view inside the content area.
-     */
+    
     private void loadPage(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -252,9 +240,7 @@ public class SecretaireDashboardController {
         }
     }
 
-    /**
-     * Switches to the login page.
-     */
+    
     private void switchToLoginPage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/Login.fxml"));
@@ -270,28 +256,21 @@ public class SecretaireDashboardController {
         }
     }
 
-    /**
-     * Handles user logout.
-     */
+    
     @FXML
     private void handleLogout() {
         SessionManager.logout();
         switchToLoginPage();
     }
 
-    /**
-     * Navigates to the profile page.
-     */
+    
     @FXML
     private void handleProfile() {
         clearSidebarSelection();
         loadPage("/org/example/Profile.fxml");
     }
 
-    /**
-     * Handles the "Modifier autoecole" action.
-     * Loads the auto-école configuration page with preloaded data.
-     */
+    
     @FXML
     private void handleModifierAutoEcole() {
         clearSidebarSelection();
@@ -334,9 +313,7 @@ public class SecretaireDashboardController {
         highlightSidebarButton(btnInscription);
     }
 
-    /**
-     * Highlights the clicked sidebar button.
-     */
+    
     private void highlightSidebarButton(Button selectedButton) {
         btnCandidats.getStyleClass().remove("selected");
         btnMoniteurs.getStyleClass().remove("selected");
@@ -347,9 +324,7 @@ public class SecretaireDashboardController {
         selectedButton.getStyleClass().add("selected");
     }
 
-    /**
-     * Clears the selection highlight from all sidebar buttons.
-     */
+    
     private void clearSidebarSelection() {
         btnCandidats.getStyleClass().remove("selected");
         btnMoniteurs.getStyleClass().remove("selected");
@@ -358,9 +333,7 @@ public class SecretaireDashboardController {
         btnInscription.getStyleClass().remove("selected");
     }
 
-    /**
-     * Assigns icons for sidebar buttons and the hamburger button.
-     */
+    
     private void setIconsForSidebar() {
         btnCandidats.setGraphic(createIcon(FontAwesomeSolid.USER_GRADUATE));
         btnMoniteurs.setGraphic(createIcon(FontAwesomeSolid.CHALKBOARD_TEACHER));
@@ -374,9 +347,7 @@ public class SecretaireDashboardController {
         btnToggleSidebar.setGraphic(hamburgerIcon);
     }
 
-    /**
-     * Helper to create FontAwesome icons.
-     */
+    
     private FontIcon createIcon(FontAwesomeSolid iconType) {
         FontIcon icon = new FontIcon(iconType);
         icon.setIconSize(16);
@@ -384,13 +355,10 @@ public class SecretaireDashboardController {
         return icon;
     }
 
-    /**
-     * NEW: Checks for documents expiring within the next day (that have not been notified)
-     * and sends a notification to the current secretaire. After sending, the document is marked as notified.
-     */
+    
     private void checkDocumentExpiryNotifications() {
         VehiculeDocumentService documentService = new VehiculeDocumentService();
-        // Retrieve documents expiring soon (within 1 day)
+
         List<VehiculeDocument> expiringDocs = documentService.findDocumentsExpiringSoon(1);
         if (!expiringDocs.isEmpty()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -406,7 +374,7 @@ public class SecretaireDashboardController {
                     System.err.println("[Dashboard] FAILED to send document expiry notification to user id: "
                             + currentUser.getId());
                 }
-                // Mark the document as notified to prevent duplicate notifications.
+
                 doc.setNotified(true);
                 boolean updated = documentService.updateDocument(doc);
                 if (updated) {

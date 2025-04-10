@@ -2,22 +2,19 @@ package entite;
 
 import java.time.LocalDate;
 
-/**
- * Entity mapping for the 'vehicule_maintenance' table.
- * This captures each maintenance or repair record for a vehicle.
- */
+
 public class VehiculeMaintenance {
 
     private int maintenanceId;
     private int vehiculeId;
     private LocalDate dateMaintenance;
-    private String typeMaintenance;   // e.g. "Frein", "Vidange", "Révision", etc.
-    private String description;       // notes/description
-    private double cost;              // cost if any
-    private String scannedInvoiceUrl; // link to scanned invoice or receipt
+    private String typeMaintenance;
+    private String description;
+    private double cost;
+    private String scannedInvoiceUrl;
 
     public VehiculeMaintenance() {
-        // default constructor
+
     }
 
     public VehiculeMaintenance(int maintenanceId, int vehiculeId, LocalDate dateMaintenance,
@@ -32,7 +29,7 @@ public class VehiculeMaintenance {
         this.scannedInvoiceUrl = scannedInvoiceUrl;
     }
 
-    // Getters & Setters
+
     public int getMaintenanceId() {
         return maintenanceId;
     }

@@ -1,16 +1,16 @@
 package controller;
 
-import Utils.AlertUtils;
 import Utils.SessionManager;
+import entite.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import entite.User;
 import service.UserService;
 
 import java.io.IOException;
@@ -19,14 +19,32 @@ public class LoginController {
 
     @FXML
     private TextField usernameField;
+
+    @FXML
+    private Label usernameError;
+
     @FXML
     private PasswordField passwordField;
+
+    @FXML
+    private Label passwordError;
 
     private final UserService userService = new UserService();
 
     @FXML
     private void initialize() {
+
         Platform.runLater(this::checkAutoLogin);
+
+
+        usernameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            clearFieldError(usernameField, usernameError);
+        });
+
+
+        passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
+            clearFieldError(passwordField, passwordError);
+        });
     }
 
     private void checkAutoLogin() {
@@ -38,34 +56,59 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
+
+        clearFieldError(usernameField, usernameError);
+        clearFieldError(passwordField, passwordError);
+
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            AlertUtils.showAlert("Erreur", "Veuillez entrer votre nom d'utilisateur et mot de passe.", javafx.scene.control.Alert.AlertType.ERROR);
+        boolean valid = true;
+
+
+        if (username.isEmpty()) {
+            setFieldError(usernameField, usernameError, "Veuillez entrer votre nom d'utilisateur");
+            valid = false;
+        }
+
+        if (password.isEmpty()) {
+            setFieldError(passwordField, passwordError, "Veuillez entrer votre mot de passe");
+            valid = false;
+        }
+        if (!valid) {
+
             return;
         }
 
+
         User authenticatedUser = userService.authenticateUser(username, password);
-        if (authenticatedUser != null) {
-            SessionManager.setCurrentUser(authenticatedUser);
-            switchToDashboard(authenticatedUser.getRole());
-        } else {
-            AlertUtils.showAlert("Erreur", "Nom d'utilisateur ou mot de passe incorrect.", javafx.scene.control.Alert.AlertType.ERROR);
+        if (authenticatedUser == null) {
+            setFieldError(usernameField, null, null);
+            setFieldError(passwordField, passwordError, "Nom d'utilisateur ou mot de passe incorrect.");
+            return;
         }
+
+
+        SessionManager.setCurrentUser(authenticatedUser);
+        switchToDashboard(authenticatedUser.getRole());
     }
 
     private void switchToDashboard(String role) {
         String fxmlPage;
-        if ("secretaire".equals(role)) {
-            fxmlPage = "/org/example/SecretaireDashboard.fxml";
-        } else if ("candidat".equals(role)) {
-            fxmlPage = "/org/example/CandidatDashboard.fxml";
-        } else if ("moniteur".equals(role)) {
-            fxmlPage = "/org/example/MoniteurDashboard.fxml";
-        } else {
-            AlertUtils.showAlert("Erreur", "Rôle utilisateur inconnu.", javafx.scene.control.Alert.AlertType.ERROR);
-            return;
+        switch (role.toLowerCase()) {
+            case "secretaire":
+                fxmlPage = "/org/example/SecretaireDashboard.fxml";
+                break;
+            case "candidat":
+                fxmlPage = "/org/example/CandidatDashboard.fxml";
+                break;
+            case "moniteur":
+                fxmlPage = "/org/example/MoniteurDashboard.fxml";
+                break;
+            default:
+
+                setFieldError(passwordField, passwordError, "Rôle utilisateur inconnu.");
+                return;
         }
 
         try {
@@ -75,15 +118,35 @@ public class LoginController {
 
             Scene scene = new Scene(root, 1024, 600);
             stage.setScene(scene);
-            // Allow resizing (and maximize) while keeping the layout responsive
             stage.setResizable(true);
             stage.show();
-
-            // Center the window on screen after show
             stage.centerOnScreen();
         } catch (IOException e) {
             e.printStackTrace();
-            AlertUtils.showAlert("Erreur", "Impossible de charger la page.", javafx.scene.control.Alert.AlertType.ERROR);
+
+            setFieldError(passwordField, passwordError, "Impossible de charger la page.");
+        }
+    }
+
+    
+    private void setFieldError(TextField field, Label errorLabel, String errorMsg) {
+        if (field != null && !field.getStyleClass().contains("error")) {
+            field.getStyleClass().add("error");
+        }
+        if (errorLabel != null && errorMsg != null) {
+            errorLabel.setText(errorMsg);
+            errorLabel.setVisible(true);
+        }
+    }
+
+    
+    private void clearFieldError(TextField field, Label errorLabel) {
+        if (field != null) {
+            field.getStyleClass().remove("error");
+        }
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
         }
     }
 }

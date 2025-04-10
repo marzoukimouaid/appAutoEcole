@@ -23,7 +23,7 @@ public class UserService {
         return userDAO.getUserByUsername(username);
     }
 
-    // NEW: Get User by ID
+
     public User getUserById(int id) {
         return userDAO.getUserById(id);
     }

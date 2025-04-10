@@ -16,13 +16,7 @@ import service.UserService;
 import java.time.LocalDate;
 import java.util.Optional;
 
-/**
- * ExamenCodeDetailsController
- *
- * - candidate => read-only (no buttons)
- * - secretaire => edit + delete
- * - moniteur => "Mark as Passed" only if exam is paid AND exam date is today
- */
+
 public class ExamenCodeDetailsController {
 
     @FXML private Label lblTitle;
@@ -36,7 +30,7 @@ public class ExamenCodeDetailsController {
 
     private ExamenCode examenCode;
 
-    // Possibly a parent controller if we need secretarial callbacks
+
     private SecretaireInscriptionExamenController parentController;
 
     private final ExamenCodeService examService = new ExamenCodeService();
@@ -45,25 +39,25 @@ public class ExamenCodeDetailsController {
 
     @FXML
     public void initialize() {
-        // Hide all by default
+
         btnEdit.setVisible(false);
         btnDelete.setVisible(false);
         btnMarkPassed.setVisible(false);
 
-        // Check role from session
+
         User currentUser = SessionManager.getCurrentUser();
         if (currentUser != null) {
             switch (currentUser.getRole()) {
                 case "candidate":
-                    // read-only
+
                     break;
                 case "secretaire":
-                    // show edit/delete
+
                     btnEdit.setVisible(true);
                     btnDelete.setVisible(true);
                     break;
                 case "moniteur":
-                    // can mark passed
+
                     btnMarkPassed.setVisible(true);
                     break;
             }
@@ -97,7 +91,7 @@ public class ExamenCodeDetailsController {
 
     @FXML
     private void handleEdit() {
-        // For secretaire
+
         if (parentController != null) {
             parentController.openEditExamenCodePage(examenCode);
         }
@@ -105,7 +99,7 @@ public class ExamenCodeDetailsController {
 
     @FXML
     private void handleDelete() {
-        // For secretaire
+
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Confirmer la suppression");
         confirmAlert.setHeaderText("Voulez-vous vraiment supprimer cet examen ?");
@@ -132,19 +126,17 @@ public class ExamenCodeDetailsController {
         }
     }
 
-    /**
-     * For moniteur: only mark as PASSED if exam is paid AND exam date is today.
-     */
+    
     @FXML
     private void handleMarkPassed() {
-        // 1) Must be paid
+
         if (examenCode.getPaiementStatus() != ExamenCode.PaymentStatus.PAID) {
             new Alert(Alert.AlertType.WARNING,
                     "Impossible de marquer l'examen comme réussi: il n'est pas payé.")
                     .showAndWait();
             return;
         }
-        // 2) Must be scheduled for the current date
+
         LocalDate examDate = examenCode.getExamDatetime().toLocalDate();
         if (!examDate.equals(LocalDate.now())) {
             new Alert(Alert.AlertType.WARNING,
@@ -153,7 +145,7 @@ public class ExamenCodeDetailsController {
             return;
         }
 
-        // Mark as PASSED
+
         examenCode.setStatus(ExamenCode.ExamStatus.PASSED);
         boolean updated = examService.updateExamenCode(examenCode);
         if (updated) {

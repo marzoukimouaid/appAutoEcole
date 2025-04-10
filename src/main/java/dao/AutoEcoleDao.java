@@ -12,7 +12,7 @@ public class AutoEcoleDao {
 
     private static final Connection conn = ConnexionDB.getInstance();
 
-    // Updated method with two new parameters: prixSeanceConduit and prixSeanceCode.
+
     public void initializeAutoEcole(String name, String address, String phone, String email,
                                     double prixSeanceConduit, double prixSeanceCode) {
         String sql = "INSERT INTO auto_ecole (name, address, telephone, email, prix_seance_conduit, prix_seance_code) " +
@@ -55,9 +55,7 @@ public class AutoEcoleDao {
         return dataList;
     }
 
-    /**
-     * New method to update the auto-école configuration.
-     */
+    
     public void updateAutoEcole(String name, String address, String phone, String email,
                                 double prixSeanceConduit, double prixSeanceCode) {
         String sql = "UPDATE auto_ecole SET name = ?, address = ?, telephone = ?, email = ?, prix_seance_conduit = ?, prix_seance_code = ?";

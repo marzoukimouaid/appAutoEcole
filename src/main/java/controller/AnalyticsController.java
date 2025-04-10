@@ -29,9 +29,9 @@ public class AnalyticsController implements Initializable {
     private Label labelConduitSuccess;
 
     @FXML
-    private LineChart<String, Number> lineChartRevenue;   // NEW: separate chart
+    private LineChart<String, Number> lineChartRevenue;
     @FXML
-    private LineChart<String, Number> lineChartExpenses;  // NEW: separate chart
+    private LineChart<String, Number> lineChartExpenses;
 
     @FXML
     private PieChart pieChartVehicleUsage;
@@ -45,20 +45,20 @@ public class AnalyticsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Default: "month"
+
         loadStats("month");
 
-        // Listen for toggle changes
+
         periodToggleGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
-                String period = newVal.getUserData().toString();  // "month" or "year"
+                String period = newVal.getUserData().toString();
                 loadStats(period);
             }
         });
     }
 
     private void loadStats(String period) {
-        // 1) Basic stats: exam success, usage
+
         AnalyticsStats stats = analyticsService.getAnalyticsStats(period);
 
         double codeSuccess = stats.getCodeExamSuccessRate() * 100.0;
@@ -66,7 +66,7 @@ public class AnalyticsController implements Initializable {
         labelCodeSuccess.setText(String.format("%.1f %%", codeSuccess));
         labelConduitSuccess.setText(String.format("%.1f %%", conduitSuccess));
 
-        // 2) Clear the line charts
+
         lineChartRevenue.getData().clear();
         lineChartExpenses.getData().clear();
         lineChartRevenue.setCreateSymbols(true);
@@ -74,23 +74,23 @@ public class AnalyticsController implements Initializable {
         lineChartExpenses.setCreateSymbols(true);
         lineChartExpenses.setAnimated(false);
 
-        // We'll build the data from multi-point logic
+
         List<RevenueExpensePoint> points;
         if ("month".equalsIgnoreCase(period)) {
             points = analyticsService.getMonthlyRevenueExpenses(12);
         } else {
-            // year
+
             points = analyticsService.getYearlyRevenueExpenses(5);
         }
 
-        // Build a single Series for Revenue, a single Series for Expenses
+
         XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
         revenueSeries.setName("Revenus (TND)");
 
         XYChart.Series<String, Number> expenseSeries = new XYChart.Series<>();
         expenseSeries.setName("Dépenses (TND)");
 
-        // Fill them with data
+
         for (RevenueExpensePoint p : points) {
             XYChart.Data<String, Number> revData = new XYChart.Data<>(p.getLabel(), p.getRevenue());
             attachTooltip(revData, p.getLabel(), "Revenus", p.getRevenue());
@@ -101,16 +101,16 @@ public class AnalyticsController implements Initializable {
             expenseSeries.getData().add(expData);
         }
 
-        // Add each Series to the separate line charts
+
         lineChartRevenue.getData().add(revenueSeries);
         lineChartExpenses.getData().add(expenseSeries);
 
-        // Show final data point's revenue/expense in top labels
+
         RevenueExpensePoint lastPoint = points.get(points.size() - 1);
         labelRevenue.setText(String.format("%.2f TND", lastPoint.getRevenue()));
         labelExpenses.setText(String.format("%.2f TND", lastPoint.getExpenses()));
 
-        // 3) Vehicle usage
+
         pieChartVehicleUsage.getData().clear();
         Map<String, Long> usageMap = stats.getVehicleUsageByLabel();
         for (Map.Entry<String, Long> e : usageMap.entrySet()) {
@@ -120,15 +120,13 @@ public class AnalyticsController implements Initializable {
             pieChartVehicleUsage.getData().add(slice);
         }
 
-        // 4) Exam success pie
+
         pieChartExamSuccess.getData().clear();
         pieChartExamSuccess.getData().add(new PieChart.Data("Code", codeSuccess));
         pieChartExamSuccess.getData().add(new PieChart.Data("Conduit", conduitSuccess));
     }
 
-    /**
-     * Helper to attach a tooltip to each data point.
-     */
+    
     private void attachTooltip(XYChart.Data<String, Number> data, String label, String type, double value) {
         data.nodeProperty().addListener((obs, oldNode, newNode) -> {
             if (newNode != null) {

@@ -12,15 +12,15 @@ public class DossierCandidat {
     private int candidateId;
     private String permisType;
 
-    // New fields for the number of sessions
+
     private int nombreSeancesConduite;
     private int nombreSeancesCode;
 
-    // Default constructor
+
     public DossierCandidat() {
     }
 
-    // Constructor without id (for creation)
+
     public DossierCandidat(String cinUrl, String certificatMedicalUrl, String photoIdentiteUrl,
                            LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType,
                            int nombreSeancesConduite, int nombreSeancesCode) {
@@ -35,7 +35,7 @@ public class DossierCandidat {
         this.nombreSeancesCode = nombreSeancesCode;
     }
 
-    // Full constructor with id
+
     public DossierCandidat(int id, String cinUrl, String certificatMedicalUrl, String photoIdentiteUrl,
                            LocalDateTime createdAt, LocalDateTime updatedAt, int candidateId, String permisType,
                            int nombreSeancesConduite, int nombreSeancesCode) {
@@ -51,7 +51,7 @@ public class DossierCandidat {
         this.nombreSeancesCode = nombreSeancesCode;
     }
 
-    // Getters and setters
+
     public int getId() {
         return id;
     }

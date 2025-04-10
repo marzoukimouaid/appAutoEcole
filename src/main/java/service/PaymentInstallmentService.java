@@ -27,9 +27,7 @@ public class PaymentInstallmentService {
         return installmentDao.update(installment);
     }
 
-    /**
-     * Marks an installment as paid.
-     */
+    
     public boolean markInstallmentAsPaid(int installmentId, LocalDate datePaid) {
         Optional<PaymentInstallment> opt = installmentDao.findById(installmentId);
         if(opt.isPresent()) {

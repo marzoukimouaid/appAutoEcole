@@ -4,15 +4,15 @@ import java.time.LocalDate;
 
 public class Payment {
     private int id;
-    private int userId;          // Candidate/User paying
+    private int userId;
     private double totalAmount;
-    private String paymentType;  // "FULL" or "INSTALLMENT"
+    private String paymentType;
     private LocalDate paymentDate;
-    private String status;       // "PAID" or "PENDING"
+    private String status;
 
     public Payment() {}
 
-    // Constructor with id (for retrieval)
+
     public Payment(int id, int userId, double totalAmount, String paymentType, LocalDate paymentDate, String status) {
         this.id = id;
         this.userId = userId;
@@ -22,7 +22,7 @@ public class Payment {
         this.status = status;
     }
 
-    // Constructor without id (for creation)
+
     public Payment(int userId, double totalAmount, String paymentType, LocalDate paymentDate, String status) {
         this.userId = userId;
         this.totalAmount = totalAmount;
@@ -31,7 +31,7 @@ public class Payment {
         this.status = status;
     }
 
-    // Getters and Setters
+
     public int getId() {
         return id;
     }

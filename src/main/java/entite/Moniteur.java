@@ -3,25 +3,25 @@ package entite;
 public class Moniteur {
     private int userId;
     private PermisType permisType;
-    private double salaire; // New field for salary
+    private double salaire;
 
-    // Nested enum for permis type
+
     public static enum PermisType {
         A, B, C;
     }
 
-    // Default constructor
+
     public Moniteur() {
     }
 
-    // Constructor with all fields
+
     public Moniteur(int userId, PermisType permisType, double salaire) {
         this.userId = userId;
         this.permisType = permisType;
         this.salaire = salaire;
     }
 
-    // Getters and setters
+
     public int getUserId() {
         return userId;
     }

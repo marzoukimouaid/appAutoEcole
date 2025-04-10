@@ -11,14 +11,14 @@ public class Vehicule {
     private int kmRestantEntretien;
     private VehicleType type;
 
-    // Nested enum for vehicle type
+
     public static enum VehicleType {
         MOTO, VOITURE, CAMION;
     }
 
     public Vehicule() {}
 
-    // Constructor for creation (without id)
+
     public Vehicule(String immatriculation, String marque, LocalDate dateMiseEnService, int kilometrageTotal, int kmRestantEntretien, VehicleType type) {
         this.immatriculation = immatriculation;
         this.marque = marque;
@@ -28,7 +28,7 @@ public class Vehicule {
         this.type = type;
     }
 
-    // Full constructor with id
+
     public Vehicule(int id, String immatriculation, String marque, LocalDate dateMiseEnService, int kilometrageTotal, int kmRestantEntretien, VehicleType type) {
         this.id = id;
         this.immatriculation = immatriculation;
@@ -39,7 +39,7 @@ public class Vehicule {
         this.type = type;
     }
 
-    // Getters and setters
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 

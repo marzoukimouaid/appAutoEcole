@@ -15,26 +15,17 @@ import service.ProfileService;
 import java.time.LocalDate;
 import java.util.Optional;
 
-/**
- * ExamenConduitDetailsController
- *
- * - candidate => read only
- * - secretaire => edit + delete
- * - moniteur => "Mark as Passed" only if exam is paid AND exam date is today
- *
- * Updated: Now uses a WebView/Leaflet map to show exam's lat/lon,
- * instead of displaying lat/lon text in lblLocation.
- */
+
 public class ExamenConduitDetailsController {
 
     @FXML private Label lblTitle;
     @FXML private Label lblDate;
     @FXML private Label lblStatus;
-    // Removed direct usage of lblLocation for lat/lon text
+
     @FXML private Label lblCandidate;
     @FXML private Label lblMoniteur;
 
-    // New WebView to display the map
+
     @FXML private WebView mapView;
 
     @FXML private Button btnEdit;
@@ -57,7 +48,7 @@ public class ExamenConduitDetailsController {
         if (currentUser != null) {
             switch (currentUser.getRole()) {
                 case "candidate":
-                    // read only
+
                     break;
                 case "secretaire":
                     btnEdit.setVisible(true);
@@ -69,13 +60,13 @@ public class ExamenConduitDetailsController {
             }
         }
 
-        // Load the Leaflet map once
+
         WebEngine engine = mapView.getEngine();
-        // Make sure "leafletMap.html" is actually in src/main/resources/<your package> so getResource(...) doesn't return null
+
         String mapUrl = getClass().getResource("/org/example/leafletMap.html").toExternalForm();
         engine.load(mapUrl);
 
-        // After the map is loaded, place the marker if exam data is already set
+
         engine.getLoadWorker().stateProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == Worker.State.SUCCEEDED && examenConduit != null) {
                 placeMarker();
@@ -91,7 +82,7 @@ public class ExamenConduitDetailsController {
         this.examenConduit = examenConduit;
         loadDetails();
 
-        // If the map is already loaded, place the marker now
+
         if (mapView.getEngine().getLoadWorker().getState() == Worker.State.SUCCEEDED) {
             placeMarker();
         }
@@ -102,7 +93,7 @@ public class ExamenConduitDetailsController {
         lblDate.setText("Date/Heure: " + examenConduit.getExamDatetime());
         lblStatus.setText("Statut: " + examenConduit.getStatus().name());
 
-        // Candidate & Moniteur names
+
         String candidateName = profileService.getProfileByUserId(examenConduit.getCandidatId())
                 .map(p -> p.getNom() + " " + p.getPrenom())
                 .orElse("N/A");
@@ -113,18 +104,16 @@ public class ExamenConduitDetailsController {
         lblCandidate.setText("Candidat: " + candidateName);
         lblMoniteur.setText("Moniteur: " + moniteurName);
 
-        // We no longer set lblLocation, since we show lat/lon on the map
-        // lblLocation.setText("Lieu: (" + examenConduit.getLatitude() + ", " + examenConduit.getLongitude() + ")");
+
+
     }
 
-    /**
-     * Place a marker on the Leaflet map at the exam's lat/lon.
-     */
+    
     private void placeMarker() {
         double lat = examenConduit.getLatitude();
         double lng = examenConduit.getLongitude();
 
-        // JavaScript snippet that sets the marker and centers the map
+
         String script = String.format(
                 "var latLng = L.latLng(%f, %f);" +
                         "if (typeof marker !== 'undefined' && marker) {" +
@@ -164,19 +153,17 @@ public class ExamenConduitDetailsController {
         }
     }
 
-    /**
-     * moniteur: mark as passed only if exam is paid and exam date is today
-     */
+    
     @FXML
     private void handleMarkPassed() {
-        // must be paid
+
         if (examenConduit.getPaiementStatus() != ExamenConduit.PaymentStatus.PAID) {
             new Alert(Alert.AlertType.WARNING,
                     "Impossible de marquer l'examen comme réussi: il n'est pas payé.")
                     .showAndWait();
             return;
         }
-        // must be the same day
+
         if (!examenConduit.getExamDatetime().toLocalDate().equals(LocalDate.now())) {
             new Alert(Alert.AlertType.WARNING,
                     "Impossible de marquer l'examen comme réussi: la date d'examen n'est pas aujourd'hui.")

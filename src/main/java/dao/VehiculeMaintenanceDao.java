@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * DAO class for vehicule_maintenance table.
- */
+
 public class VehiculeMaintenanceDao {
 
     private final Connection conn = ConnexionDB.getInstance();

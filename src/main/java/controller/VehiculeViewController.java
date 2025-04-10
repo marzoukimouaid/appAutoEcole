@@ -16,12 +16,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Displays a single Vehicule's details, docs, and maintenance.
- * - "Ajouter un Document" => load AddDocument.fxml
- * - "Ajouter un Entretien" => load AddMaintenance.fxml
- * Replaces the entire rootPane content for either operation.
- */
+
 public class VehiculeViewController {
 
     @FXML private StackPane rootPane;
@@ -46,7 +41,7 @@ public class VehiculeViewController {
 
     @FXML
     private void initialize() {
-        // Wire up the button clicks
+
         btnAddDocument.setOnAction(e -> handleAddDocument());
         btnAddMaintenance.setOnAction(e -> handleAddMaintenance());
     }
@@ -61,14 +56,14 @@ public class VehiculeViewController {
         lblKmRestant.setText(String.valueOf(vehicule.getKmRestantEntretien()));
         lblType.setText(vehicule.getType() != null ? vehicule.getType().name() : "N/A");
 
-        // Load data from DB
+
         List<VehiculeDocument> docs = docService.getDocumentsForVehicule(vehicule.getId());
         docs.sort(Comparator.comparing(VehiculeDocument::getDateObtention, Comparator.nullsLast(Comparator.reverseOrder())));
 
         List<VehiculeMaintenance> maints = maintService.getMaintenanceForVehicule(vehicule.getId());
         maints.sort(Comparator.comparing(VehiculeMaintenance::getDateMaintenance, Comparator.nullsLast(Comparator.reverseOrder())));
 
-        // Display them
+
         populateDocuments(docs);
         populateMaintenance(maints);
     }
@@ -91,7 +86,7 @@ public class VehiculeViewController {
             AddDocumentController docController = loader.getController();
             docController.initData(currentVehicule);
 
-            // Replace everything in rootPane
+
             rootPane.getChildren().setAll(formRoot);
 
         } catch (IOException e) {
@@ -104,11 +99,11 @@ public class VehiculeViewController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/AddMaintenance.fxml"));
             Parent formRoot = loader.load();
 
-            // Pass the currentVehicule to the AddMaintenanceController
+
             AddMaintenanceController maintController = loader.getController();
             maintController.initData(currentVehicule);
 
-            // Replace everything in rootPane
+
             rootPane.getChildren().setAll(formRoot);
 
         } catch (IOException e) {

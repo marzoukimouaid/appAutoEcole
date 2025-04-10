@@ -10,7 +10,6 @@ import service.AutoEcoleService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 public class App extends Application {
 
@@ -18,26 +17,17 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        // Debugging: print the current classpath
-        System.out.println("java.class.path: " + System.getProperty("java.class.path"));
 
-        // Debugging: print the location from which App.class is loaded
-        URL appClassUrl = App.class.getResource("App.class");
-        System.out.println("App.class is loaded from: " + appClassUrl);
-
-        // Debugging: check if the icon resource URL can be found
-        URL iconURL = App.class.getResource("/assets/logo_principale.png");
-        System.out.println("Icon resource URL: " + iconURL);
-
-        // Check if the Auto-école has been configured
         boolean isInitialized = !AutoEcoleService.getAutoEcoleData().isEmpty();
 
         String fxmlToLoad = isInitialized ? "Login" : "AutoEcole";
         Parent root = loadFXML(fxmlToLoad);
         scene = new Scene(root);
+        stage.setResizable(true);
         stage.setScene(scene);
 
-        // Set the stage title based on auto-école configuration
+
+
         if (isInitialized) {
             String autoEcoleName = AutoEcoleService.getAutoEcoleName();
             stage.setTitle(autoEcoleName);
@@ -45,7 +35,7 @@ public class App extends Application {
             stage.setTitle("Configuration Auto-école");
         }
 
-        // Try to load the icon resource with a null-check
+
         InputStream iconStream = App.class.getResourceAsStream("/assets/logo_principale.png");
 
         if (iconStream != null) {

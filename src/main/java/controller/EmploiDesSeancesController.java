@@ -50,7 +50,7 @@ public class EmploiDesSeancesController {
     private User currentUser;
     private YearMonth currentYearMonth;
 
-    // Services
+
     private final SeanceCodeService seanceCodeService = new SeanceCodeService();
     private final SeanceConduitService seanceConduitService = new SeanceConduitService();
     private final ExamenCodeService examenCodeService = new ExamenCodeService();
@@ -65,7 +65,7 @@ public class EmploiDesSeancesController {
             System.err.println("No user in session. Cannot load seances/exams.");
             return;
         }
-        // Start with the current month
+
         LocalDate now = LocalDate.now();
         currentYearMonth = YearMonth.of(now.getYear(), now.getMonth());
 
@@ -87,18 +87,18 @@ public class EmploiDesSeancesController {
         buildAppointmentsList();
     }
 
-    // -------------------------------------------------------------
-    // 1) Draw the monthly calendar with minimal "type" labels
-    // -------------------------------------------------------------
+
+
+
     private void drawCalendar() {
-        // Set the month label
+
         DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMMM yyyy");
         monthYearLabel.setText(currentYearMonth.atDay(1).format(monthFmt));
 
-        // Clear grid
+
         calendarGrid.getChildren().clear();
 
-        // Day-of-week headers
+
         String[] dayNames = {"Lun","Mar","Mer","Jeu","Ven","Sam","Dim"};
         for (int col = 0; col < 7; col++) {
             Label header = new Label(dayNames[col]);
@@ -106,29 +106,29 @@ public class EmploiDesSeancesController {
             calendarGrid.add(header, col, 0);
         }
 
-        // Basic date logic
+
         LocalDate first = currentYearMonth.atDay(1);
         int daysInMonth = currentYearMonth.lengthOfMonth();
-        int startDayOfWeek = first.getDayOfWeek().getValue(); // Monday=1..Sunday=7
+        int startDayOfWeek = first.getDayOfWeek().getValue();
         int colIndex = startDayOfWeek - 1;
         int rowIndex = 1;
 
         LocalDate start = first;
         LocalDate end = currentYearMonth.atEndOfMonth();
 
-        // We'll collect short "type" strings by day in a Map
+
         Map<LocalDate, List<String>> dayTypes = new HashMap<>();
         java.util.function.BiConsumer<LocalDate,String> addType = (d, t) -> dayTypes.computeIfAbsent(d, k -> new ArrayList<>()).add(t);
 
-        // Gather the seances/exams for the current user role
+
         List<EventInfo> events = gatherEventsForCurrentUser(start, end);
-        // For each event, add its short label
+
         for (EventInfo ev : events) {
             LocalDate eventDay = ev.dateTime.toLocalDate();
             addType.accept(eventDay, ev.getShortLabel());
         }
 
-        // Fill day cells
+
         for (int day = 1; day <= daysInMonth; day++) {
             VBox cell = new VBox(3);
             cell.setStyle(
@@ -162,13 +162,13 @@ public class EmploiDesSeancesController {
         }
     }
 
-    // -------------------------------------------------------------
-    // 2) Build the monthly appointments list with "Inspect" and "Imprimer PDF" buttons
-    // -------------------------------------------------------------
+
+
+
     private void buildAppointmentsList() {
         appointmentsContainer.getChildren().clear();
 
-        // Create an HBox for the heading and the print button
+
         HBox headingBox = new HBox();
         headingBox.setSpacing(10);
         headingBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -183,10 +183,10 @@ public class EmploiDesSeancesController {
         LocalDate start = currentYearMonth.atDay(1);
         LocalDate end = currentYearMonth.atEndOfMonth();
 
-        // Gather events for the current user
+
         List<EventInfo> events = gatherEventsForCurrentUser(start, end);
 
-        // Sort by date/time
+
         events.sort(Comparator.comparing(e -> e.dateTime));
 
         if (events.isEmpty()) {
@@ -196,7 +196,7 @@ public class EmploiDesSeancesController {
             return;
         }
 
-        // Build minimal cards: date/time + type + Inspect button
+
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
         for (EventInfo ev : events) {
             VBox card = new VBox(4);
@@ -204,17 +204,17 @@ public class EmploiDesSeancesController {
             card.setPrefWidth(600);
             card.setPadding(new javafx.geometry.Insets(10));
 
-            // Date/time label
+
             Label dtLabel = new Label(dtf.format(ev.dateTime));
             dtLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
             card.getChildren().add(dtLabel);
 
-            // Type label
+
             Label typeLabel = new Label(ev.getShortLabel());
             typeLabel.setStyle("-fx-text-fill: #444;");
             card.getChildren().add(typeLabel);
 
-            // Inspect button
+
             Button inspectBtn = new Button("Inspecter");
             inspectBtn.getStyleClass().add("inspect-button");
             inspectBtn.setOnAction(e -> handleInspect(ev));
@@ -224,9 +224,7 @@ public class EmploiDesSeancesController {
         }
     }
 
-    /**
-     * Called when user clicks "Inspecter" for a given event.
-     */
+    
     private void handleInspect(EventInfo ev) {
         try {
             FXMLLoader loader = null;
@@ -275,10 +273,7 @@ public class EmploiDesSeancesController {
         }
     }
 
-    /**
-     * Opens a file-save dialog and generates a PDF of the calendar and appointments
-     * for the currently selected month.
-     */
+    
     private void handlePrintCalendar() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Enregistrer l'emploi du temps");
@@ -287,7 +282,7 @@ public class EmploiDesSeancesController {
         File file = fileChooser.showSaveDialog(appointmentsContainer.getScene().getWindow());
         if (file != null) {
             try {
-                // Get auto-école info
+
                 List<String[]> autoEcoleData = autoEcoleService.getAutoEcoleData();
                 String header;
                 String footer;
@@ -300,7 +295,7 @@ public class EmploiDesSeancesController {
                     footer = "";
                 }
 
-                // Get candidate or moniteur details
+
                 String candidateDetails;
                 Optional<Profile> profileOpt = profileService.getProfileByUserId(currentUser.getId());
                 if (profileOpt.isPresent()) {
@@ -309,16 +304,16 @@ public class EmploiDesSeancesController {
                     candidateDetails = "Candidat: " + currentUser.getUsername();
                 }
 
-                // Build the events for the currently selected month
+
                 LocalDate start = currentYearMonth.atDay(1);
                 LocalDate end = currentYearMonth.atEndOfMonth();
                 List<EventInfo> events = gatherEventsForCurrentUser(start, end);
 
-                // Group by day so we can fill the calendar table
+
                 Map<LocalDate, List<EventInfo>> eventsByDay = events.stream()
                         .collect(Collectors.groupingBy(e -> e.dateTime.toLocalDate()));
 
-                // Transform into a map of day -> list of short label strings
+
                 Map<LocalDate, List<String>> calendarLabelsByDay = new HashMap<>();
                 for (Map.Entry<LocalDate, List<EventInfo>> entry : eventsByDay.entrySet()) {
                     List<String> labels = entry.getValue().stream()
@@ -327,7 +322,7 @@ public class EmploiDesSeancesController {
                     calendarLabelsByDay.put(entry.getKey(), labels);
                 }
 
-                // Sort events by date/time for the appointments list and transform to full details strings
+
                 List<EventInfo> sortedEvents = new ArrayList<>(events);
                 sortedEvents.sort(Comparator.comparing(e -> e.dateTime));
                 List<String> appointmentDetails = sortedEvents.stream()
@@ -352,9 +347,7 @@ public class EmploiDesSeancesController {
         }
     }
 
-    /**
-     * Displays a success notification using NotificationUtil.
-     */
+    
     private void showSuccessNotification(String message) {
         StackPane contentArea = (StackPane) appointmentsContainer.getScene().lookup("#contentArea");
         if (contentArea != null) {
@@ -362,16 +355,14 @@ public class EmploiDesSeancesController {
         }
     }
 
-    /**
-     * Gathers the seances/exams for the current user’s role between [start, end].
-     */
+    
     private List<EventInfo> gatherEventsForCurrentUser(LocalDate start, LocalDate end) {
         if (currentUser == null) return Collections.emptyList();
         String role = currentUser.getRole().toLowerCase();
 
         List<EventInfo> result = new ArrayList<>();
 
-        // Updated candidate branch to handle both "candidate" and "candidat"
+
         if (role.equals("candidate") || role.equals("candidat")) {
             seanceCodeService.getSeancesByCandidatId(currentUser.getId()).stream()
                     .filter(s -> isWithin(s.getSessionDatetime().toLocalDate(), start, end))
@@ -444,7 +435,7 @@ public class EmploiDesSeancesController {
         return (!d.isBefore(start)) && (!d.isAfter(end));
     }
 
-    // Inner class to unify all events
+
     private static class EventInfo {
         private final LocalDateTime dateTime;
         private final String labelForCalendar;
@@ -463,12 +454,12 @@ public class EmploiDesSeancesController {
             this.examenConduit = eD;
         }
 
-        // Returns a short label for use in the calendar table (only the type)
+
         public String getShortLabel() {
             return labelForCalendar;
         }
 
-        // Returns full details for the appointments list
+
         public String getFullLabel() {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
             return dtf.format(dateTime) + " - " + labelForCalendar;

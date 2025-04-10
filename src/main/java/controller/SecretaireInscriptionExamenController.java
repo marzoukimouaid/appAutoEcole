@@ -45,7 +45,7 @@ public class SecretaireInscriptionExamenController {
     private void loadExamInscriptions() {
         examListContainer.getChildren().clear();
 
-        // Fetch exam inscriptions from both exam types.
+
         List<ExamenCode> codeList = examenCodeService.getAllExamenCodes();
         List<ExamenConduit> conduitList = examenConduitService.getAllExamenConduits();
 
@@ -53,7 +53,7 @@ public class SecretaireInscriptionExamenController {
         allExams.addAll(codeList);
         allExams.addAll(conduitList);
 
-        // Sort exams descending by exam date/time.
+
         allExams.sort((o1, o2) -> {
             LocalDateTime dt1 = (o1 instanceof ExamenCode)
                     ? ((ExamenCode) o1).getExamDatetime()
@@ -64,13 +64,13 @@ public class SecretaireInscriptionExamenController {
             return dt2.compareTo(dt1);
         });
 
-        // If no exams are found, display an indicative label.
+
         if (allExams.isEmpty()) {
             Label noExamLabel = new Label("Aucune inscription trouvée");
-            noExamLabel.getStyleClass().add("no-data-label"); // Define this in your CSS.
+            noExamLabel.getStyleClass().add("no-data-label");
             examListContainer.getChildren().add(noExamLabel);
         } else {
-            // Otherwise, create and add cards for each exam.
+
             allExams.forEach(exam -> {
                 VBox card = createExamCard(exam);
                 examListContainer.getChildren().add(card);
@@ -204,7 +204,7 @@ public class SecretaireInscriptionExamenController {
         }
     }
 
-    // Method to open the edit page for an ExamenCode.
+
     public void openEditExamenCodePage(ExamenCode exam) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertExamenCode.fxml"));
@@ -218,7 +218,7 @@ public class SecretaireInscriptionExamenController {
         }
     }
 
-    // Method to open the edit page for an ExamenConduit.
+
     public void openEditExamenConduitPage(ExamenConduit exam) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/InsertExamenConduit.fxml"));

@@ -9,17 +9,17 @@ public class PaymentInstallment {
     }
 
     private int installmentId;
-    private int paymentId;           // Foreign key to Payment
-    private int installmentNumber;   // e.g., 1 for first month, 2 for second, etc.
-    private LocalDate dueDate;       // Due date for this installment
-    private double amountDue;        // The amount that should be paid in this installment
-    private Status status;           // "PENDING" or "PAID"
-    private LocalDate datePaid;      // Date when installment was paid (null if pending)
-    private boolean notified;        // New field: whether a notification has been sent
+    private int paymentId;
+    private int installmentNumber;
+    private LocalDate dueDate;
+    private double amountDue;
+    private Status status;
+    private LocalDate datePaid;
+    private boolean notified;
 
     public PaymentInstallment() {}
 
-    // Full constructor (including id and notified)
+
     public PaymentInstallment(int installmentId, int paymentId, int installmentNumber, LocalDate dueDate,
                               double amountDue, Status status, LocalDate datePaid, boolean notified) {
         this.installmentId = installmentId;
@@ -32,7 +32,7 @@ public class PaymentInstallment {
         this.notified = notified;
     }
 
-    // Constructor for creation (without id and datePaid); notified defaults to false
+
     public PaymentInstallment(int paymentId, int installmentNumber, LocalDate dueDate, double amountDue, Status status) {
         this.paymentId = paymentId;
         this.installmentNumber = installmentNumber;
@@ -43,7 +43,7 @@ public class PaymentInstallment {
         this.notified = false;
     }
 
-    // Getters and Setters
+
     public int getInstallmentId() {
         return installmentId;
     }

@@ -63,7 +63,7 @@ public class SeanceCodeDao {
         return seances;
     }
 
-    // NEW: Retrieve seances by moniteur id.
+
     public List<SeanceCode> findByMoniteurId(int moniteurId) {
         List<SeanceCode> seances = new ArrayList<>();
         String sql = "SELECT * FROM seance_code WHERE moniteur_id = ? ORDER BY session_datetime ASC";

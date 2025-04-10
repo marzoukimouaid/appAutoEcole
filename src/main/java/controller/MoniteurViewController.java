@@ -23,11 +23,9 @@ public class MoniteurViewController {
 
     private final ProfileService profileService = new ProfileService();
 
-    /**
-     * Initialize the UI with data for this Moniteur.
-     */
+    
     public void initData(Moniteur moniteur) {
-        // Retrieve the associated Profile
+
         Profile profile = profileService.getProfileByUserId(moniteur.getUserId()).orElse(null);
 
         if (profile != null) {
@@ -41,12 +39,12 @@ public class MoniteurViewController {
             lblPhone.setText(String.valueOf(profile.getTel()));
             lblAddress.setText(profile.getAddresse());
 
-            // If the profile has a picture URL, load it
+
             if (profile.getPictureUrl() != null && !profile.getPictureUrl().isEmpty()) {
                 imgProfile.setImage(new Image(profile.getPictureUrl(), true));
             }
         } else {
-            // If no profile is found, set placeholders
+
             lblName.setText("N/A");
             lblEmail.setText("N/A");
             lblBirthday.setText("N/A");
@@ -54,7 +52,7 @@ public class MoniteurViewController {
             lblAddress.setText("N/A");
         }
 
-        // Show the moniteur's Permis
+
         if (moniteur.getPermisType() != null) {
             lblPermisType.setText(moniteur.getPermisType().name());
         } else {
