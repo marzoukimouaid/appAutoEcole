@@ -1,6 +1,6 @@
 # Gestion Auto-École 🚗
 
-A JavaFX desktop application for managing driving school operations, developed as a university project under Mr. T. Ben Mena.
+A JavaFX desktop application for managing driving school operations, developed as a university project.
 
 ## 🚀 Features
 
